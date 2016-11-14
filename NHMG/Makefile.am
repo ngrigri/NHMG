@@ -1,0 +1,2 @@
+BASE_SUBDIRS= src tests
+SUBDIRS		= $(BASE_SUBDIRS)
