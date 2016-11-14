@@ -481,7 +481,8 @@ if test "$enable_mpi_mpt" = "yes" ; then
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-  LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
+#NG 14/11/16  LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
+  LDFLAGS="$LDFLAGS"
 fi
 
 if test "$enable_intel_mpi" = "yes" ; then
@@ -494,7 +495,8 @@ if test "$enable_intel_mpi" = "yes" ; then
   fi
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-  LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
+#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
+  LDFLAGS="$LDFLAGS"
 fi
 
 if test "$enable_openmpi" = "yes" ; then
@@ -502,7 +504,8 @@ if test "$enable_openmpi" = "yes" ; then
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-  LDFLAGS="$LDFLAGS -I${MPI_INC}  -L${MPI_LIB} -lmpi"
+#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC}  -L${MPI_LIB} -lmpi"
+  LDFLAGS="$LDFLAGS"
 fi
 
 if test "$enable_mpich" = "yes" ; then
@@ -510,7 +513,8 @@ if test "$enable_mpich" = "yes" ; then
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-  LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpich -lmpichf90"
+#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpich -lmpichf90"
+  LDFLAGS="$LDFLAGS"
 fi
 
 
@@ -547,44 +551,6 @@ if test "$enable_netcdf" = "yes" ; then
   AC_ARG_VAR(NETCDF_LIB,Location of NetCDF library (compile-time))
 # Add user-specified netCDF locations, if any, else add /usr/local/ 
 # locations if they exist
-################
-## NETCDF_LIB ##
-################
-  if test "${NETCDF_LIB}"; then
-      if test -d "${NETCDF_LIB}"; then
-        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
-          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
-            LIBS="${LIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
-          else
-  	  LIBS="${LIBS} -L${NETCDF_LIB} -lnetcdf"
-          fi
-        else
-          AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
-        fi
-      else
-        AC_MSG_ERROR([${NETCDF_LIB} location does not exist!])
-      fi
-  else
-      case "$host" in
-        *apple-darwin*)
-          NETCDF_LIB="/sw/lib/netcdf-gfortran/lib";;
-        *)
-          NETCDF_LIB="/usr/lib"
-      esac
-      if test -d "${NETCDF_LIB}"; then
-        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
-          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
-            LIBS="${LIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
-          else
-  	  LIBS="${LIBS} -L${NETCDF_LIB} -lnetcdf"
-          fi
-        else
-          AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
-        fi
-      else
-        AC_MSG_ERROR([${NETCDF_LIB} location does not exist!])
-      fi
-  fi
 
 ################
 ## NETCDF_INC ##
@@ -623,59 +589,6 @@ if test "$enable_netcdf" = "yes" ; then
   AC_MSG_NOTICE([  -> NetCDF library: ${NETCDF_LIB}])
   AC_MSG_NOTICE([  -> NetCDF module : ${NETCDF_INC}])
 
-###############
-## HDF5  LIB ##
-###############
-  if test "$enable_hdf5" = "yes" ; then
-    if test "${HDF5_LIB}"; then
-      if test -d "${HDF5_LIB}"; then
-         LIBS="${LIBS} -L${HDF5_LIB}"
-        if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
-   	  LIBS="${LIBS} -lhdf5_hl"
-        else
-          AC_MSG_ERROR([Can't find libhdf5_hl.a in ${HDF5_LIB}])
-        fi
-        if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
-          LIBS="${LIBS} -lhdf5_fortran"
-        fi
-        if test -f "${HDF5_LIB}/libhdf5.a"; then
-          LIBS="${LIBS} -lhdf5"
-        else
-          AC_MSG_ERROR([Can't find libhdf5.a in ${HDF5_LIB}])
-        fi
-        if test -f "${HDF5_LIB}/libz.a"; then
-          LIBS="${LIBS} -lz"
-        fi
-      else
-        AC_MSG_ERROR([${HDF5_LIB} location does not exist!])
-      fi
-    else
-      HDF5_LIB="/usr/lib"
-      if test -d "${HDF5_LIB}"; then
-         LIBS="${LIBS} -L${HDF5_LIB}"
-         if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
-           LIBS="${LIBS} -lhdf5_hl"
-         else
-           AC_MSG_ERROR([Can't find libhdf5_hl.a in ${HDF5_LIB}])
-         fi
-         if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
-           LIBS="${LIBS} -lhdf5_fortran"
-         fi
-         if test -f "${HDF5_LIB}/libhdf5.a"; then
-           LIBS="${LIBS} -lhdf5"
-         else
-           AC_MSG_ERROR([Can't find libhdf5.a in ${HDF5_LIB}])
-         fi
-         if test -f "${HDF5_LIB}/libz.a"; then
-          LIBS="${LIBS} -lz"
-         fi
-      else
-        AC_MSG_ERROR([${HDF5_LIB} location does not exist!])
-      fi
-    fi
-    AC_MSG_NOTICE([  -> HDF5 library for Netcdf 4 : ${HDF5_LIB}])
-  fi
-
 ##################
 ## HDF5 INCLUDE ##
 ##################
@@ -697,29 +610,7 @@ if test "$enable_netcdf" = "yes" ; then
     AC_MSG_NOTICE([  -> HDF5 include for Netcdf 4 : ${HDF5_INC}])
   fi
 
-######################################################
-## Test a simple fortran 90 code linked with NetCDF ##
-######################################################
-AC_MSG_CHECKING([for Fortran-90 program linked with NetCDF library])
-cat <<EOF >conftest.f90
-    program conftest
-      USE netcdf
-    END program conftest
-EOF
-  echo ""
-  echo "$FC ${FCFLAGS} ${FCFLAGS_f90} conftest.f90 ${LIBS}"
-  doit='$FC ${FCFLAGS} ${FCFLAGS_f90} conftest.f90 ${LIBS}'
-  if AC_TRY_EVAL(doit); then
-    nc_ans=yes
-  else
-    nc_ans=no
-  fi
-  rm -f conftest.f90 a.out
-  AC_MSG_RESULT([$nc_ans])
-  if test "x$nc_ans" = xno; then
-    AC_MSG_NOTICE([ ])
-    AC_MSG_ERROR([A simple Fortran 90 program linked with Netcdf library doesn't work. Please verify that the NetCDF library was compiled with the Fortran compiler $FC.])
-  fi
+
 fi
 
 
@@ -732,8 +623,8 @@ AC_SUBST(F77, [$F77])
 AC_SUBST(FC,[$FC])
 AC_SUBST(FCFLAGS,[$FCFLAGS])
 AC_SUBST(FCFLAGS_f90,[$FCFLAGS_f90])
-AC_SUBST(LDFLAGS,[$LDFLAGS])
-AC_SUBST(LIBS,[$LIBS])
+#AC_SUBST(LDFLAGS,[$LDFLAGS])
+#AC_SUBST(LIBS,[$LIBS])
 
 #########################################################################
 # Checks for system services

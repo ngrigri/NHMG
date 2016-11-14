@@ -120,12 +120,12 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libnhmg_la_LIBADD =
-am_libnhmg_la_OBJECTS = mg_mpi.lo mg_tictoc.lo mg_zr_zw.lo \
-	mg_namelist.lo mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo \
-	mg_gather.lo mg_zr_zw.lo mg_define_matrices.lo \
-	mg_compute_rhs.lo mg_correct_uvw.lo mg_set_bbc.lo \
-	mg_compute_barofrc.lo mg_compute_fluxes.lo mg_relax.lo \
-	mg_intergrids.lo mg_btbc_coupling.lo mg_solvers.lo
+am_libnhmg_la_OBJECTS = mg_mpi.lo mg_tictoc.lo mg_namelist.lo \
+	mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo mg_gather.lo \
+	mg_zr_zw.lo mg_define_matrices.lo mg_compute_rhs.lo \
+	mg_correct_uvw.lo mg_set_bbc.lo mg_compute_barofrc.lo \
+	mg_compute_fluxes.lo mg_relax.lo mg_intergrids.lo \
+	mg_btbc_coupling.lo mg_solvers.lo
 libnhmg_la_OBJECTS = $(am_libnhmg_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -365,7 +365,6 @@ libnhmg_la_LDFLAGS = -version-number 0:0:0
 libnhmg_la_SOURCES = \
 	mg_mpi.f90             \
 	mg_tictoc.f90          \
-	mg_zr_zw.f90           \
 	mg_namelist.f90        \
 	mg_netcdf_out.f90      \
 	mg_grids.f90           \
@@ -755,10 +754,10 @@ uninstall-am: uninstall-libLTLIBRARIES
 
 
 .f90.mod:
-	$(FC) $(FCFLAGS) -c $<
+	$(FC) -c $<
 
 .f90.o:
-	$(FC) $(FCFLAGS) -c -o $@ $<
+	$(FC) -c -o $@ $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c  $@ $<

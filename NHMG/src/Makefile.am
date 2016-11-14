@@ -7,10 +7,10 @@ FORTRAN_TOOLS=.
 SUFFIXES = .F90 .f90 .o .mod
 
 .f90.mod:
-	$(FC) $(FCFLAGS) -c $<
+	$(FC) -c $<
 
 .f90.o:
-	$(FC) $(FCFLAGS) -c -o $@ $<
+	$(FC) -c -o $@ $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c  $@ $<
@@ -29,7 +29,6 @@ libnhmg_la_LDFLAGS = -version-number 0:0:0
 libnhmg_la_SOURCES =       \
 	mg_mpi.f90             \
 	mg_tictoc.f90          \
-	mg_zr_zw.f90           \
 	mg_namelist.f90        \
 	mg_netcdf_out.f90      \
 	mg_grids.f90           \
