@@ -36,8 +36,7 @@ libnhmg_la_SOURCES =       \
 	mg_mpi_exchange.f90    \
 	mg_gather.f90          \
     mg_zr_zw.f90           \
-	mg_define_matrix.f90   \
-    mg_define_rhs.f90      \
+	mg_define_matrices.f90 \
 	mg_compute_rhs.f90     \
     mg_correct_uvw.f90     \
     mg_set_bbc.f90         \
