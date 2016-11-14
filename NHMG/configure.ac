@@ -28,7 +28,7 @@
 # Initialization calls
 ########################################################################
 ## Revision stamp from configure.ac into configure.
-AC_REVISION($Revision: 1.0.0 $)
+AC_REVISION($Revision: 0.0.0 $)
 #
 ## Ensure that a recent enough version of Autotconf is being used.
 AC_PREREQ([2.59])
@@ -36,6 +36,7 @@ AC_PREREQ([2.59])
 ## Initialize autoconf with name of project, version, bug report 
 ## and support email address.
 AC_INIT([NHMG],[0.0.0],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
+#
 #
 ## Set the directory that contains support scripts such as install-sh
 ## and config.guess
@@ -46,10 +47,14 @@ AM_INIT_AUTOMAKE
 ## Compute the canonical host-system type variable "host".
 AC_CANONICAL_HOST
 #
-# To create libraries
-#LT_PREREQ([2.4.6])
-#LT_INIT
-#AC_PROG_LIBTOOL
+# Keep libtool macros in an m4 directory.
+AC_CONFIG_MACRO_DIR([m4])
+#
+# Set up libtool.
+AC_MSG_NOTICE([setting up libtool])
+LT_PREREQ([2.2])
+LT_INIT
+#
 #
 #########################################################################
 # Checks for typedefs, structures, and compiler characteristics.

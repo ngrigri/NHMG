@@ -33,12 +33,13 @@ bin_PROGRAMS   = \
 
 ##
 ##
-testcuc_SOURCES =           \
-    $(LIBNHMGDIR)/libnhmg.a \
-	nhydro.f90              \
+testcuc_SOURCES =  \
+	nhydro.f90     \
 	mg_testcuc.f90
+testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
+
 ##
-testseamount_SOURCES=       \
-	$(LIBNHMGDIR)/libnhmg.a \
-	nhydro.f90              \
+testseamount_SOURCES=   \
+	nhydro.f90          \
 	mg_testseamount.f90
+testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a

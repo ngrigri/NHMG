@@ -25,7 +25,7 @@ cleanf:
 SUBDIRS	       = .
 
 lib_LTLIBRARIES = libnhmg.la
-
+libnhmg_la_LDFLAGS = -version-number 0:0:0
 libnhmg_la_SOURCES =       \
 	mg_mpi.f90             \
 	mg_tictoc.f90          \
