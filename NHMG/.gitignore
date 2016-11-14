@@ -23,7 +23,8 @@ confdb/
 # Ignore config.status
 config.status
 # Ignore executable file starting by test*:
-test*
+testseamount
+testcuc
 mainmodel
 # Ignore files starting with fort.*
 fort.*
