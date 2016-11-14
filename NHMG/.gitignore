@@ -1,6 +1,8 @@
 # Line starting with '#' are commented.
 # Ignore all files libnhmg.a
-libnhmg.a
+libnhmg.la
+# Ignore all files src/.libs
+.libs
 # Ignore executable file starting by test*:
 testseamount
 testcuc
@@ -10,6 +12,8 @@ testcuc
 *.mod
 # Ignore all files *.o
 *.o
+# Ignore all files *.lo
+*.lo
 # Ignore all files *.log
 *.log
 # Ignore all files Makefile
