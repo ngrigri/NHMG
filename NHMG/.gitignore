@@ -1,6 +1,9 @@
 # Line starting with '#' are commented.
-# Ignore all files mgroms
-mgroms
+# Ignore all files libnhmg.a
+libnhmg.a
+# Ignore executable file starting by test*:
+testseamount
+testcuc
 # Ignore all files *~
 *~
 # Ignore all files *.mod
@@ -22,9 +25,6 @@ autom4te.cache/
 confdb/
 # Ignore config.status
 config.status
-# Ignore executable file starting by test*:
-testseamount
-testcuc
 mainmodel
 # Ignore files starting with fort.*
 fort.*
