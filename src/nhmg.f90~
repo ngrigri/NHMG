@@ -1,0 +1,10 @@
+!!
+!! nhmg module is here just to ceate a nhmg.mod to call the libnhmg.la library
+!!
+
+module nhmg
+
+
+
+
+end module nhmg

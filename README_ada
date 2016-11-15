@@ -1,0 +1,49 @@
+Where:
+-----
+http://www.idris.fr/ada/
+
+Git:
+---
+module load git/2.8.2  
+git is available on ADA but internet connexion not, it is not possible to clone a repository from github 
+
+Environment:
+-----------
+
+module load intel/2017.0 netcdf/seq/4.3.3.1 
+
+Configuration and compilation (bash):
+-----------------------------
+export MPI_INC=/smplocal/intel/compilers_and_libraries_2017.0.098/linux/mpi/intel64/include
+export MPI_LIB=/smplocal/intel/compilers_and_libraries_2017.0.098/linux/mpi/intel64/lib
+export NETCDF_INC=/smplocal/pub/NetCDF/4.3.3.1/seq/include
+export NETCDF_LIB=/smplocal/pub/NetCDF/4.3.3.1/seq/lib
+
+./configure --prefix=/linkhome/rech/dgw/rdgw004/MGROMS --enable-intel_mpi  --enable-netcdf [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-optimization=debug] [--enable-profiling]
+make clean
+make 
+make install
+
+Problem :
+-------
+Error if you keep in mg_netcdf_out.f90 the routine :
+sub_netcdf_write_fast_r3D
+sub_netcdf_write_fast_r3D_p
+
+remove/comment sub_netcdf_write_fast_r3D in mg_netcdf_out.f90 
+and comment in mg_test*.f90 the write_netcdf calls.
+
+Submission:
+----------
+- in interactive mode: 
+                 export LD_LIBRARY_PATH=/smplocal/pub/NetCDF/4.3.3.1/seq/lib:$LD_LIBRARY_PATH
+                 cd $WORKDIR
+                 cd MGROMS
+                 mkdir test_****
+                 cd test_****
+                 cp /linkhome/rech/dgw/rdgw004/MGROMS/mgroms-0.3.8/src/testseamount ./.
+                 cp /linkhome/rech/dgw/rdgw004/MGROMS/mgroms-0.3.8/src/nh_namelist ./.
+                 mpirun -np 4 ./testseamount
+- in batch mode:
+                cp examples/IDRIS_ADA/run_test.ll ./.
+                llsubmit run_test.ll
