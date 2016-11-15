@@ -45,3 +45,8 @@ libnhmg_la_SOURCES =       \
 	mg_intergrids.f90      \
     mg_btbc_coupling.f90   \
 	mg_solvers.f90
+
+include_HEADERS = nhmg.mod
+libnhmg_la_DEPENDENCIES = nhmg.mod
+
+
