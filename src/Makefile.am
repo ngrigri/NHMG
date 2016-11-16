@@ -7,7 +7,7 @@ FORTRAN_TOOLS=.
 SUFFIXES = .F90 .f90 .o .mod
 
 .f90.mod:
-	$(FC) -c $<
+	$(FC) $(FCFLAGS) -c $<
 
 .f90.o:
 	$(FC) -c -o $@ $<
@@ -35,6 +35,7 @@ libnhmg_la_SOURCES =       \
 	mg_mpi_exchange.f90    \
 	mg_gather.f90          \
     mg_zr_zw.f90           \
+    mg_horiz_grids.f90     \
 	mg_define_matrices.f90 \
 	mg_compute_rhs.f90     \
     mg_correct_uvw.f90     \
@@ -44,9 +45,31 @@ libnhmg_la_SOURCES =       \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
     mg_btbc_coupling.f90   \
-	mg_solvers.f90
+	mg_solvers.f90         \
+    nhmg.f90
 
-include_HEADERS = nhmg.mod
-libnhmg_la_DEPENDENCIES = nhmg.mod
+#include_HEADERS = nhmg.mod
+nodist_include_HEADERS =  \
+	mg_mpi.mod             \
+	mg_tictoc.mod          \
+	mg_namelist.mod        \
+	mg_netcdf_out.mod      \
+	mg_grids.mod           \
+	mg_mpi_exchange.mod    \
+	mg_gather.mod          \
+    mg_zr_zw.mod           \
+    mg_horiz_grids.mod     \
+	mg_define_matrices.mod \
+	mg_compute_rhs.mod     \
+    mg_correct_uvw.mod     \
+    mg_set_bbc.mod         \
+    mg_compute_barofrc.mod \
+    mg_compute_fluxes.mod  \
+	mg_relax.mod           \
+	mg_intergrids.mod      \
+    mg_btbc_coupling.mod   \
+	mg_solvers.mod
+
+#libnhmg_la_DEPENDENCIES = nhmg.mod mg_mpi.mod mg_grids.mod
 
 

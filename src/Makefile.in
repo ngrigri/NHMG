@@ -80,8 +80,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(include_HEADERS)
+DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -124,10 +123,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libnhmg_la_LIBADD =
 am_libnhmg_la_OBJECTS = mg_mpi.lo mg_tictoc.lo mg_namelist.lo \
 	mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo mg_gather.lo \
-	mg_zr_zw.lo mg_define_matrices.lo mg_compute_rhs.lo \
-	mg_correct_uvw.lo mg_set_bbc.lo mg_compute_barofrc.lo \
-	mg_compute_fluxes.lo mg_relax.lo mg_intergrids.lo \
-	mg_btbc_coupling.lo mg_solvers.lo
+	mg_zr_zw.lo mg_horiz_grids.lo mg_define_matrices.lo \
+	mg_compute_rhs.lo mg_correct_uvw.lo mg_set_bbc.lo \
+	mg_compute_barofrc.lo mg_compute_fluxes.lo mg_relax.lo \
+	mg_intergrids.lo mg_btbc_coupling.lo mg_solvers.lo nhmg.lo
 libnhmg_la_OBJECTS = $(am_libnhmg_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -179,7 +178,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(include_HEADERS)
+HEADERS = $(nodist_include_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -374,6 +373,7 @@ libnhmg_la_SOURCES = \
 	mg_mpi_exchange.f90    \
 	mg_gather.f90          \
     mg_zr_zw.f90           \
+    mg_horiz_grids.f90     \
 	mg_define_matrices.f90 \
 	mg_compute_rhs.f90     \
     mg_correct_uvw.f90     \
@@ -383,10 +383,32 @@ libnhmg_la_SOURCES = \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
     mg_btbc_coupling.f90   \
-	mg_solvers.f90
+	mg_solvers.f90         \
+    nhmg.f90
 
-include_HEADERS = nhmg.mod
-libnhmg_la_DEPENDENCIES = nhmg.mod
+
+#include_HEADERS = nhmg.mod
+nodist_include_HEADERS = \
+	mg_mpi.mod             \
+	mg_tictoc.mod          \
+	mg_namelist.mod        \
+	mg_netcdf_out.mod      \
+	mg_grids.mod           \
+	mg_mpi_exchange.mod    \
+	mg_gather.mod          \
+    mg_zr_zw.mod           \
+    mg_horiz_grids.mod     \
+	mg_define_matrices.mod \
+	mg_compute_rhs.mod     \
+    mg_correct_uvw.mod     \
+    mg_set_bbc.mod         \
+    mg_compute_barofrc.mod \
+    mg_compute_fluxes.mod  \
+	mg_relax.mod           \
+	mg_intergrids.mod      \
+    mg_btbc_coupling.mod   \
+	mg_solvers.mod
+
 all: all-recursive
 
 .SUFFIXES:
@@ -477,9 +499,9 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-nodist_includeHEADERS: $(nodist_include_HEADERS)
 	@$(NORMAL_INSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
 	if test -n "$$list"; then \
 	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
 	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
@@ -493,9 +515,9 @@ install-includeHEADERS: $(include_HEADERS)
 	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-nodist_includeHEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
 
@@ -713,7 +735,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-nodist_includeHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -758,7 +780,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-libLTLIBRARIES uninstall-nodist_includeHEADERS
 
 .MAKE: $(am__recursive_targets) install-am install-strip
 
@@ -769,19 +791,19 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-libLTLIBRARIES install-man \
+	install-nodist_includeHEADERS install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-am uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+	tags tags-am uninstall uninstall-am uninstall-libLTLIBRARIES \
+	uninstall-nodist_includeHEADERS
 
 
 .f90.mod:
-	$(FC) -c $<
+	$(FC) $(FCFLAGS) -c $<
 
 .f90.o:
 	$(FC) -c -o $@ $<
@@ -794,6 +816,8 @@ clean-local:
 
 cleanf:
 	-rm -f *.nc fort.* *.dump *.xml gmon.out *.log *__genmod*
+
+#libnhmg_la_DEPENDENCIES = nhmg.mod mg_mpi.mod mg_grids.mod
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

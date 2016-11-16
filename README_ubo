@@ -18,7 +18,7 @@ setenv MPI_LIB /opt/linux/mpich2/1.5-intel12.1/lib
 setenv NETCDF_INC /opt/linux/netcdf/4.1.3-intel12/64/include
 setenv NETCDF_LIB /opt/linux/netcdf/4.1.3-intel12/64/lib
 
-./configure --prefix=/home/grima/NH_MultiGrid --enable-mpich --enable-netcdf [--enable-optimization=debug]
+./configure --prefix=/home/grima/CROCO-NH --enable-mpich --enable-netcdf [--enable-optimization=debug]
 make clean
 make 
 make install
