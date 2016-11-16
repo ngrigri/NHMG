@@ -67,11 +67,11 @@ contains
 
     logical :: exist=.false.
 
-    !- Namelist file name, by default 'nh_namelist'
+    !- Namelist file name, by default 'nhmg_namelist'
     if (present(filename)) then
        fn_nml = filename
     else
-       fn_nml = 'nh_namelist'
+       fn_nml = 'nhmg_namelist'
     endif
 
     !- Check if a namelist file exist
