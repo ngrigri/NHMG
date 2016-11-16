@@ -68,7 +68,8 @@ nodist_include_HEADERS =  \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
     mg_btbc_coupling.mod   \
-	mg_solvers.mod
+	mg_solvers.mod         \
+    nhmg.mod
 
 #libnhmg_la_DEPENDENCIES = nhmg.mod mg_mpi.mod mg_grids.mod
 

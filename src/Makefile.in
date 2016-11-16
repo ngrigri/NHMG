@@ -407,7 +407,8 @@ nodist_include_HEADERS = \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
     mg_btbc_coupling.mod   \
-	mg_solvers.mod
+	mg_solvers.mod         \
+    nhmg.mod
 
 all: all-recursive
 
