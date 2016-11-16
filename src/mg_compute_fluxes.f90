@@ -55,21 +55,18 @@ contains
     do i = 0,nx+1
        do j = 0,ny+1
           do k = 1,nz
-!             dz(k,j,i) = zw(k+1,j,i)-zw(k,j,i)
-             dz(k,j,i) = zw(k,j,i)-zw(k-1,j,i) !because zw indexed as croco from 0 to nz
+             dz(k,j,i) = zw(k+1,j,i)-zw(k,j,i)
           enddo
        enddo
     enddo
     allocate(dzw(nz+1,0:ny+1,0:nx+1))
     do i = 0,nx+1
        do j = 0,ny+1
-!          dzw(1,j,i) = zr(1,j,i)-zw(1,j,i) 
-          dzw(1,j,i) = zr(1,j,i)-zw(0,j,i) !because zw indexed as croco from 0 to nz
+          dzw(1,j,i) = zr(1,j,i)-zw(1,j,i) 
           do k = 2,nz
              dzw(k,j,i) = zr(k,j,i)-zr(k-1,j,i) 
           enddo
-!          dzw(nz+1,j,i) = zw(nz+1,j,i)-zr(nz,j,i) 
-         dzw(nz+1,j,i) = zw(nz,j,i)-zr(nz,j,i) !because zw indexed as croco from 0 to nz
+          dzw(nz+1,j,i) = zw(nz+1,j,i)-zr(nz,j,i) 
        enddo
     enddo
     !! Cell widths
@@ -132,10 +129,8 @@ contains
     do i = 1,nx
        do j = 1,ny
           do k = 1,nz+1
-!             zyw(k,j,i) = 0.5_8*(zw(k,j+1,i)-zw(k,j-1,i))/dy(j,i)
-             zyw(k,j,i) = 0.5_8*(zw(k-1,j+1,i)-zw(k-1,j-1,i))/dy(j,i) !because zw indexed as croco from 0 to nz
-!             zxw(k,j,i) = 0.5_8*(zw(k,j,i+1)-zw(k,j,i-1))/dx(j,i)
-             zxw(k,j,i) = 0.5_8*(zw(k-1,j,i+1)-zw(k-1,j,i-1))/dx(j,i) !because zw indexed as croco from 0 to nz
+             zyw(k,j,i) = 0.5_8*(zw(k,j+1,i)-zw(k,j-1,i))/dy(j,i)
+             zxw(k,j,i) = 0.5_8*(zw(k,j,i+1)-zw(k,j,i-1))/dx(j,i)
           enddo
        enddo
     enddo
@@ -159,14 +154,13 @@ contains
           k = 1 ! lower level
           uf(k,j,i) =  &
                qrt                                                      * & 
-!               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
-               ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j,i-1) - zw(k-1,j,i-1) ) * & !because zw indexed as croco from 0 to nz
+               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
                ( dy(j,i) + dy(j,i-1) ) * u(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )* two * dzw(k  ,j,i  )*w(k-1,j,i) & !note the index trick for w 
-               + zxdy(k,j,i  )*       dzw(k+1,j,i  )*w(k+1-1,j,i) & !note the index trick for w 
-               + zxdy(k,j,i-1)* two * dzw(k  ,j,i-1)*w(k-1,j,i-1) & !note the index trick for w 
-               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1-1,j,i-1) & !note the index trick for w 
+               + zxdy(k,j,i  )* two * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
+               + zxdy(k,j,i  )*       dzw(k+1,j,i  )*w(k+1,j,i  ) &
+               + zxdy(k,j,i-1)* two * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
+               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1,j,i-1) &
                )  ! umask
 
 !!$               - qrt * ( &
@@ -188,28 +182,26 @@ contains
 
           do k = 2,nz-1 !interior levels
              uf(k,j,i) =  qrt                                               * & 
-!                  ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
-                  ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j,i-1) - zw(k-1,j,i-1) ) * & !because zw indexed as croco from 0 to nz
+                  ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
                   ( dy(j,i) + dy(j,i-1) ) * u(k,j,i) &
                   - qrt * ( &
-                  + zxdy(k,j,i  ) * dzw(k  ,j,i  )*w(k-1,j,i) & !note the index trick for w 
-                  + zxdy(k,j,i  ) * dzw(k+1,j,i  )*w(k+1-1,j,i) & !note the index trick for w 
-                  + zxdy(k,j,i-1) * dzw(k  ,j,i-1)*w(k-1,j,i-1) & !note the index trick for w 
-                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1)*w(k+1-1,j,i-1) & !note the index trick for w 
+                  + zxdy(k,j,i  ) * dzw(k  ,j,i  )*w(k  ,j,i  ) &
+                  + zxdy(k,j,i  ) * dzw(k+1,j,i  )*w(k+1,j,i  ) &
+                  + zxdy(k,j,i-1) * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
+                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1)*w(k+1,j,i-1) &
                   )  ! umask
           enddo
 
           k = nz !upper level
           uf(k,j,i) = &
                qrt                                                       * & 
-!               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
-               ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j,i-1) - zw(k-1,j,i-1) ) * & !because zw indexed as croco from 0 to nz
+               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j,i-1) - zw(k,j,i-1) ) * &
                ( dy(j,i) + dy(j,i-1) ) * u(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )*       dzw(k  ,j,i  )*w(k-1,j,i) & !note the index trick for w 
-               + zxdy(k,j,i  )* two * dzw(k+1,j,i  )*w(k+1-1,j,i) & !note the index trick for w 
-               + zxdy(k,j,i-1)*       dzw(k  ,j,i-1)*w(k-1,j,i-1) & !note the index trick for w 
-               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1-1,j,i-1) & !note the index trick for w 
+               + zxdy(k,j,i  )*       dzw(k  ,j,i  )*w(k  ,j,i  ) & 
+               + zxdy(k,j,i  )* two * dzw(k+1,j,i  )*w(k+1,j,i  ) & 
+               + zxdy(k,j,i-1)*       dzw(k  ,j,i-1)*w(k  ,j,i-1) & 
+               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1,j,i-1) & 
                )  ! umask
 
        enddo
@@ -230,14 +222,13 @@ contains
           k = 1 !lower level
           vf(k,j,i) = &
                qrt                                                       * &
-!               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
-               ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j-1,i) - zw(k-1,j-1,i) ) * & !because zw indexed as croco from 0 to nz
+               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
                ( dx(j,i) + dx(j-1,i) ) * v(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)* two * dzw(k  ,j  ,i)*w(k-1,j,i) & !note the index trick for w 
-               + zydx(k,j  ,i)*       dzw(k+1,j  ,i)*w(k+1-1,j,i) & !note the index trick for w 
-               + zydx(k,j-1,i)* two * dzw(k  ,j-1,i)*w(k-1,j-1,i) & !note the index trick for w 
-               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*w(k+1-1,j-1,i) & !note the index trick for w 
+               + zydx(k,j  ,i)* two * dzw(k  ,j  ,i)*w(k  ,j  ,i) &  
+               + zydx(k,j  ,i)*       dzw(k+1,j  ,i)*w(k+1,j  ,i) &
+               + zydx(k,j-1,i)* two * dzw(k  ,j-1,i)*w(k  ,j-1,i) &
+               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*w(k+1,j-1,i) &
                ) !* vmask(j,i)
 
 !!$               - qrt * ( &
@@ -261,14 +252,13 @@ contains
           do k = 2,nz-1 !interior levels
              vf(k,j,i) = &
                   qrt                                                       * &
-!                  ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
-                  ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j-1,i) - zw(k-1,j-1,i) ) * & !because zw indexed as croco from 0 to nz
+                  ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
                   ( dx(j,i) + dx(j-1,i) ) * v(k,j,i) &
                   - qrt * ( &
-                  + zydx(k,j  ,i) * dzw(k  ,j  ,i)*w(k-1,j,i) & !note the index trick for w 
-                  + zydx(k,j  ,i) * dzw(k+1,j  ,i)*w(k+1-1,j,i) & !note the index trick for w 
-                  + zydx(k,j-1,i) * dzw(k  ,j-1,i)*w(k-1,j-1,i) & !note the index trick for w 
-                  + zydx(k,j-1,i) * dzw(k+1,j-1,i)*w(k+1-1,j-1,i) & !note the index trick for w 
+                  + zydx(k,j  ,i) * dzw(k  ,j  ,i)*w(k  ,j  ,i) & 
+                  + zydx(k,j  ,i) * dzw(k+1,j  ,i)*w(k+1,j  ,i) & 
+                  + zydx(k,j-1,i) * dzw(k  ,j-1,i)*w(k  ,j-1,i) & 
+                  + zydx(k,j-1,i) * dzw(k+1,j-1,i)*w(k+1,j-1,i) & 
                   )  !* vmask(j,i)
 
           enddo
@@ -276,14 +266,13 @@ contains
           k = nz !upper level
           vf(k,j,i) =  &
                qrt                                                       * &
-!               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
-               ( zw(k,j,i) - zw(k-1,j,i) + zw(k,j-1,i) - zw(k-1,j-1,i) ) * & !because zw indexed as croco from 0 to nz
+               ( zw(k+1,j,i) - zw(k,j,i) + zw(k+1,j-1,i) - zw(k,j-1,i) ) * &
                ( dx(j,i) + dx(j-1,i) ) * v(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)*       dzw(k  ,j  ,i)*w(k-1,j,i) & !note the index trick for w 
-               + zydx(k,j  ,i)* two * dzw(k+1,j  ,i)*w(k+1-1,j,i) & !note the index trick for w 
-               + zydx(k,j-1,i)*       dzw(k  ,j-1,i)*w(k-1,j-1,i) & !note the index trick for w 
-               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*w(k+1-1,j-1,i) & !note the index trick for w 
+               + zydx(k,j  ,i)*       dzw(k  ,j  ,i)*w(k  ,j  ,i) &
+               + zydx(k,j  ,i)* two * dzw(k+1,j  ,i)*w(k+1,j  ,i) & 
+               + zydx(k,j-1,i)*       dzw(k  ,j-1,i)*w(k  ,j-1,i) &
+               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*w(k+1,j-1,i) & 
                ) !* vmask(j,i)
 
        enddo

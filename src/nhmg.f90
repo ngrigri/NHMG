@@ -56,10 +56,11 @@ contains
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(in) :: zwa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
+
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(in) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(in) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(inout) :: wa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
 
     real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
@@ -68,6 +69,7 @@ contains
     real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
 !!!
+
     integer(kind=ip) :: i,j,k
 
     integer(kind=ip), save :: iter_bbc=0
@@ -77,10 +79,10 @@ contains
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
     allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(0:nz,0:ny+1,0:nx+1))
+    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate( ub(1:nz,0:ny+1,0:nx+1))
     allocate( vb(1:nz,0:ny+1,0:nx+1))
-    allocate( wb(0:nz,0:ny+1,0:nx+1))
+    allocate( wb(1:nz+1,0:ny+1,0:nx+1))
     !-UB-!
     do i = 1,nx+1
       do j = 0,ny+1
@@ -112,7 +114,7 @@ contains
     !-WB-!
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           wb(k,j,i) = wa(i,j,k)
         enddo
       enddo
@@ -126,7 +128,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           zwb(k,j,i) = zwa(i,j,k)
         enddo
       enddo
@@ -147,7 +149,7 @@ contains
 !!! dirty reshape arrays indexing kji -> ijk !!!
    do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           wa(i,j,k) = w(k,j,i)
         enddo
       enddo
@@ -173,10 +175,11 @@ contains
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(in) :: zwa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
+
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(in) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(in) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(in) :: wa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: wa !vertical indexing different than croco
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(out):: ufa
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(out):: vfa
 
@@ -201,10 +204,10 @@ contains
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
     allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(0:nz,0:ny+1,0:nx+1))
+    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate(ub(1:nz,0:ny+1,  nx+1))
     allocate(vb(1:nz,  ny+1,0:nx+1))
-    allocate(wb(0:nz,0:ny+1,0:nx+1))
+    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -221,7 +224,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           wb(k,j,i) = wa(i,j,k)
         enddo
       enddo
@@ -235,7 +238,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           zwb(k,j,i) = zwa(i,j,k)
         enddo
       enddo
@@ -315,10 +318,10 @@ contains
     real(kind=rp), dimension(1:nx+1,0:ny+1),      target, intent(in) :: uf_bara
     real(kind=rp), dimension(0:nx+1,1:ny+1),      target, intent(in) :: vf_bara
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(in) :: zwa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(inout) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(inout) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(inout) :: wa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, optional, intent(out):: ufa
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, optional, intent(out):: vfa
 
@@ -349,10 +352,10 @@ contains
     allocate(uf_barb(0:ny+1,  nx+1))
     allocate(vf_barb(  ny+1,0:nx+1))
     allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(0:nz,0:ny+1,0:nx+1))
+    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate(ub(1:nz,0:ny+1,  nx+1))
     allocate(vb(1:nz,  ny+1,0:nx+1))
-    allocate(wb(0:nz,0:ny+1,0:nx+1))
+    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
           uf_barb(j,i) = uf_bara(i,j)
@@ -382,7 +385,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           zwb(k,j,i) = zwa(i,j,k)
         enddo
       enddo
@@ -403,7 +406,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           wb(k,j,i) = wa(i,j,k)
         enddo
       enddo
@@ -480,7 +483,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           wa(i,j,k) = w(k,j,i)
         enddo
       enddo
@@ -560,10 +563,10 @@ contains
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(in) :: zwa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(inout) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(inout) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,0:nz), target, intent(inout) :: wa
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
     real(kind=rp),                                   optional, intent(in) :: dt
     real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(out):: rua
     real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(out):: rva
@@ -594,10 +597,10 @@ contains
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
     allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(0:nz,0:ny+1,0:nx+1))
+    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate( ub(1:nz,0:ny+1,0:nx+1))
     allocate( vb(1:nz,0:ny+1,0:nx+1))
-    allocate( wb(0:nz,0:ny+1,0:nx+1))
+    allocate( wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -607,7 +610,7 @@ contains
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
-        do k = 0,nz
+        do k = 1,nz+1
           zwb(k,j,i) = zwa(i,j,k)
         enddo
       enddo
@@ -640,7 +643,7 @@ contains
     enddo
     do i = 0,nx+1
        do j = 0,ny+1
-          do k = 0,nz
+          do k = 1,nz+1
              wb(k,j,i) = wa(i,j,k)
           enddo
        enddo
@@ -758,7 +761,7 @@ contains
     enddo
     do i = 0,nx+1
        do j = 0,ny+1
-          do k = 0,nz
+          do k = 1,nz+1
              wa(i,j,k) = wb(k,j,i)
           enddo
        enddo

@@ -49,8 +49,7 @@ contains
     do i = 0,nx+1
        do j = 0,ny+1
           do k = 1,nz
-!             dz(k,j,i) = zw(k+1,j,i)-zw(k,j,i)
-             dz(k,j,i) = zw(k,j,i)-zw(k-1,j,i) !because zw indexed as croco from 0 to nz
+             dz(k,j,i) = zw(k+1,j,i)-zw(k,j,i)
           enddo
        enddo
     enddo

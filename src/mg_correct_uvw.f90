@@ -82,13 +82,12 @@ contains
 
           do k = 2,nz !interior levels
              dzw = zr(k,j,i)-zr(k-1,j,i)
-             w(k-1,j,i) = w(k-1,j,i) - one / dzw * (p(k,j,i)-p(k-1,j,i))
+             w(k,j,i) = w(k,j,i) - one / dzw * (p(k,j,i)-p(k-1,j,i))
           enddo
 
           k = nz+1 !surface
-!          dzw = zw(nz+1,j,i)-zr(nz,j,i)
-          dzw = zw(nz,j,i)-zr(nz,j,i) !because zw indexed as croco from 0 to nz
-          w(k-1,j,i) = w(k-1,j,i) - one / dzw * (-p(k-1,j,i))
+          dzw = zw(nz+1,j,i)-zr(nz,j,i)
+          w(k,j,i) = w(k,j,i) - one / dzw * (-p(k-1,j,i))
 
        enddo
     enddo
