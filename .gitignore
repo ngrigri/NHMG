@@ -1,6 +1,8 @@
 # Line starting with '#' are commented.
 # Ignore all files .libs
 .libs
+# Ignore all files Makefile
+Makefile
 # Ignore all files *~
 *~
 # Ignore all files *_old
