@@ -15239,10 +15239,8 @@ $as_echo "$as_me:   -> NetCDF module : ${NETCDF_INC}" >&6;}
 $as_echo "$as_me:   -> HDF5 include for Netcdf 4 : ${HDF5_INC}" >&6;}
   fi
 
-
+#End of test "$enable_netcdf" = "yes" ; then
 fi
-
-
 
 #########################################################################
 # Export DATA

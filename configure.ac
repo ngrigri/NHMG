@@ -610,10 +610,8 @@ if test "$enable_netcdf" = "yes" ; then
     AC_MSG_NOTICE([  -> HDF5 include for Netcdf 4 : ${HDF5_INC}])
   fi
 
-
-fi
-
-
+#End of test "$enable_netcdf" = "yes" ; then
+fi 
 
 #########################################################################
 # Export DATA

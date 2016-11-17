@@ -1,9 +1,7 @@
 ########################################################################
 ##- Author@mail: Nicolas.Grima@univ-brest.fr
-##- Date       : November 2015
+##- Date       : November 2016
 ########################################################################
-LIBNHMGDIR = ../src
-
 SUFFIXES = .F90 .f90 .o .mod
 
 .f90.mod:
@@ -21,11 +19,14 @@ clean-local:
 cleanf:
 	-rm -f *.nc fort.* *.dump *.xml gmon.out *.log *__genmod*
 
+SRCDIR = ../src
+LIBNHMGDIR = ${SRCDIR}
+
 ##
 SUBDIRS	       = .
-examplesdir    = $(prefix)
-examples_DATA  = nh_namelist
-EXTRA_DIST     = $(examples_DATA)
+testsdir    = $(prefix)
+tests_DATA  = nhmg_namelist
+EXTRA_DIST     = $(tests_DATA)
 
 bin_PROGRAMS   = \
 	testcuc      \
@@ -34,12 +35,13 @@ bin_PROGRAMS   = \
 ##
 ##
 testcuc_SOURCES =  \
-	nhydro.f90     \
-	mg_testcuc.f90
+	mg_testcuc.f90 \
+	$(SRCDIR)/mg_mpi.f90
+
 testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
 
 ##
 testseamount_SOURCES=   \
-	nhydro.f90          \
 	mg_testseamount.f90
+
 testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a

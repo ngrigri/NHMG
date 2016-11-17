@@ -27,6 +27,7 @@ SUBDIRS	       = .
 lib_LTLIBRARIES = libnhmg.la
 libnhmg_la_LDFLAGS = -version-number 0:0:0
 libnhmg_la_SOURCES =       \
+    mg_cst.f90             \
 	mg_mpi.f90             \
 	mg_tictoc.f90          \
 	mg_namelist.f90        \
@@ -49,7 +50,8 @@ libnhmg_la_SOURCES =       \
     nhmg.f90
 
 #include_HEADERS = nhmg.mod
-nodist_include_HEADERS =  \
+nodist_include_HEADERS =   \
+    mg_cst.mod             \
 	mg_mpi.mod             \
 	mg_tictoc.mod          \
 	mg_namelist.mod        \

@@ -92,16 +92,16 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(examplesdir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(testsdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_testcuc_OBJECTS = nhydro.$(OBJEXT) mg_testcuc.$(OBJEXT)
+am_testcuc_OBJECTS = mg_testcuc.$(OBJEXT) mg_mpi.$(OBJEXT)
 testcuc_OBJECTS = $(am_testcuc_OBJECTS)
 testcuc_DEPENDENCIES = $(LIBNHMGDIR)/libnhmg.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am_testseamount_OBJECTS = nhydro.$(OBJEXT) mg_testseamount.$(OBJEXT)
+am_testseamount_OBJECTS = mg_testseamount.$(OBJEXT)
 testseamount_OBJECTS = $(am_testseamount_OBJECTS)
 testseamount_DEPENDENCIES = $(LIBNHMGDIR)/libnhmg.a
 AM_V_P = $(am__v_P_@AM_V@)
@@ -174,7 +174,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-DATA = $(examples_DATA)
+DATA = $(tests_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -355,19 +355,19 @@ top_srcdir = @top_srcdir@
 
 ########################################################################
 ########################################################################
-LIBNHMGDIR = ../src
 SUFFIXES = .F90 .f90 .o .mod
+SRCDIR = ../src
+LIBNHMGDIR = ${SRCDIR}
 SUBDIRS = .
-examplesdir = $(prefix)
-examples_DATA = nh_namelist
-EXTRA_DIST = $(examples_DATA)
+testsdir = $(prefix)
+tests_DATA = nhmg_namelist
+EXTRA_DIST = $(tests_DATA)
 testcuc_SOURCES = \
-	nhydro.f90     \
-	mg_testcuc.f90
+	mg_testcuc.f90 \
+	$(SRCDIR)/mg_mpi.f90
 
 testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
 testseamount_SOURCES = \
-	nhydro.f90          \
 	mg_testseamount.f90
 
 testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a
@@ -475,32 +475,38 @@ distclean-compile:
 .f90.lo:
 	$(AM_V_FC)$(LTFCCOMPILE) -c -o $@ $<
 
+mg_mpi.o: $(SRCDIR)/mg_mpi.f90
+	$(AM_V_FC)$(FC) $(AM_FCFLAGS) $(FCFLAGS) -c -o mg_mpi.o `test -f '$(SRCDIR)/mg_mpi.f90' || echo '$(srcdir)/'`$(SRCDIR)/mg_mpi.f90
+
+mg_mpi.obj: $(SRCDIR)/mg_mpi.f90
+	$(AM_V_FC)$(FC) $(AM_FCFLAGS) $(FCFLAGS) -c -o mg_mpi.obj `if test -f '$(SRCDIR)/mg_mpi.f90'; then $(CYGPATH_W) '$(SRCDIR)/mg_mpi.f90'; else $(CYGPATH_W) '$(srcdir)/$(SRCDIR)/mg_mpi.f90'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-examplesDATA: $(examples_DATA)
+install-testsDATA: $(tests_DATA)
 	@$(NORMAL_INSTALL)
-	@list='$(examples_DATA)'; test -n "$(examplesdir)" || list=; \
+	@list='$(tests_DATA)'; test -n "$(testsdir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(examplesdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(examplesdir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(testsdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(testsdir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(examplesdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(examplesdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(testsdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(testsdir)" || exit $$?; \
 	done
 
-uninstall-examplesDATA:
+uninstall-testsDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(examples_DATA)'; test -n "$(examplesdir)" || list=; \
+	@list='$(tests_DATA)'; test -n "$(testsdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(examplesdir)'; $(am__uninstall_files_from_dir)
+	dir='$(DESTDIR)$(testsdir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -661,7 +667,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(examplesdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(testsdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -716,7 +722,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-examplesDATA
+install-data-am: install-testsDATA
 
 install-dvi: install-dvi-recursive
 
@@ -761,7 +767,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-examplesDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-testsDATA
 
 .MAKE: $(am__recursive_targets) install-am install-strip
 
@@ -771,15 +777,15 @@ uninstall-am: uninstall-binPROGRAMS uninstall-examplesDATA
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am \
-	install-examplesDATA install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-examplesDATA
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip install-testsDATA \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-testsDATA
 
 
 .f90.mod:
