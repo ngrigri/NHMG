@@ -167,15 +167,28 @@ contains
     !- We use a lot of loops to reduce the compilation time which can be very long
     !- if we use only one loop for these memory allocations.
     !-
+
+    do lev=1,nlevs
+       nx = grid(lev)%nx
+       ny = grid(lev)%ny
+       allocate(grid(lev)%dx(0:ny+1,0:nx+1))
+       allocate(grid(lev)%dy(0:ny+1,0:nx+1))
+    enddo
+
     do lev=1,nlevs
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz
-       ! Halo point is two for topography and vertical mesh !
+       allocate(grid(lev)%zr(  nz,-1:ny+2,-1:nx+2)) ! 2 extra points
+       allocate(grid(lev)%zw(nz+1,-1:ny+2,-1:nx+2)) ! 2 extra points
+    enddo
+
+    do lev=1,nlevs
+       nx = grid(lev)%nx
+       ny = grid(lev)%ny
+       nz = grid(lev)%nz
        allocate(grid(lev)%zeta(    0:ny+1, 0:nx+1))
        allocate(grid(lev)%h(       0:ny+1, 0:nx+1))
-       allocate(grid(lev)%zr(  nz,-1:ny+2,-1:nx+2))
-       allocate(grid(lev)%zw(nz+1,-1:ny+2,-1:nx+2))
        allocate(grid(lev)%cw(  nz+1,0:ny+1,0:nx+1))
     enddo
 
@@ -210,13 +223,6 @@ contains
           nd = 8
        endif
        allocate(grid(lev)%cA(nd,nz,0:ny+1,0:nx+1))
-    enddo
-
-    do lev=1,nlevs
-       nx = grid(lev)%nx
-       ny = grid(lev)%ny
-       allocate(grid(lev)%dx(0:ny+1,0:nx+1))
-       allocate(grid(lev)%dy(0:ny+1,0:nx+1))
     enddo
 
     ! MPI exhanges for 2D arrays

@@ -37,6 +37,7 @@ libnhmg_la_SOURCES =       \
 	mg_gather.f90          \
     mg_zr_zw.f90           \
     mg_horiz_grids.f90     \
+    mg_vert_grids.f90     \
 	mg_define_matrices.f90 \
 	mg_compute_rhs.f90     \
     mg_correct_uvw.f90     \
@@ -61,6 +62,7 @@ nodist_include_HEADERS =   \
 	mg_gather.mod          \
     mg_zr_zw.mod           \
     mg_horiz_grids.mod     \
+    mg_vert_grids.mod     \
 	mg_define_matrices.mod \
 	mg_compute_rhs.mod     \
     mg_correct_uvw.mod     \

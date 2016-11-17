@@ -123,7 +123,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libnhmg_la_LIBADD =
 am_libnhmg_la_OBJECTS = mg_cst.lo mg_mpi.lo mg_tictoc.lo \
 	mg_namelist.lo mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo \
-	mg_gather.lo mg_zr_zw.lo mg_horiz_grids.lo \
+	mg_gather.lo mg_zr_zw.lo mg_horiz_grids.lo mg_vert_grids.lo \
 	mg_define_matrices.lo mg_compute_rhs.lo mg_correct_uvw.lo \
 	mg_set_bbc.lo mg_compute_barofrc.lo mg_compute_fluxes.lo \
 	mg_relax.lo mg_intergrids.lo mg_btbc_coupling.lo mg_solvers.lo \
@@ -376,6 +376,7 @@ libnhmg_la_SOURCES = \
 	mg_gather.f90          \
     mg_zr_zw.f90           \
     mg_horiz_grids.f90     \
+    mg_vert_grids.f90     \
 	mg_define_matrices.f90 \
 	mg_compute_rhs.f90     \
     mg_correct_uvw.f90     \
@@ -401,6 +402,7 @@ nodist_include_HEADERS = \
 	mg_gather.mod          \
     mg_zr_zw.mod           \
     mg_horiz_grids.mod     \
+    mg_vert_grids.mod     \
 	mg_define_matrices.mod \
 	mg_compute_rhs.mod     \
     mg_correct_uvw.mod     \

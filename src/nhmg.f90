@@ -6,6 +6,7 @@ module nhmg
   use mg_tictoc
   use mg_mpi_exchange
   use mg_horiz_grids
+  use mg_vert_grids
   use mg_netcdf_out
   use mg_set_bbc
   use mg_compute_fluxes
@@ -21,14 +22,10 @@ module nhmg
 contains
 
   !--------------------------------------------------------------
-  subroutine nhmg_init(nx,ny,nz,npxg,npyg,dxa,dya)
+  subroutine nhmg_init(nx,ny,nz,npxg,npyg)
       
     integer(kind=ip), intent(in) :: nx, ny, nz
     integer(kind=ip), intent(in) :: npxg, npyg
-
-    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxa, dya
-    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxb, dyb
-    real(kind=rp), dimension(:,:)          , pointer    :: dx, dy
 
     if (myrank==0) write(*,*)' nhmg_init:'
 
@@ -40,15 +37,82 @@ contains
 
     call define_neighbours()
 
+    call print_grids()
+
+  end subroutine nhmg_init
+
+  !--------------------------------------------------------------
+  subroutine nhmg_set_horiz_grids(nx,ny,dxa,dya)
+
+    integer(kind=ip), intent(in) :: nx, ny
+
+    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxa, dya
+    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxb, dyb
+    real(kind=rp), dimension(:,:)          , pointer    :: dx, dy
+
+    if (myrank==0) write(*,*)' nhmg_set_horiz_grids:'
+
     dxb = transpose(dxa)
     dyb = transpose(dya)
     dx => dxb
     dy => dyb
-    call fill_horiz_grids(dx,dy)
 
-    call print_grids()
+    call set_horiz_grids(dx,dy)
 
-  end subroutine nhmg_init
+  end subroutine nhmg_set_horiz_grids
+
+  !--------------------------------------------------------------
+  subroutine nhmg_set_vert_grids(nx,ny,nz,zra,zwa)
+
+    integer(kind=ip), intent(in) :: nx, ny, nz
+
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
+
+    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
+
+!!! dirty reshape arrays indexing ijk -> kji !!!
+    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
+!!!
+
+    integer(kind=ip) :: i,j,k
+
+    integer(kind=ip), save :: iter_vert_grids=0
+    iter_vert_grids = iter_vert_grids + 1
+
+    if (myrank==0) write(*,*)' nhmg_set_vert_grids: ',iter_vert_grids
+
+!!! dirty reshape arrays indexing ijk -> kji !!!
+    allocate(zrb(1:nz,0:ny+1,0:nx+1))
+    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
+    do i = 0,nx+1
+      do j = 0,ny+1
+        do k = 1,nz
+          zrb(k,j,i) = zra(i,j,k)
+        enddo
+      enddo
+    enddo
+    do i = 0,nx+1
+      do j = 0,ny+1
+        do k = 1,nz+1
+          zwb(k,j,i) = zwa(i,j,k)
+        enddo
+      enddo
+    enddo
+    zr => zrb
+    zw => zwb
+!!!
+    call set_vert_grids(zr,zw)
+
+    if (associated(zr)) zr => null()
+    if (associated(zw)) zw => null()
+
+!!! dirty reshape arrays indexing kji -> ijk !!!
+    deallocate(zrb)
+    deallocate(zwb)
+!!!
+
+  end subroutine nhmg_set_vert_grids
 
   !--------------------------------------------------------------
   subroutine nhmg_bbc(nx,ny,nz,zra,zwa,ua,va,wa)
@@ -154,11 +218,6 @@ contains
         enddo
       enddo
     enddo
-    deallocate(zrb)
-    deallocate(zwb)
-    deallocate(ub)
-    deallocate(vb)
-    deallocate(wb)
 !!!
 
     if (associated(zr)) zr => null()
@@ -166,6 +225,14 @@ contains
     if (associated(u)) u => null()
     if (associated(v)) v => null()
     if (associated(w)) w => null()
+
+!!! dirty reshape arrays indexing kji -> ijk !!!
+    deallocate(zrb)
+    deallocate(zwb)
+    deallocate(ub)
+    deallocate(vb)
+    deallocate(wb)
+!!!
 
   end subroutine nhmg_bbc
 
@@ -289,13 +356,6 @@ contains
         enddo
       enddo
     enddo
-    deallocate(zrb)
-    deallocate(zwb)
-    deallocate(ub)
-    deallocate(vb)
-    deallocate(wb)
-    deallocate(ufb)
-    deallocate(vfb)
 !!!
 
     if (associated(zr)) zr => null()
@@ -305,6 +365,16 @@ contains
     if (associated(w)) w => null()
     if (associated(uf)) uf => null()
     if (associated(vf)) vf => null()
+
+!!! dirty reshape arrays indexing kji -> ijk !!!
+    deallocate(zrb)
+    deallocate(zwb)
+    deallocate(ub)
+    deallocate(vb)
+    deallocate(wb)
+    deallocate(ufb)
+    deallocate(vfb)
+!!!
 
     call toc(1,'nhmg_fluxes')	
  
@@ -744,6 +814,10 @@ contains
 !       endif
     endif
 
+    if (associated(u)) u => null()
+    if (associated(v)) v => null()
+    if (associated(w)) w => null()
+
 !!! dirty reshape arrays indexing kji -> ijk !!!
     do i = 1,nx+1
        do j = 0,ny+1
@@ -772,10 +846,6 @@ contains
     deallocate(vb)
     deallocate(wb)
 !!!
-
-    if (associated(u)) u => null()
-    if (associated(v)) v => null()
-    if (associated(w)) w => null()
 
     call toc(1,'nhmg_solve')	
 
