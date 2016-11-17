@@ -35,8 +35,7 @@ bin_PROGRAMS   = \
 ##
 ##
 testcuc_SOURCES =  \
-	mg_testcuc.f90 \
-	$(SRCDIR)/mg_mpi.f90
+	mg_testcuc.f90 
 
 testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
 

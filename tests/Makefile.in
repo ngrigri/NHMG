@@ -94,7 +94,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(testsdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_testcuc_OBJECTS = mg_testcuc.$(OBJEXT) mg_mpi.$(OBJEXT)
+am_testcuc_OBJECTS = mg_testcuc.$(OBJEXT)
 testcuc_OBJECTS = $(am_testcuc_OBJECTS)
 testcuc_DEPENDENCIES = $(LIBNHMGDIR)/libnhmg.a
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -363,8 +363,7 @@ testsdir = $(prefix)
 tests_DATA = nhmg_namelist
 EXTRA_DIST = $(tests_DATA)
 testcuc_SOURCES = \
-	mg_testcuc.f90 \
-	$(SRCDIR)/mg_mpi.f90
+	mg_testcuc.f90 
 
 testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
 testseamount_SOURCES = \
@@ -474,12 +473,6 @@ distclean-compile:
 
 .f90.lo:
 	$(AM_V_FC)$(LTFCCOMPILE) -c -o $@ $<
-
-mg_mpi.o: $(SRCDIR)/mg_mpi.f90
-	$(AM_V_FC)$(FC) $(AM_FCFLAGS) $(FCFLAGS) -c -o mg_mpi.o `test -f '$(SRCDIR)/mg_mpi.f90' || echo '$(srcdir)/'`$(SRCDIR)/mg_mpi.f90
-
-mg_mpi.obj: $(SRCDIR)/mg_mpi.f90
-	$(AM_V_FC)$(FC) $(AM_FCFLAGS) $(FCFLAGS) -c -o mg_mpi.obj `if test -f '$(SRCDIR)/mg_mpi.f90'; then $(CYGPATH_W) '$(SRCDIR)/mg_mpi.f90'; else $(CYGPATH_W) '$(srcdir)/$(SRCDIR)/mg_mpi.f90'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
