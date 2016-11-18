@@ -6,6 +6,7 @@ module mg_vert_grids
   use mg_mpi_exchange
   use mg_gather
   use mg_namelist
+  use mg_netcdf_out
 
   implicit none
 
@@ -42,9 +43,9 @@ contains
     real(kind=rp), parameter :: qrt  = 0.25_rp
     real(kind=rp), parameter :: zero = 0._rp
 
-    !! fill and coarsen zr and zw
-
     do lev = 1, nlevs
+
+       !! fill and coarsen zr and zw
 
        if (myrank==0) write(*,*)'   lev=',lev
 
@@ -52,12 +53,12 @@ contains
        ny=grid(lev)%ny
        nz=grid(lev)%nz
 
-       if (lev == 1) then ! fill zr,zw
+       if (lev == 1) then ! zr,zw from croco
 
           grid(lev)%zr(1:nz  ,0:ny+1,0:nx+1) = z_r !only 1 extra point ??????????
           grid(lev)%zw(1:nz+1,0:ny+1,0:nx+1) = z_w !only 1 extra point ??????????
 
-       else ! coarsen zr,zw (needed when directly discretizing on coarser grids)
+       else               ! coarsen zr,zw (needed when directly discretizing on coarser grids)
 
           nxf = grid(lev-1)%nx
           nyf = grid(lev-1)%ny
@@ -108,29 +109,23 @@ contains
              deallocate(zwc)
           endif
 
-          call fill_halo(lev,grid(lev)%zr) ! necesary fill_halo ?????????? 
-          call fill_halo(lev,grid(lev)%zw)
-
        end if
 
-    end do
+       call fill_halo(lev,grid(lev)%zr) ! special fill_halo of zr
+       call fill_halo(lev,grid(lev)%zw) ! special fill_halo of zw
 
-    !! compute derived qties
+       if (netcdf_output) then
+          call write_netcdf(grid(lev)%zr,vname='zr',netcdf_file_name='zr.nc',rank=myrank,iter=lev)
+          call write_netcdf(grid(lev)%zw,vname='zw',netcdf_file_name='zw.nc',rank=myrank,iter=lev)
+       endif
 
-    do lev = 1, nlevs
-
-       if (myrank==0) write(*,*)'   lev=',lev
-
-       nx=grid(lev)%nx
-       ny=grid(lev)%ny
-       nz=grid(lev)%nz
+       !! compute derived qties
 
        dx => grid(lev)%dx
        dy => grid(lev)%dy
 
        zr => grid(lev)%zr
        zw => grid(lev)%zw
-
        dzw => grid(lev)%dzw
        Arx => grid(lev)%Arx
        Ary => grid(lev)%Ary 
@@ -205,19 +200,19 @@ contains
 !!$    do i = 1,nx
 !!$       do j = 1,ny
 !!$          do k = 1,nz
-!!$             zy(k,j,i) = 0.5_8*(zr(k,j+1,i)-zr(k,j-1,i))/dy(j,i)
 !!$             zx(k,j,i) = 0.5_8*(zr(k,j,i+1)-zr(k,j,i-1))/dx(j,i)
+!!$             zy(k,j,i) = 0.5_8*(zr(k,j+1,i)-zr(k,j-1,i))/dy(j,i)
 !!$          enddo
 !!$       enddo
 !!$    enddo
-!!$    call fill_halo(1,zy) ! copy interior value in the halo
-!!$    call fill_halo(1,zx) ! copy interior value in the halo       
+!!$    call fill_halo(1,zx) ! copy interior value in the halo     
+!!$    call fill_halo(1,zy) ! copy interior value in the halo    
 
-       do i = 0,nx+1
-          do j = 0,ny+1
+       do i = 0,nx+1        ! because of the special fill_halo of zr, the slopes zxdy and 
+          do j = 0,ny+1     ! zydx in the halo are equal to the slopes at the first interior points 
              do k = 1, nz
-                zydx(k,j,i) = hlf * (( zr(k,j+1,i  ) - zr(k,j-1,i  ) ) / dy(j,i) ) * dx(j,i)
                 zxdy(k,j,i) = hlf * (( zr(k,j  ,i+1) - zr(k,j  ,i-1) ) / dx(j,i) ) * dy(j,i)
+                zydx(k,j,i) = hlf * (( zr(k,j+1,i  ) - zr(k,j-1,i  ) ) / dy(j,i) ) * dx(j,i)
              enddo
           enddo
        enddo
@@ -264,6 +259,12 @@ contains
 
           enddo
        enddo
+
+       if (netcdf_output) then
+          call write_netcdf(grid(lev)%zxdy,vname='zxdy',netcdf_file_name='zxdy.nc',rank=myrank,iter=lev)
+          call write_netcdf(grid(lev)%zydx,vname='zydx',netcdf_file_name='zydx.nc',rank=myrank,iter=lev)
+          call write_netcdf(grid(lev)%cw,vname='cw',netcdf_file_name='cw.nc',rank=myrank,iter=lev)
+       endif
 
     enddo
 

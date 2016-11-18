@@ -33,12 +33,12 @@ contains
        nx=grid(lev)%nx
        ny=grid(lev)%ny
 
-       if (lev == 1) then ! fill dx, dy
+       if (lev == 1) then ! dx,dy from croco
 
           grid(lev)%dx(0:ny+1,0:nx+1) = dx
           grid(lev)%dy(0:ny+1,0:nx+1) = dy
 
-       else               ! coarsen dx, dy 
+       else               ! coarsen dx,dy 
                           ! (needed when directly discretizing on coarser grids)
 
           nxf =grid(lev-1)%nx
@@ -78,10 +78,10 @@ contains
              deallocate(dyc)
           endif
 
-          call fill_halo(lev,grid(lev)%dx)
-          call fill_halo(lev,grid(lev)%dy)
-
        endif
+
+       call fill_halo(lev,grid(lev)%dx)
+       call fill_halo(lev,grid(lev)%dy)
 
     enddo
 

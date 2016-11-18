@@ -12,7 +12,7 @@ module nhmg
   use mg_compute_fluxes
   use mg_btbc_coupling
   use mg_compute_rhs
-  use mg_define_matrices
+  use mg_set_matrices
   use mg_solvers
   use mg_correct_uvw
   use mg_compute_barofrc
@@ -511,42 +511,42 @@ contains
   end subroutine nhmg_coupling
 
   !--------------------------------------------------------------
-  subroutine nhmg_matrices(nx,ny,nz,zetaa,ha,hc,theta_b,theta_s)
-
-    integer(kind=ip), intent(in) :: nx, ny, nz
-
-    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: zetaa, ha
-    real(kind=rp),                           intent(in) :: hc, theta_b, theta_s
-    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: zetab, hb
-    real(kind=rp), dimension(:,:)          , pointer    :: zeta, h
-
-    integer(kind=ip), save :: iter_matrices=-1
-    iter_matrices = iter_matrices + 1
-
-    if (myrank==0) write(*,*)' nhmg_matrices:'
-
-    zetab = transpose(zetaa)
-    hb = transpose(ha)
-
-    zeta => zetab
-    h => hb
-
-    nhhc      = hc
-    nhtheta_b = theta_b
-    nhtheta_s = theta_s
-
-    call define_matrices(zeta,h)
-
-    if (check_output) then
-       if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200) .OR. &
-           (iter_matrices .EQ. 999) .OR. (iter_matrices .EQ. 1000) .OR. &
-           (iter_matrices .EQ. 1999) .OR. (iter_matrices .EQ. 2000) .OR. &
-           (iter_matrices .GE. 3499)) then
-       call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='so.nc',rank=myrank,iter=iter_matrices)
-       endif
-    endif
-
-  end subroutine nhmg_matrices
+!!$  subroutine nhmg_matrices(nx,ny,nz,zetaa,ha,hc,theta_b,theta_s)
+!!$
+!!$    integer(kind=ip), intent(in) :: nx, ny, nz
+!!$
+!!$    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: zetaa, ha
+!!$    real(kind=rp),                           intent(in) :: hc, theta_b, theta_s
+!!$    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: zetab, hb
+!!$    real(kind=rp), dimension(:,:)          , pointer    :: zeta, h
+!!$
+!!$    integer(kind=ip), save :: iter_matrices=-1
+!!$    iter_matrices = iter_matrices + 1
+!!$
+!!$    if (myrank==0) write(*,*)' nhmg_matrices:'
+!!$
+!!$    zetab = transpose(zetaa)
+!!$    hb = transpose(ha)
+!!$
+!!$    zeta => zetab
+!!$    h => hb
+!!$
+!!$    nhhc      = hc
+!!$    nhtheta_b = theta_b
+!!$    nhtheta_s = theta_s
+!!$
+!!$    call define_matrices(zeta,h)
+!!$
+!!$    if (check_output) then
+!!$       if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200) .OR. &
+!!$           (iter_matrices .EQ. 999) .OR. (iter_matrices .EQ. 1000) .OR. &
+!!$           (iter_matrices .EQ. 1999) .OR. (iter_matrices .EQ. 2000) .OR. &
+!!$           (iter_matrices .GE. 3499)) then
+!!$       call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='so.nc',rank=myrank,iter=iter_matrices)
+!!$       endif
+!!$    endif
+!!$
+!!$  end subroutine nhmg_matrices
 
   !--------------------------------------------------------------
   subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rua,rva)
@@ -648,7 +648,10 @@ contains
 !       endif
     endif
 
-    !- step 2 -
+    !- step 2 - 
+    call set_matrices()
+
+    !- step 3 -
     call solve_p(solver_prec,solver_maxiter)
 
     if (check_output) then
@@ -661,7 +664,7 @@ contains
 !       endif
     endif
 
-    !- step 3 -
+    !- step 4 -
     call correct_uvw(u,v,w)
 
        if (check_output) then
@@ -675,7 +678,7 @@ contains
 !          endif
        endif
 
-    !- step 4 -
+    !- step 5 -
     if ((present(dt)).and.(present(rua)).and.(present(rva))) then
 
        ru => rua
