@@ -46,10 +46,11 @@ module mg_grids
      real(kind=rp),dimension(:,:,:),pointer :: zw => null()   ! Mesh in z at w point   (nz+1, 2 halo points)
 
      ! All these variables are dependante of dx, dy, zr and zw
-     ! they are computed in define matrices and used in compute rhs to only for the first level.
-     real(kind=rp),dimension(:,:,:),pointer :: dzw  => null() ! Cell heights (lev =1)
-     real(kind=rp),dimension(:,:,:),pointer :: zxdy => null() ! Slopes in y-direction defined at rho-points (lev =1)
-     real(kind=rp),dimension(:,:,:),pointer :: zydx => null() ! Slopes in x-direction defined at rho-points (lev =1)
+     real(kind=rp),dimension(:,:,:),pointer :: dzw  => null() ! Cell height at w-points
+     real(kind=rp),dimension(:,:,:),pointer :: Arx  => null() ! Cell face surface at u-points
+     real(kind=rp),dimension(:,:,:),pointer :: Ary  => null() ! Cell face surface at v-points
+     real(kind=rp),dimension(:,:,:),pointer :: zxdy => null() ! Slopes in x-direction defined at rho-points * dy
+     real(kind=rp),dimension(:,:,:),pointer :: zydx => null() ! Slopes in y-direction defined at rho-points * dx
      real(kind=rp),dimension(:,:,:),pointer :: cw   => null() ! All levels
 
      ! Dummy array to calculate uf, vf and wf
@@ -168,19 +169,31 @@ contains
     !- if we use only one loop for these memory allocations.
     !-
 
-    do lev=1,nlevs
+    do lev=1,nlevs ! set_horiz_grids
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        allocate(grid(lev)%dx(0:ny+1,0:nx+1))
        allocate(grid(lev)%dy(0:ny+1,0:nx+1))
     enddo
 
-    do lev=1,nlevs
+    do lev=1,nlevs ! set_vert_grids
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz
        allocate(grid(lev)%zr(  nz,-1:ny+2,-1:nx+2)) ! 2 extra points
        allocate(grid(lev)%zw(nz+1,-1:ny+2,-1:nx+2)) ! 2 extra points
+    enddo
+
+    do lev=1,nlevs ! set_vert_grids
+       nx = grid(lev)%nx
+       ny = grid(lev)%ny
+       nz = grid(lev)%nz
+       allocate(grid(lev)%dzw( nz+1,0:ny+1,0:nx+1))
+       allocate(grid(lev)%Arx( nz  ,0:ny+1,1:nx+1))
+       allocate(grid(lev)%Ary( nz  ,1:ny+1,0:nx+1))
+       allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1))
+       allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1))
+       allocate(grid(lev)%cw(  nz+1,0:ny+1,0:nx+1))
     enddo
 
     do lev=1,nlevs
@@ -189,22 +202,16 @@ contains
        nz = grid(lev)%nz
        allocate(grid(lev)%zeta(    0:ny+1, 0:nx+1))
        allocate(grid(lev)%h(       0:ny+1, 0:nx+1))
-       allocate(grid(lev)%cw(  nz+1,0:ny+1,0:nx+1))
     enddo
 
-    ! Some intermediate arrays for define matrices and compute rhs
-    lev = 1
+    lev = 1 ! Some intermediate arrays for define matrices and compute rhs
     nx = grid(lev)%nx
     ny = grid(lev)%ny
     nz = grid(lev)%nz
-    allocate(grid(lev)%dzw( nz+1,0:ny+1,0:nx+1))
-    allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1))
-    allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1))
-
     allocate(grid(lev)%dummy3Dnz( nz  ,0:ny+1,0:nx+1))
     allocate(grid(lev)%dummy3Dnzp(nz+1,0:ny+1,0:nx+1))
 
-    do lev=1,nlevs
+    do lev=1,nlevs ! 
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz
@@ -213,7 +220,7 @@ contains
        allocate(grid(lev)%r(nz,0:ny+1,0:nx+1))
     enddo
 
-    do lev=1,nlevs
+    do lev=1,nlevs !
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz

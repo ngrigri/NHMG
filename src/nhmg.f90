@@ -62,12 +62,12 @@ contains
   end subroutine nhmg_set_horiz_grids
 
   !--------------------------------------------------------------
-  subroutine nhmg_set_vert_grids(nx,ny,nz,zra,zwa)
+  subroutine nhmg_set_vert_grids(nx,ny,nz,z_r,z_w)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz  ), target, intent(in) :: z_r
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: z_w !vertical indexing different than croco!
 
     real(kind=rp), dimension(:,:,:), pointer :: zr,zw
 
@@ -88,14 +88,14 @@ contains
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz
-          zrb(k,j,i) = zra(i,j,k)
+          zrb(k,j,i) = z_r(i,j,k)
         enddo
       enddo
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz+1
-          zwb(k,j,i) = zwa(i,j,k)
+          zwb(k,j,i) = z_w(i,j,k)
         enddo
       enddo
     enddo
@@ -115,22 +115,17 @@ contains
   end subroutine nhmg_set_vert_grids
 
   !--------------------------------------------------------------
-  subroutine nhmg_bbc(nx,ny,nz,zra,zwa,ua,va,wa)
+  subroutine nhmg_bbc(nx,ny,nz,ua,va,wa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
-
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(in) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(in) :: va
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(in) :: ua
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(in) :: va
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
 
-    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
 !!!
 
@@ -142,8 +137,6 @@ contains
     if (myrank==0) write(*,*)' nhmg_bbc:'
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate( ub(1:nz,0:ny+1,0:nx+1))
     allocate( vb(1:nz,0:ny+1,0:nx+1))
     allocate( wb(1:nz+1,0:ny+1,0:nx+1))
@@ -183,22 +176,6 @@ contains
         enddo
       enddo
     enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          zrb(k,j,i) = zra(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz+1
-          zwb(k,j,i) = zwa(i,j,k)
-        enddo
-      enddo
-    enddo
-    zr => zrb
-    zw => zwb
     u => ub
     v => vb
     w => wb
@@ -208,7 +185,7 @@ contains
     call fill_halo(1,v,lbc_null='v')
     call fill_halo(1,w)
 
-    call set_bbc(zr,zw,u,v,w)
+    call set_bbc(u,v,w)
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
    do i = 0,nx+1
@@ -220,15 +197,11 @@ contains
     enddo
 !!!
 
-    if (associated(zr)) zr => null()
-    if (associated(zw)) zw => null()
     if (associated(u)) u => null()
     if (associated(v)) v => null()
     if (associated(w)) w => null()
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(zrb)
-    deallocate(zwb)
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
@@ -237,25 +210,20 @@ contains
   end subroutine nhmg_bbc
 
   !--------------------------------------------------------------
-  subroutine nhmg_fluxes(nx,ny,nz,zra,zwa,ua,va,wa,ufa,vfa)
+  subroutine nhmg_fluxes(nx,ny,nz,ua,va,wa,ufa,vfa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
-
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(in) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(in) :: va
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(in) :: ua
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(in) :: va
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: wa !vertical indexing different than croco
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(out):: ufa
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(out):: vfa
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(out):: ufa
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(out):: vfa
 
-    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
     real(kind=rp), dimension(:,:,:), allocatable, target :: ufb,vfb
 !!!
@@ -270,8 +238,6 @@ contains
     call tic(1,'nhmg_fluxes')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate(ub(1:nz,0:ny+1,  nx+1))
     allocate(vb(1:nz,  ny+1,0:nx+1))
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
@@ -296,22 +262,6 @@ contains
         enddo
       enddo
     enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          zrb(k,j,i) = zra(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz+1
-          zwb(k,j,i) = zwa(i,j,k)
-        enddo
-      enddo
-    enddo
-    zr => zrb
-    zw => zwb
     u => ub
     v => vb
     w => wb
@@ -334,7 +284,7 @@ contains
 !       call write_netcdf(w,vname='w',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
 !    endif
 
-    call compute_fluxes(zr,zw,u,v,w,uf,vf)
+    call compute_fluxes(u,v,w,uf,vf)
 
 !    if (check_output) then
 !       call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
@@ -358,8 +308,6 @@ contains
     enddo
 !!!
 
-    if (associated(zr)) zr => null()
-    if (associated(zw)) zw => null()
     if (associated(u)) u => null()
     if (associated(v)) v => null()
     if (associated(w)) w => null()
@@ -367,8 +315,6 @@ contains
     if (associated(vf)) vf => null()
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(zrb)
-    deallocate(zwb)
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
@@ -381,28 +327,25 @@ contains
   end subroutine nhmg_fluxes
 
   !--------------------------------------------------------------
-  subroutine nhmg_coupling(nx,ny,nz,zra,zwa,uf_bara,vf_bara,ua,va,wa,ufa,vfa)
+  subroutine nhmg_coupling(nx,ny,nz,uf_bara,vf_bara,ua,va,wa,ufa,vfa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(1:nx+1,0:ny+1),      target, intent(in) :: uf_bara
     real(kind=rp), dimension(0:nx+1,1:ny+1),      target, intent(in) :: vf_bara
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(inout) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(inout) :: va
+  
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, optional, intent(out):: ufa
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, optional, intent(out):: vfa
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, optional, intent(out):: ufa
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, optional, intent(out):: vfa
 
     real(kind=rp), dimension(:,:),   pointer :: uf_bar,vf_bar
-    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    real(kind=rp), dimension(:,:),   allocatable, target :: uf_barb,vf_barb
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
+    real(kind=rp), dimension(:,:),   allocatable, target :: uf_barb,vf_barb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
     real(kind=rp), dimension(:,:,:), allocatable, target :: ufb,vfb
 !!! 
@@ -421,8 +364,6 @@ contains
 !!! dirty reshape arrays indexing ijk -> kji !!!
     allocate(uf_barb(0:ny+1,  nx+1))
     allocate(vf_barb(  ny+1,0:nx+1))
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate(ub(1:nz,0:ny+1,  nx+1))
     allocate(vb(1:nz,  ny+1,0:nx+1))
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
@@ -446,20 +387,6 @@ contains
     call fill_halo(1,Tmp3Darray,lbc_null='v')
     vf_barb(1:ny+1,0:nx+1)=Tmp3Darray(1,1:ny+1,0:nx+1)
     deallocate(Tmp3Darray)
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          zrb(k,j,i) = zra(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz+1
-          zwb(k,j,i) = zwa(i,j,k)
-        enddo
-      enddo
-    enddo
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -483,8 +410,6 @@ contains
     enddo
     uf_bar => uf_barb
     vf_bar => vf_barb
-    zr => zrb
-    zw => zwb
     u => ub
     v => vb
     w => wb
@@ -492,8 +417,6 @@ contains
     call fill_halo(1,w)
 !!!
 
-!    zr => zra
-!    zw => zwa
 !    uf_bar => uf_bara
 !    vf_bar => vf_bara
 !    u => ua
@@ -518,11 +441,11 @@ contains
 !       uf => ufa
 !       vf => vfa
 
-       call btbc_coupling(zr,zw,uf_bar,vf_bar,u,v,w,uf,vf)
+       call btbc_coupling(uf_bar,vf_bar,u,v,w,uf,vf)
 
     else
 
-       call btbc_coupling(zr,zw,uf_bar,vf_bar,u,v,w)
+       call btbc_coupling(uf_bar,vf_bar,u,v,w)
 
     endif
 
@@ -578,8 +501,6 @@ contains
     endif
     deallocate(uf_barb)
     deallocate(vf_barb)
-    deallocate(zrb)
-    deallocate(zwb)
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
@@ -628,30 +549,23 @@ contains
   end subroutine nhmg_matrices
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(nx,ny,nz,zra,zwa,ua,va,wa,dt,rua,rva)
+  subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rua,rva)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: zra
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: zwa !vertical indexing different than croco
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz), target, intent(inout) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz), target, intent(inout) :: va
+    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
+    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco
     real(kind=rp),                                   optional, intent(in) :: dt
     real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(out):: rua
     real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(out):: rva
 
-    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
-    real(kind=rp), dimension(:,:,:), pointer :: u, v, w
-    real(kind=rp), dimension(:,:)  , pointer :: ru, rv
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+    real(kind=rp), dimension(:,:)  , pointer :: ru,rv
 
 !!! dirty reshape arrays indexing
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub, vb, wb
 !!! 
-
-    real(kind=rp)    :: tol
-    integer(kind=ip) :: maxite
 
     integer(kind=ip) :: i,j,k
 
@@ -662,29 +576,10 @@ contains
 
     call tic(1,'nhmg_solve')
 
-    tol    = solver_prec    
-    maxite = solver_maxiter 
-
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     allocate( ub(1:nz,0:ny+1,0:nx+1))
     allocate( vb(1:nz,0:ny+1,0:nx+1))
     allocate( wb(1:nz+1,0:ny+1,0:nx+1))
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          zrb(k,j,i) = zra(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz+1
-          zwb(k,j,i) = zwa(i,j,k)
-        enddo
-      enddo
-    enddo
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -718,8 +613,6 @@ contains
           enddo
        enddo
     enddo
-    zr => zrb
-    zw => zwb
     u => ub
     v => vb
     w => wb
@@ -744,7 +637,7 @@ contains
        endif
 
     !- step 1 - 
-    call compute_rhs(zr,zw,u,v,w)
+    call compute_rhs(u,v,w)
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -756,7 +649,7 @@ contains
     endif
 
     !- step 2 -
-    call solve_p(tol,maxite)
+    call solve_p(solver_prec,solver_maxiter)
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -769,7 +662,7 @@ contains
     endif
 
     !- step 3 -
-    call correct_uvw(zr,zw,u,v,w)
+    call correct_uvw(u,v,w)
 
        if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -788,7 +681,7 @@ contains
        ru => rua
        rv => rva
 
-       call compute_barofrc(zr,zw,dt,ru,rv)
+       call compute_barofrc(dt,ru,rv)
 
        if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -803,7 +696,7 @@ contains
     endif
 
     !- step 5 -
-    call compute_rhs(zr,zw,u,v,w)
+    call compute_rhs(u,v,w)
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -840,8 +733,6 @@ contains
           enddo
        enddo
     enddo
-    deallocate(zrb)
-    deallocate(zwb)
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)

@@ -11,16 +11,15 @@ module mg_correct_uvw
 
 contains
   !-------------------------------------------------------------------------     
-  subroutine correct_uvw(zr,zw,u,v,w)
+  subroutine correct_uvw(u,v,w)
 
-    real(kind=rp), dimension(:,:,:), pointer, intent(in)  :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer, intent(inout) :: u,v,w
 
     integer(kind=ip):: k, j, i
     integer(kind=ip):: nx, ny, nz
 
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
-!    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
+    real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: p
     real(kind=rp) :: dxu,dyv
     real(kind=rp) :: dzw
@@ -37,8 +36,8 @@ contains
 
     dx => grid(1)%dx
     dy => grid(1)%dy
-!    zr => grid(1)%zr
-!    zw => grid(1)%zw
+    zr => grid(1)%zr
+    zw => grid(1)%zw
 
     if (myrank==0) write(*,*)'- correct u,v,w:'
 
