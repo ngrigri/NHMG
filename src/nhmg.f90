@@ -7,15 +7,12 @@ module nhmg
   use mg_mpi_exchange
   use mg_horiz_grids
   use mg_vert_grids
-  use mg_netcdf_out
-  use mg_set_bbc
-  use mg_compute_fluxes
-  use mg_btbc_coupling
-  use mg_compute_rhs
-  use mg_set_matrices
+  use mg_bbc
+  use mg_fluxes
+  use mg_coupling
+  use mg_projection
   use mg_solvers
-  use mg_correct_uvw
-  use mg_compute_barofrc
+  use mg_netcdf_out
 
   implicit none
 
@@ -42,22 +39,29 @@ contains
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
-  subroutine nhmg_set_horiz_grids(nx,ny,dxa,dya)
+  subroutine nhmg_set_horiz_grids(nx,ny,dxa,dya,dxua,dyva)
 
     integer(kind=ip), intent(in) :: nx, ny
 
     real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxa, dya
+    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxua, dyva
     real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxb, dyb
+    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxub, dyvb
     real(kind=rp), dimension(:,:)          , pointer    :: dx, dy
+    real(kind=rp), dimension(:,:)          , pointer    :: dxu, dyv
 
     if (myrank==0) write(*,*)' nhmg_set_horiz_grids:'
 
     dxb = transpose(dxa)
     dyb = transpose(dya)
+    dxub = transpose(dxua)
+    dyvb = transpose(dyva)
     dx => dxb
     dy => dyb
+    dxu => dxub
+    dyv => dyvb
 
-    call set_horiz_grids(dx,dy)
+    call set_horiz_grids(dx,dy,dxu,dyv)
 
   end subroutine nhmg_set_horiz_grids
 
@@ -284,7 +288,7 @@ contains
 !       call write_netcdf(w,vname='w',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
 !    endif
 
-    call compute_fluxes(u,v,w,uf,vf)
+    call set_fluxes(u,v,w,uf,vf)
 
 !    if (check_output) then
 !       call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
@@ -441,11 +445,11 @@ contains
 !       uf => ufa
 !       vf => vfa
 
-       call btbc_coupling(uf_bar,vf_bar,u,v,w,uf,vf)
+       call bt2bc_coupling(uf_bar,vf_bar,u,v,w,uf,vf)
 
     else
 
-       call btbc_coupling(uf_bar,vf_bar,u,v,w)
+       call bt2bc_coupling(uf_bar,vf_bar,u,v,w)
 
     endif
 
@@ -509,44 +513,6 @@ contains
     call toc(1,'nhmg_coupling')
 
   end subroutine nhmg_coupling
-
-  !--------------------------------------------------------------
-!!$  subroutine nhmg_matrices(nx,ny,nz,zetaa,ha,hc,theta_b,theta_s)
-!!$
-!!$    integer(kind=ip), intent(in) :: nx, ny, nz
-!!$
-!!$    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: zetaa, ha
-!!$    real(kind=rp),                           intent(in) :: hc, theta_b, theta_s
-!!$    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: zetab, hb
-!!$    real(kind=rp), dimension(:,:)          , pointer    :: zeta, h
-!!$
-!!$    integer(kind=ip), save :: iter_matrices=-1
-!!$    iter_matrices = iter_matrices + 1
-!!$
-!!$    if (myrank==0) write(*,*)' nhmg_matrices:'
-!!$
-!!$    zetab = transpose(zetaa)
-!!$    hb = transpose(ha)
-!!$
-!!$    zeta => zetab
-!!$    h => hb
-!!$
-!!$    nhhc      = hc
-!!$    nhtheta_b = theta_b
-!!$    nhtheta_s = theta_s
-!!$
-!!$    call define_matrices(zeta,h)
-!!$
-!!$    if (check_output) then
-!!$       if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200) .OR. &
-!!$           (iter_matrices .EQ. 999) .OR. (iter_matrices .EQ. 1000) .OR. &
-!!$           (iter_matrices .EQ. 1999) .OR. (iter_matrices .EQ. 2000) .OR. &
-!!$           (iter_matrices .GE. 3499)) then
-!!$       call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='so.nc',rank=myrank,iter=iter_matrices)
-!!$       endif
-!!$    endif
-!!$
-!!$  end subroutine nhmg_matrices
 
   !--------------------------------------------------------------
   subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rua,rva)
@@ -637,7 +603,7 @@ contains
        endif
 
     !- step 1 - 
-    call compute_rhs(u,v,w)
+    call set_rhs(u,v,w)
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -684,7 +650,7 @@ contains
        ru => rua
        rv => rva
 
-       call compute_barofrc(dt,ru,rv)
+       call bc2bt_coupling(dt,ru,rv)
 
        if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -699,7 +665,7 @@ contains
     endif
 
     !- step 5 -
-    call compute_rhs(u,v,w)
+    call set_rhs(u,v,w)
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &

@@ -40,8 +40,8 @@ module mg_grids
 
      real(kind=rp),dimension(:,:)  ,pointer :: dx => null()   ! Mesh in x  (1 halo point)
      real(kind=rp),dimension(:,:)  ,pointer :: dy => null()   ! Mesh in y  (1 halo point)
-     real(kind=rp),dimension(:,:)  ,pointer :: zeta  => null()! Free-surface anomaly (1 halo point)
-     real(kind=rp),dimension(:,:)  ,pointer :: h  => null()   ! Topography (1 halo point)
+     real(kind=rp),dimension(:,:)  ,pointer :: dxu => null()  ! Mesh in x  (1 halo point)
+     real(kind=rp),dimension(:,:)  ,pointer :: dyv => null()  ! Mesh in y  (1 halo point)
      real(kind=rp),dimension(:,:,:),pointer :: zr => null()   ! Mesh in z at rho point (nz  , 2 halo points)
      real(kind=rp),dimension(:,:,:),pointer :: zw => null()   ! Mesh in z at w point   (nz+1, 2 halo points)
 
@@ -174,6 +174,8 @@ contains
        ny = grid(lev)%ny
        allocate(grid(lev)%dx(0:ny+1,0:nx+1))
        allocate(grid(lev)%dy(0:ny+1,0:nx+1))
+       allocate(grid(lev)%dxu(0:ny+1,0:nx+1))
+       allocate(grid(lev)%dyv(0:ny+1,0:nx+1))
     enddo
 
     do lev=1,nlevs ! set_vert_grids
@@ -194,14 +196,6 @@ contains
        allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1))
        allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1))
        allocate(grid(lev)%cw(  nz+1,0:ny+1,0:nx+1))
-    enddo
-
-    do lev=1,nlevs
-       nx = grid(lev)%nx
-       ny = grid(lev)%ny
-       nz = grid(lev)%nz
-       allocate(grid(lev)%zeta(    0:ny+1, 0:nx+1))
-       allocate(grid(lev)%h(       0:ny+1, 0:nx+1))
     enddo
 
     lev = 1 ! Some intermediate arrays for define matrices and compute rhs
@@ -782,7 +776,6 @@ contains
           if (associated(grid(lev)%r))              deallocate(grid(lev)%r)
           if (associated(grid(lev)%dx))             deallocate(grid(lev)%dx)
           if (associated(grid(lev)%dy))             deallocate(grid(lev)%dy)
-          if (associated(grid(lev)%h))              deallocate(grid(lev)%h)
           if (associated(grid(lev)%zr))             deallocate(grid(lev)%zr)
           if (associated(grid(lev)%zw))             deallocate(grid(lev)%zw)
           if (associated(grid(lev)%dzw))            deallocate(grid(lev)%dzw)

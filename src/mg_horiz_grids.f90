@@ -12,9 +12,10 @@ module mg_horiz_grids
 contains
 
   !----------------------------------------
-  subroutine set_horiz_grids(dx,dy)
+  subroutine set_horiz_grids(dx,dy,dxu,dyv)
 
     real(kind=rp), dimension(:,:), pointer, intent(in) :: dx,dy
+    real(kind=rp), dimension(:,:), pointer, intent(in) :: dxu,dyv
 
     integer(kind=ip) :: lev
     integer(kind=ip) :: nx,ny
@@ -23,6 +24,8 @@ contains
 
     real(kind=rp), dimension(:,:), pointer :: dxf,dxc
     real(kind=rp), dimension(:,:), pointer :: dyf,dyc
+    real(kind=rp), dimension(:,:), pointer :: dxuf,dxuc
+    real(kind=rp), dimension(:,:), pointer :: dyvf,dyvc
 
     real(kind=rp), parameter :: hlf  = 0.5_rp
 
@@ -37,6 +40,8 @@ contains
 
           grid(lev)%dx(0:ny+1,0:nx+1) = dx
           grid(lev)%dy(0:ny+1,0:nx+1) = dy
+          grid(lev)%dxu(0:ny+1,0:nx+1) = dxu
+          grid(lev)%dyv(0:ny+1,0:nx+1) = dyv
 
        else               ! coarsen dx,dy 
                           ! (needed when directly discretizing on coarser grids)
@@ -46,17 +51,23 @@ contains
 
           dxf => grid(lev-1)%dx
           dyf => grid(lev-1)%dy
+          dxuf => grid(lev-1)%dxu
+          dyvf => grid(lev-1)%dyv
 
           if (grid(lev)%gather == 1) then
              nxc= nx/grid(lev)%ngx
              nyc= ny/grid(lev)%ngy
              allocate(dxc(0:nyc+1,0:nxc+1))
              allocate(dyc(0:nyc+1,0:nxc+1))
+             allocate(dxuc(0:nyc+1,0:nxc+1))
+             allocate(dyvc(0:nyc+1,0:nxc+1))
           else
              nxc = nx
              nyc = ny
              dxc => grid(lev)%dx
              dyc => grid(lev)%dy
+             dxuc => grid(lev)%dxu
+             dyvc => grid(lev)%dyv
           endif
 
           dxc(1:nyc,1:nxc) = hlf      * ( & ! only interior points
@@ -71,17 +82,35 @@ contains
                dyf(1:nyf  :2,2:nxf+1:2) + &
                dyf(2:nyf+1:2,2:nxf+1:2) )
 
+          dxuc(1:nyc,1:nxc) = hlf      * ( & ! only interior points
+               dxuf(1:nyf  :2,1:nxf  :2) + &
+               dxuf(2:nyf+1:2,1:nxf  :2) + &
+               dxuf(1:nyf  :2,2:nxf+1:2) + &
+               dxuf(2:nyf+1:2,2:nxf+1:2) )
+
+          dyvc(1:nyc,1:nxc) = hlf      * ( &
+               dyvf(1:nyf  :2,1:nxf  :2) + &
+               dyvf(2:nyf+1:2,1:nxf  :2) + &
+               dyvf(1:nyf  :2,2:nxf+1:2) + &
+               dyvf(2:nyf+1:2,2:nxf+1:2) )
+
           if (grid(lev)%gather == 1) then
              call gather(lev,dxc,grid(lev)%dx)
              call gather(lev,dyc,grid(lev)%dy)
+             call gather(lev,dxuc,grid(lev)%dxu)
+             call gather(lev,dyvc,grid(lev)%dyv)
              deallocate(dxc)
              deallocate(dyc)
+             deallocate(dxuc)
+             deallocate(dyvc)
           endif
 
        endif
 
        call fill_halo(lev,grid(lev)%dx)
        call fill_halo(lev,grid(lev)%dy)
+       call fill_halo(lev,grid(lev)%dxu)
+       call fill_halo(lev,grid(lev)%dyv)
 
     enddo
 

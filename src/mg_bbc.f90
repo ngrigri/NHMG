@@ -1,4 +1,4 @@
-module mg_set_bbc
+module mg_bbc
 
   use mg_mpi
   use mg_tictoc
@@ -65,4 +65,4 @@ contains
 
   end subroutine set_bbc
  
-end module mg_set_bbc
+end module mg_bbc
