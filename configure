@@ -638,6 +638,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+TESTLIBS
 FCFLAGS_f90
 F77
 NETCDF_LIB
@@ -14898,8 +14899,8 @@ $as_echo "$as_me:   -> PROFILING is SELECTED (prof)" >&6;}
           fi
         ;;
         *)
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: mgroms MSG: !!! HOST and/or SYSTEM is UNKNOWN : $host !!!" >&5
-$as_echo "$as_me: WARNING: mgroms MSG: !!! HOST and/or SYSTEM is UNKNOWN : $host !!!" >&2;}
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: NHMG MSG: !!! HOST and/or SYSTEM is UNKNOWN : $host !!!" >&5
+$as_echo "$as_me: WARNING: NHMG MSG: !!! HOST and/or SYSTEM is UNKNOWN : $host !!!" >&2;}
         ;;
         esac
       ;;
@@ -15096,8 +15097,7 @@ $as_echo "$as_me:        -> mpif90" >&6;}
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-#NG 14/11/16  LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
-  LDFLAGS="$LDFLAGS"
+  TESTLIBS="$TESTLIBS -I${MPI_INC} -L${MPI_LIB} -lmpi"
 fi
 
 if test "$enable_intel_mpi" = "yes" ; then
@@ -15113,8 +15113,7 @@ $as_echo "$as_me:        -> mpiifort -trace (traceanalyser)" >&6;}
   fi
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpi"
-  LDFLAGS="$LDFLAGS"
+  TESTLIBS="$TESTLIBS -I${MPI_INC} -L${MPI_LIB} -lmpi"
 fi
 
 if test "$enable_openmpi" = "yes" ; then
@@ -15123,8 +15122,7 @@ $as_echo "$as_me:       -> OpenMPI PARALLELISATION IS SELECTED" >&6;}
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC}  -L${MPI_LIB} -lmpi"
-  LDFLAGS="$LDFLAGS"
+  TESTLIBS="$TESTLIBS -I${MPI_INC} -L${MPI_LIB} -lmpi"
 fi
 
 if test "$enable_mpich" = "yes" ; then
@@ -15133,8 +15131,7 @@ $as_echo "$as_me:       -> MPI PARALLELISATION IS SELECTED" >&6;}
   FC=mpif90
   CFLAGS="$CFLAGS"
   FCFLAGS="$FCFLAGS -I${MPI_INC}"
-#NG 14/11/16   LDFLAGS="$LDFLAGS -I${MPI_INC} -L${MPI_LIB} -lmpich -lmpichf90"
-  LDFLAGS="$LDFLAGS"
+  TESTLIBS="$TESTLIBS  -I${MPI_INC} -L${MPI_LIB} -lmpich -lmpichf90"
 fi
 
 
@@ -15177,6 +15174,44 @@ if test "$enable_netcdf" = "yes" ; then
 
 # Add user-specified netCDF locations, if any, else add /usr/local/
 # locations if they exist
+################
+## NETCDF_LIB ##
+################
+  if test "${NETCDF_LIB}"; then
+      if test -d "${NETCDF_LIB}"; then
+        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
+          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
+            TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+          else
+  	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
+          fi
+        else
+          as_fn_error $? "Can't find libnetcdf.a in ${NETCDF_LIB}" "$LINENO" 5
+        fi
+      else
+        as_fn_error $? "${NETCDF_LIB} location does not exist!" "$LINENO" 5
+      fi
+  else
+      case "$host" in
+        *apple-darwin*)
+          NETCDF_LIB="/sw/lib/netcdf-gfortran/lib";;
+        *)
+          NETCDF_LIB="/usr/lib"
+      esac
+      if test -d "${NETCDF_LIB}"; then
+        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
+          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
+            TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+          else
+  	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
+          fi
+        else
+          as_fn_error $? "Can't find libnetcdf.a in ${NETCDF_LIB}" "$LINENO" 5
+        fi
+      else
+        as_fn_error $? "${NETCDF_LIB} location does not exist!" "$LINENO" 5
+      fi
+  fi
 
 ################
 ## NETCDF_INC ##
@@ -15200,12 +15235,12 @@ if test "$enable_netcdf" = "yes" ; then
       esac
       if test -d "${NETCDF_INC}"; then
         if test -f "${NETCDF_INC}/netcdf.mod"; then
-  	FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
+       	  FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
         else
           as_fn_error $? "Can't find netcdf.mod in ${NETCDF_INC}" "$LINENO" 5
         fi
       else
-  	as_fn_error $? "{NETCDF_INC} location does not exist!" "$LINENO" 5
+  	    as_fn_error $? "{NETCDF_INC} location does not exist!" "$LINENO" 5
       fi
   fi
 
@@ -15216,6 +15251,60 @@ if test "$enable_netcdf" = "yes" ; then
 $as_echo "$as_me:   -> NetCDF library: ${NETCDF_LIB}" >&6;}
   { $as_echo "$as_me:${as_lineno-$LINENO}:   -> NetCDF module : ${NETCDF_INC}" >&5
 $as_echo "$as_me:   -> NetCDF module : ${NETCDF_INC}" >&6;}
+
+###############
+## HDF5  LIB ##
+###############
+  if test "$enable_hdf5" = "yes" ; then
+    if test "${HDF5_LIB}"; then
+      if test -d "${HDF5_LIB}"; then
+         TESTLIBS="${TESTLIBS} -L${HDF5_LIB}"
+        if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
+   	  TESTLIBS="${TESTLIBS} -lhdf5_hl"
+        else
+          as_fn_error $? "Can't find libhdf5_hl.a in ${HDF5_LIB}" "$LINENO" 5
+        fi
+        if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
+          TESTLIBS="${TESTLIBS} -lhdf5_fortran"
+        fi
+        if test -f "${HDF5_LIB}/libhdf5.a"; then
+          TESTLIBS="${TESTLIBS} -lhdf5"
+        else
+          as_fn_error $? "Can't find libhdf5.a in ${HDF5_LIB}" "$LINENO" 5
+        fi
+        if test -f "${HDF5_LIB}/libz.a"; then
+          TESTLIBS="${TESTLIBS} -lz"
+        fi
+      else
+        as_fn_error $? "${HDF5_LIB} location does not exist!" "$LINENO" 5
+      fi
+    else
+      HDF5_LIB="/usr/lib"
+      if test -d "${HDF5_LIB}"; then
+         TESTLIBS="${TESTLIBS} -L${HDF5_LIB}"
+         if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
+           TESTLIBS="${TESTLIBS} -lhdf5_hl"
+         else
+           as_fn_error $? "Can't find libhdf5_hl.a in ${HDF5_LIB}" "$LINENO" 5
+         fi
+         if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
+           TESTLIBS="${TESTLIBS} -lhdf5_fortran"
+         fi
+         if test -f "${HDF5_LIB}/libhdf5.a"; then
+           TESTLIBS="${TESTLIBS} -lhdf5"
+         else
+           as_fn_error $? "Can't find libhdf5.a in ${HDF5_LIB}" "$LINENO" 5
+         fi
+         if test -f "${HDF5_LIB}/libz.a"; then
+          TESTLIBS="${TESTLIBS} -lz"
+         fi
+      else
+        as_fn_error $? "${HDF5_LIB} location does not exist!" "$LINENO" 5
+      fi
+    fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}:   -> HDF5 library for Netcdf 4 : ${HDF5_LIB}" >&5
+$as_echo "$as_me:   -> HDF5 library for Netcdf 4 : ${HDF5_LIB}" >&6;}
+  fi
 
 ##################
 ## HDF5 INCLUDE ##
@@ -15239,8 +15328,39 @@ $as_echo "$as_me:   -> NetCDF module : ${NETCDF_INC}" >&6;}
 $as_echo "$as_me:   -> HDF5 include for Netcdf 4 : ${HDF5_INC}" >&6;}
   fi
 
-#End of test "$enable_netcdf" = "yes" ; then
+######################################################
+## Test a simple fortran 90 code linked with NetCDF ##
+######################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran-90 program linked with NetCDF library" >&5
+$as_echo_n "checking for Fortran-90 program linked with NetCDF library... " >&6; }
+cat <<EOF >conftest.f90
+    program conftest
+      USE netcdf
+    END program conftest
+EOF
+  echo ""
+  echo "$FC ${FCFLAGS} ${FCFLAGS_f90} conftest.f90 ${TESTLIBS}"
+  doit='$FC ${FCFLAGS} ${FCFLAGS_f90} conftest.f90 ${TESTLIBS}'
+  if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$doit\""; } >&5
+  (eval $doit) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+    nc_ans=yes
+  else
+    nc_ans=no
+  fi
+  rm -f conftest.f90 a.out
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $nc_ans" >&5
+$as_echo "$nc_ans" >&6; }
+  if test "x$nc_ans" = xno; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}:  " >&5
+$as_echo "$as_me:  " >&6;}
+    as_fn_error $? "A simple Fortran 90 program linked with Netcdf library doesn't work. Please verify that the NetCDF library was compiled with the Fortran compiler $FC." "$LINENO" 5
+  fi
 fi
+
+
 
 #########################################################################
 # Export DATA
@@ -15255,8 +15375,8 @@ FCFLAGS=$FCFLAGS
 
 FCFLAGS_f90=$FCFLAGS_f90
 
-#AC_SUBST(LDFLAGS,[$LDFLAGS])
-#AC_SUBST(LIBS,[$LIBS])
+TESTLIBS=$TESTLIBS
+
 
 #########################################################################
 # Checks for system services
@@ -17750,7 +17870,7 @@ fi
 echo ""
 echo "Configuration Parameters:"
 echo "------------------------"
-echo "mgroms's version........ ${VERSION}"
+echo "NHMG's version........ ${VERSION}"
 echo "prefix............... ${prefix}"
 echo "FC................... ${FC}"
 echo "FCFLAGS.............. ${FCFLAGS}"
@@ -17778,6 +17898,6 @@ date
 # Inform users of the very useful configure.eg
 echo ""
 echo "*******************************************************************"
-echo "*              mgroms's configuration is completed                *"
+echo "*              NHMG's configuration is completed                *"
 echo "* You are now ready to run 'make clean', 'make' and 'make install'*"
 echo "*******************************************************************"
