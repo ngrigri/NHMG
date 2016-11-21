@@ -59,26 +59,23 @@ contains
 
              ru(i,j) = ru(i,j) &
 
-                     - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
-
-                     + qrt * (  & ! zero in our flat bottom case
-                             + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i)-p(k  ,j,i)) & 
-                             +  & ! zero in our flat bottom case
-                             + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) &
-                             )
+                  - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
+                  + qrt * (  & 
+                  + & ! zero in our flat bottom case
+                  + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i  )-p(k  ,j,i  )) & 
+                  + & ! zero in our flat bottom case
+                  + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) )
 
           do k = 2,nz-1
 
              ru(i,j) = ru(i,j) &
 
                      - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
-
-                     + qrt * ( dx(j,i  )*zxdy(k,j,i  ) * (p(k  ,j,i)-p(k-1,j,i)) & 
-                             + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i)-p(k  ,j,i)) & 
-                             + dx(j,i-1)*zxdy(k,j,i-1) * (p(k  ,j,i-1)-p(k-1,j,i-1)) & 
-                             + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) &
-                             )
-
+                     + qrt * ( &
+                     + dx(j,i  )*zxdy(k,j,i  ) * (p(k  ,j,i)-p(k-1,j,i)) & 
+                     + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i)-p(k  ,j,i)) & 
+                     + dx(j,i-1)*zxdy(k,j,i-1) * (p(k  ,j,i-1)-p(k-1,j,i-1)) & 
+                     + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) )
           enddo
 
           k = nz
@@ -86,7 +83,6 @@ contains
              ru(i,j) = ru(i,j) &
 
                      - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
-
                      + qrt * ( dx(j,i  )*zxdy(k,j,i  ) * (p(k  ,j,i)-p(k-1,j,i)) & 
                              + dx(j,i  )*zxdy(k,j,i  ) * two * (-p(k  ,j,i)) & 
                              + dx(j,i-1)*zxdy(k,j,i-1) * (p(k  ,j,i-1)-p(k-1,j,i-1)) & 
@@ -169,8 +165,9 @@ contains
 
     real(kind=rp), dimension(:,:)  ,   pointer :: su_integr,sv_integr
     real(kind=rp), dimension(:,:)  ,   pointer :: uf_integr,vf_integr
-    real(kind=rp), dimension(:,:,:),   pointer :: uf_integr_tmp,vf_integr_tmp !!dirty
     real(kind=rp), dimension(:,:,:),   pointer :: wc
+
+    real(kind=rp), dimension(:,:,:),   pointer :: uf_integr_tmp,vf_integr_tmp !!dirty
 
     integer(kind=ip), save :: iter_coupling_in=0
     iter_coupling_in = iter_coupling_in + 1
