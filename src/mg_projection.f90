@@ -390,7 +390,7 @@ contains
           do j = 1,ny+1
              do k = 2,nz-1 
                 ! couples with k+1,j-1
-                cA(3,k,j,i) =  qrt * ( zydx(k+1,j,i) + qrt *zydx(k,j-1,i) )
+                cA(3,k,j,i) = qrt * ( zydx(k+1,j,i) + zydx(k,j-1,i) )
                 ! couples with j-1
                 cA(4,k,j,i) =  Ary(k,j,i) / dyv(j,i) 
                 ! couples with k-1,j-1
@@ -401,11 +401,11 @@ contains
        do i = 1,nx+1
           do j = 1,ny 
              do k = 2,nz-1 
-                ! Couples with k+1,i-1
-                cA(6,k,j,i) =  qrt * ( zxdy(k+1,j,i) + zxdy(k,j,i-1) )
-                ! Couples with i-1
+                ! couples with k+1,i-1
+                cA(6,k,j,i) = qrt * ( zxdy(k+1,j,i) + zxdy(k,j,i-1) )
+                ! couples with i-1
                 cA(7,k,j,i) = Arx(k,j,i) / dxu(j,i) 
-                ! Couples with k-1,i-1
+                ! couples with k-1,i-1
                 cA(8,k,j,i) = - qrt * ( zxdy(k-1,j,i) + zxdy(k,j,i-1) )
              enddo
           enddo
@@ -430,17 +430,17 @@ contains
        enddo
        do i = 1,nx+1
           do j = 1,ny 
-             ! Couples with i-1
+             ! couples with i-1
              cA(7,k,j,i) = Arx(k,j,i) / dxu(j,i) &
                   + qrt * ( -zxdy(k,j,i-1) + zxdy(k,j,i) )
-             ! Couples with k-1,i-1
+             ! couples with k-1,i-1
              cA(8,k,j,i) = - qrt * ( zxdy(k-1,j,i) + zxdy(k,j,i-1) )
           enddo
        enddo
 
        call fill_halo(lev,cA)
 
-       !! interaction coeff with itself
+       !! self-interaction coeff
        do i = 1,nx
           do j = 1,ny
 
