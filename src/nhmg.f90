@@ -536,9 +536,9 @@ contains
     call tic(1,'nhmg_solve')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate( ub(1:nz,0:ny+1,0:nx+1)) ! modified i : 0:nx+1 
-    allocate( vb(1:nz,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
-    allocate( wb(1:nz+1,0:ny+1,0:nx+1))
+    allocate(ub(1:nz  ,0:ny+1,0:nx+1)) ! modified i : 0:nx+1 
+    allocate(vb(1:nz  ,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
+    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -575,7 +575,7 @@ contains
     u => ub
     v => vb
     w => wb
-!!! 
+!!! dirty reshape arrays indexing ijk -> kji !!!
 
     call fill_halo(1,u,lbc_null='u')
     call fill_halo(1,v,lbc_null='v')
@@ -612,7 +612,7 @@ contains
     call set_matrices()
 
     !- step 3 -
-    call solve_p(solver_prec,solver_maxiter)
+    call solve_p()
 
     if (check_output) then
 !       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
@@ -658,7 +658,7 @@ contains
 
     endif
 
-    !- step 5 -
+    !- step 6 -
     call set_rhs(u,v,w)
 
     if (check_output) then
@@ -699,7 +699,7 @@ contains
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
-!!!
+!!! dirty reshape arrays indexing kji -> ijk !!!
 
     call toc(1,'nhmg_solve')	
 

@@ -14,16 +14,12 @@ module mg_solvers
 contains
 
   !---------------------------------------------------------------------
-  subroutine solve_p(tol,maxite)
+  subroutine solve_p()
 
-    real(kind=rp)   , intent(in) :: tol
-    integer(kind=ip), intent(in) :: maxite
-
-    ! local
-    real(kind=rp)    :: rnorm,bnorm,res0,conv,rnorm0
     integer(kind=ip) :: nite
-
     integer(kind=ip) :: nx,ny,nz
+
+    real(kind=rp)    :: rnorm,bnorm,res0,conv,rnorm0
     real(kind=rp), dimension(:,:,:), pointer :: p,b,r
 
     real(kind=lg) :: tstart,tend,perf
@@ -58,7 +54,7 @@ contains
 
     if (myrank == 0) write(100,*) rnorm0, nite
 
-    do while ((nite < maxite).and.(res0 > tol))
+    do while ((nite < solver_maxiter).and.(res0 > solver_prec))
 
        call Fcycle()
 
