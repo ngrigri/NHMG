@@ -1,5 +1,6 @@
 module mg_projection
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -28,12 +29,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: cw
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
     real(kind=rp), dimension(:,:,:), pointer :: rhs
-
-    real(kind=rp), parameter :: two  = 2._rp
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: zero = 0._rp
 
     integer(kind=ip), save :: iter_rhs=-2
     iter_rhs = iter_rhs + 1
@@ -107,10 +102,10 @@ contains
 
            uf(k,j,i) = Arx(k,j,i)/dxu(j,i) *dxu(j,i)*u(k,j,i) &
 
-                  - qrt * ( zxdy(k,j,i  ) *     dzw(k  ,j,i  )*w(k  ,j,i  ) &
-                           +zxdy(k,j,i  ) *2._8*dzw(k+1,j,i  )*w(k+1,j,i  ) &
-                           +zxdy(k,j,i-1) *     dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-                           +zxdy(k,j,i-1) *2._8*dzw(k+1,j,i-1)*w(k+1,j,i-1) )
+                  - qrt * ( zxdy(k,j,i  ) *      dzw(k  ,j,i  )*w(k  ,j,i  ) &
+                           +zxdy(k,j,i  ) * two *dzw(k+1,j,i  )*w(k+1,j,i  ) &
+                           +zxdy(k,j,i-1) *      dzw(k  ,j,i-1)*w(k  ,j,i-1) &
+                           +zxdy(k,j,i-1) * two *dzw(k+1,j,i-1)*w(k+1,j,i-1) )
        enddo
     enddo
 
@@ -185,10 +180,10 @@ contains
 
             vf(k,j,i) = Ary(k,j,i)/dyv(j,i) *dyv(j,i)*v(k,j,i) &
 
-                  - qrt * ( zydx(k,j  ,i) *     dzw(k  ,j  ,i)*w(k  ,j  ,i) &
-                           +zydx(k,j  ,i) *2._8*dzw(k+1,j  ,i)*w(k+1,j  ,i) &
-                           +zydx(k,j-1,i) *     dzw(k  ,j-1,i)*w(k  ,j-1,i) &
-                           +zydx(k,j-1,i) *2._8*dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
+                  - qrt * ( zydx(k,j  ,i) *      dzw(k  ,j  ,i)*w(k  ,j  ,i) &
+                           +zydx(k,j  ,i) * two *dzw(k+1,j  ,i)*w(k+1,j  ,i) &
+                           +zydx(k,j-1,i) *      dzw(k  ,j-1,i)*w(k  ,j-1,i) &
+                           +zydx(k,j-1,i) * two *dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
        enddo
     enddo
 
@@ -312,11 +307,6 @@ contains
     real(kind=rp), dimension(:,:,:),   pointer :: cw
     real(kind=rp), dimension(:,:,:,:), pointer :: cA
 
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: eigh = one/8._rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-
     integer(kind=ip), save :: iter_mat=-1
     iter_mat = iter_mat + 1
 
@@ -400,7 +390,7 @@ contains
           do j = 1,ny+1
              do k = 2,nz-1 
                 ! couples with k+1,j-1
-                cA(3,k,j,i) =  qrt * ( zydx(k+1,j,i) + 0.25_8*zydx(k,j-1,i) )
+                cA(3,k,j,i) =  qrt * ( zydx(k+1,j,i) + qrt *zydx(k,j-1,i) )
                 ! couples with j-1
                 cA(4,k,j,i) =  Ary(k,j,i) / dyv(j,i) 
                 ! couples with k-1,j-1
@@ -515,12 +505,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: p
     real(kind=rp) :: dxu,dyv
     real(kind=rp) :: dzw
-
-    real(kind=rp), parameter :: two  = 2._rp
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: zero  = 0._rp
 
     nx = grid(1)%nx
     ny = grid(1)%ny

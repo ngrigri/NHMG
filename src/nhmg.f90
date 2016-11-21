@@ -1,5 +1,6 @@
 module nhmg
 
+  use mg_cst
   use mg_mpi
   use mg_grids
   use mg_namelist
@@ -155,7 +156,7 @@ contains
     i = 0
     do j = 0,ny+1
        do k = 1,nz
-          ub(k,j,i) = 0._rp
+          ub(k,j,i) = zero
        enddo
     enddo
     !-VB-!
@@ -169,7 +170,7 @@ contains
     j = 0
     do i = 0,nx+1
        do k = 1,nz
-          vb(k,j,i) = 0._rp
+          vb(k,j,i) = zero
        enddo
     enddo
     !-WB-!
@@ -377,7 +378,7 @@ contains
       enddo
     enddo
     allocate(Tmp3Darray(1:nz,0:ny+1, 0:nx+1))
-    Tmp3Darray(:,:,:) = 0._rp
+    Tmp3Darray(:,:,:) = zero
     Tmp3Darray(1,0:ny+1,1:nx+1)=uf_barb(0:ny+1,1:nx+1)
     call fill_halo(1,Tmp3Darray,lbc_null='u')
     uf_barb(0:ny+1,1:nx+1)=Tmp3Darray(1,0:ny+1,1:nx+1)
@@ -386,7 +387,7 @@ contains
           vf_barb(j,i) = vf_bara(i,j)
       enddo
     enddo
-    Tmp3Darray(:,:,:) = 0._rp
+    Tmp3Darray(:,:,:) = zero
     Tmp3Darray(1,1:ny+1,0:nx+1)=vf_barb(1:ny+1,0:nx+1)
     call fill_halo(1,Tmp3Darray,lbc_null='v')
     vf_barb(1:ny+1,0:nx+1)=Tmp3Darray(1,1:ny+1,0:nx+1)
@@ -556,7 +557,7 @@ contains
     i = 0
     do j = 0,ny+1
        do k = 1,nz
-          ub(k,j,i) = 0._rp
+          ub(k,j,i) = zero
        enddo
     enddo
     do i = 0,nx+1
@@ -569,7 +570,7 @@ contains
     j = 0
     do i = 0,nx+1
        do k = 1,nz
-          vb(k,j,i) = 0._rp
+          vb(k,j,i) = zero
        enddo
     enddo
     do i = 0,nx+1

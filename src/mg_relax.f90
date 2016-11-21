@@ -1,5 +1,6 @@
 module mg_relax
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -67,9 +68,9 @@ contains
     integer(kind=ip)            :: ib,ie,jb,je,rbb,rbe,rbi
     real(kind=rp) :: z,gamma,g1,g2
 
-    gamma = 1._rp
+    gamma = one
     g1 = gamma
-    g2 = 1._rp - gamma
+    g2 = one - gamma
 
     k=1
 
@@ -318,11 +319,11 @@ contains
     real(kind=rp),dimension(l):: gam
     real(kind=rp)             :: bet
 
-    bet   = 1._8/d(1)
+    bet   = one / d(1)
     xc(1) = b(1)*bet
     do k=2,l
        gam(k)= dd(k-1)*bet
-       bet     = 1._8/(d(k)-dd(k-1)*gam(k))
+       bet     = one /(d(k)-dd(k-1)*gam(k))
        xc(k) = (b(k)-dd(k-1)*xc(k-1))*bet
     enddo
     do k=l-1,1,-1
@@ -389,7 +390,7 @@ contains
     integer(kind=ip) :: i,j,k
     real(kind=rp)  :: z
 
-    res = 0._rp
+    res = zero
 
     k=1
 
@@ -433,7 +434,7 @@ contains
 
     integer(kind=ip)           :: i,j,k
 
-    res = 0._rp
+    res = zero
 
     do i = 1,nx
        do j = 1,ny

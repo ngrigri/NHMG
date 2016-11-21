@@ -1,5 +1,6 @@
 module mg_bbc
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -24,12 +25,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: dzw
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: cw
-
-    real(kind=rp), parameter :: two  = 2._rp
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: zero = 0._rp
 
     nx = grid(1)%nx
     ny = grid(1)%ny

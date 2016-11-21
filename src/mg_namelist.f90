@@ -1,11 +1,9 @@
 module mg_namelist
 
+  use mg_cst
   use mg_tictoc
 
   implicit none
-
-  !- control integer and real precision (global vparameters)
-  integer(kind=4), parameter :: rp = 8, ip = 4
 
   ! smallest dimension ever for the global domain
   integer(kind=ip) :: nsmall      =   8

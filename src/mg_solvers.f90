@@ -1,5 +1,6 @@
 module mg_solvers
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -31,7 +32,7 @@ contains
 
     if (myrank==0) write(*,*)'- solve p:'
 
-    grid(1)%p(:,:,:) = 0._rp
+    grid(1)%p(:,:,:) = zero
 
     p  => grid(1)%p
     b  => grid(1)%b
@@ -184,7 +185,7 @@ contains
     real(kind=rp) :: r,res
     real(kind=rp),dimension(:,:,:)  , pointer :: x,y
 
-    r=0._rp
+    r = zero
 
     do i=1,nx
        do j=1,ny
@@ -242,7 +243,7 @@ contains
     !    call write_netcdf(grid(lev)%p,vname='p',netcdf_file_name=filen,rank=myrank)
 
 
-    grid(lev)%b = 0._rp
+    grid(lev)%b = zero
     call compute_residual(lev,dummy)    
     call norm(lev,grid(lev)%p,grid(lev)%r,nx,ny,nz,norm_c)
 
@@ -254,7 +255,7 @@ contains
        call write_netcdf(grid(lev)%r,vname='r',netcdf_file_name=filen,rank=myrank)
     endif
 
-    grid(lev-1)%p = 0._rp
+    grid(lev-1)%p = zero
     call coarse2fine(lev-1) ! interpolate p to r and add r to p
 
     if (netcdf_output) then
@@ -263,7 +264,7 @@ contains
     endif
 
     !    grid(lev-1)%p(:,:,:)= 1._rp
-    grid(lev-1)%b = 0._rp
+    grid(lev-1)%b = zero
     call compute_residual(lev-1,dummy)
 
     if (netcdf_output) then

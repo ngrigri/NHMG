@@ -1,5 +1,6 @@
 module mg_horiz_grids
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_grids
@@ -26,8 +27,6 @@ contains
     real(kind=rp), dimension(:,:), pointer :: dyf,dyc
     real(kind=rp), dimension(:,:), pointer :: dxuf,dxuc
     real(kind=rp), dimension(:,:), pointer :: dyvf,dyvc
-
-    real(kind=rp), parameter :: hlf  = 0.5_rp
 
     do lev = 1, nlevs
 

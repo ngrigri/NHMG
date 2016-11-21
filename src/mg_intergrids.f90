@@ -1,5 +1,6 @@
 module mg_intergrids
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -70,7 +71,7 @@ contains
 
     call fill_halo(lev+1,grid(lev+1)%b)
 
-    grid(lev+1)%p = 0._8
+    grid(lev+1)%p = zero
 
   end subroutine fine2coarse
 
@@ -89,13 +90,13 @@ contains
        if(mod(k,8).eq.1)then
           do j=1,ny
              do i=1,nx               
-                y(i,j,k2) = x(i,j,k)*0.125_8
+                y(i,j,k2) = x(i,j,k) * eighth
              enddo
           enddo
        else
           do j=1,ny
              do i=1,nx               
-                y(i,j,k2) = y(i,j,k2)+x(i,j,k)*0.125_8
+                y(i,j,k2) = y(i,j,k2)+x(i,j,k) * eighth
              enddo
           enddo
        endif
@@ -435,16 +436,16 @@ contains
           enddo
           ! top level
           k = nz*2
-          xf(k  ,j  ,i  ) =  0.5_8                       * ( &
+          xf(k  ,j  ,i  ) =  hlf                       * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2-1,i2-1) +   &
                b * xc(k2,j2-1,i2) + b * xc(k2,j2  ,i2-1)   )
-          xf(k  ,j+1,i  ) =  0.5_8                       * ( &
+          xf(k  ,j+1,i  ) =  hlf                       * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2+1,i2-1) +   &
                b * xc(k2,j2+1,i2) + b * xc(k2,j2  ,i2-1)   )
-          xf(k  ,j  ,i+1) =  0.5_8                       * ( &
+          xf(k  ,j  ,i+1) =  hlf                       * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2-1,i2+1) +   &
                b * xc(k2,j2-1,i2) + b * xc(k2,j2  ,i2+1)   ) 
-          xf(k  ,j+1,i+1) =  0.5_8                       * ( &
+          xf(k  ,j+1,i+1) =  hlf                       * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2+1,i2+1) +   &
                b * xc(k2,j2+1,i2) + b * xc(k2,j2  ,i2+1)   )
        enddo

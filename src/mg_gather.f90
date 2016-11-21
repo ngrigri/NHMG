@@ -1,5 +1,6 @@
 module mg_gather
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist

@@ -1,11 +1,12 @@
 module mg_mpi
 
+  use mg_cst
   use mpi
 
   implicit none
 
-  integer(kind=4) :: myrank
-  integer(kind=4) :: nprocs
+  integer(kind=ip) :: myrank
+  integer(kind=ip) :: nprocs
 
 contains
   !---------------------------------------------------------------------
@@ -20,7 +21,7 @@ contains
   !---------------------------------------------------------------------
   subroutine mpi_myrank()
 
-    integer(kind=4) :: ierr
+    integer(kind=ip) :: ierr
 
     call mpi_comm_rank(mpi_comm_world, myrank, ierr)
 
@@ -29,7 +30,7 @@ contains
   !---------------------------------------------------------------------
   subroutine mpi_nprocs()
 
-    integer(kind=4) :: ierr
+    integer(kind=ip) :: ierr
 
     call mpi_comm_size(mpi_comm_world, nprocs, ierr)
 

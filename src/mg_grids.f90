@@ -1,5 +1,6 @@
 module mg_grids
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -452,7 +453,7 @@ contains
     enddo
 
     ! Initialize pressure to zero
-    grid(1)%p(:,:,:) = 0._rp
+    grid(1)%p(:,:,:) = zero
 
     if (myrank==0) write(*,*)'  - define gather informations'
     ! Call the routine which calculate gather informations
@@ -488,9 +489,9 @@ contains
     ! we have 
     ! nhoriz = ncoarsest * 2^(nlevs-1)
     ! thus nlevs = ...
-    nl1 = 1+floor( log( nhoriz*1._rp / ncoarsest*1._rp) / log(2._rp) )
+    nl1 = 1+floor( log( nhoriz* one / ncoarsest* one) / log(two) )
 
-    nl2 = 1+floor( log( nzg*1._rp / nzmin*1._rp) / log(2._rp) )
+    nl2 = 1+floor( log( nzg   * one / nzmin    * one) / log(two) )
 
     ! NLEVS: global variable which store the number of grid levels
     nlevs = min(nl1,nl2) 

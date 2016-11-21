@@ -1,5 +1,6 @@
 module mg_coupling
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_namelist
@@ -28,12 +29,6 @@ contains
 
     real(kind=rp), dimension(:,:,:), pointer :: p
 
-    real(kind=rp), parameter :: two  = 2._rp
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: zero = 0._rp
-
     if (myrank==0) write(*,*)'- bc2bt_coupling :'
 
     nx = grid(1)%nx
@@ -53,8 +48,8 @@ contains
     !! Compute
     p => grid(1)%p
 
-    ru(:,:) = 0._8
-    rv(:,:) = 0._8
+    ru(:,:) = zero
+    rv(:,:) = zero
 
     do i = 1,nx+1
        do j = 0,ny+1 
@@ -176,12 +171,6 @@ contains
     real(kind=rp), dimension(:,:)  ,   pointer :: uf_integr,vf_integr
     real(kind=rp), dimension(:,:,:),   pointer :: uf_integr_tmp,vf_integr_tmp !!dirty
     real(kind=rp), dimension(:,:,:),   pointer :: wc
-
-    real(kind=rp), parameter :: two  = 2._rp
-    real(kind=rp), parameter :: one  = 1._rp
-    real(kind=rp), parameter :: hlf  = 0.5_rp
-    real(kind=rp), parameter :: qrt  = 0.25_rp
-    real(kind=rp), parameter :: zero = 0._rp
 
     integer(kind=ip), save :: iter_coupling_in=0
     iter_coupling_in = iter_coupling_in + 1

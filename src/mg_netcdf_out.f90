@@ -3,6 +3,7 @@ module mg_netcdf_out
   !===================!
   !- USE association -!
   !===================!
+  use mg_cst
   use netcdf
 
   !===============================!
@@ -21,8 +22,6 @@ module mg_netcdf_out
           sub_netcdf_write_fast_r4D
   end interface write_netcdf
 
-  integer(kind=4), parameter:: iprec=4, rprec=8
-
 contains
   !********************************************************************!
   !
@@ -40,33 +39,33 @@ contains
     !=============================!
     !- DECLARATIONS of ARGUMENTS -!
     !=============================!
-    real(kind = rprec), dimension(:,:), intent(in) :: array_r2D
+    real(kind = rp), dimension(:,:), intent(in) :: array_r2D
     character(len = *)                , optional, intent(in) :: vname
     character(len = *)                , optional, intent(in) :: netcdf_file_name
-    integer(kind = iprec)             , optional, intent(in) :: rank
-    integer(kind = iprec)             , optional, intent(in) :: iter
+    integer(kind = ip)             , optional, intent(in) :: rank
+    integer(kind = ip)             , optional, intent(in) :: iter
 
     !===================================!
     !- DECLARATIONS of LOCAL VARIABLES -!
     !===================================!
-    integer(kind = iprec), parameter :: nb_digit = 5
+    integer(kind = ip), parameter :: nb_digit = 5
 
     character(len=48)     :: cmft
-    integer(kind = iprec) :: size_string
+    integer(kind = ip) :: size_string
 
     character(len = 32)   :: final_netcdf_file_name
     character(len = 32)   :: final_vname
-    integer(kind = iprec) :: fiter
-    integer(kind = iprec) :: is_err
-    integer(kind = iprec) :: add_rank
+    integer(kind = ip) :: fiter
+    integer(kind = ip) :: is_err
+    integer(kind = ip) :: add_rank
 
-    integer(kind = iprec) :: dim1
-    integer(kind = iprec) :: dim2
+    integer(kind = ip) :: dim1
+    integer(kind = ip) :: dim2
 
-    integer(kind = iprec) :: nc_id
-    integer(kind = iprec) :: var_id
-    integer(kind = iprec) :: dim1_id
-    integer(kind = iprec) :: dim2_id
+    integer(kind = ip) :: nc_id
+    integer(kind = ip) :: var_id
+    integer(kind = ip) :: dim1_id
+    integer(kind = ip) :: dim2_id
 
     !======================================!
     !- SECTION 1: test optional arguments -!
@@ -240,35 +239,35 @@ contains
     !=============================!
     !- DECLARATIONS of ARGUMENTS -!
     !=============================!
-    real(kind = rprec), dimension(:,:,:), allocatable , intent(in) :: array_r3D
+    real(kind = rp), dimension(:,:,:), allocatable , intent(in) :: array_r3D
     character(len = *)                  , optional, intent(in) :: vname
     character(len = *)                  , optional, intent(in) :: netcdf_file_name
-    integer(kind = iprec)               , optional, intent(in) :: rank
-    integer(kind = iprec)               , optional, intent(in) :: iter
+    integer(kind = ip)               , optional, intent(in) :: rank
+    integer(kind = ip)               , optional, intent(in) :: iter
 
     !===================================!
     !- DECLARATIONS of LOCAL VARIABLES -!
     !===================================!
-    integer(kind = iprec), parameter :: nb_digit = 5
+    integer(kind = ip), parameter :: nb_digit = 5
 
     character(len=48)     :: cmft
-    integer(kind = iprec) :: size_string
+    integer(kind = ip) :: size_string
 
     character(len = 32)   :: final_netcdf_file_name
     character(len = 32)   :: final_vname
-    integer(kind = iprec) :: fiter
-    integer(kind = iprec) :: is_err
-    integer(kind = iprec) :: add_rank
+    integer(kind = ip) :: fiter
+    integer(kind = ip) :: is_err
+    integer(kind = ip) :: add_rank
 
-    integer(kind = iprec) :: dim1
-    integer(kind = iprec) :: dim2
-    integer(kind = iprec) :: dim3
+    integer(kind = ip) :: dim1
+    integer(kind = ip) :: dim2
+    integer(kind = ip) :: dim3
 
-    integer(kind = iprec) :: nc_id
-    integer(kind = iprec) :: var_id
-    integer(kind = iprec) :: dim1_id
-    integer(kind = iprec) :: dim2_id
-    integer(kind = iprec) :: dim3_id
+    integer(kind = ip) :: nc_id
+    integer(kind = ip) :: var_id
+    integer(kind = ip) :: dim1_id
+    integer(kind = ip) :: dim2_id
+    integer(kind = ip) :: dim3_id
 
     !======================================!
     !- SECTION 1: test optional arguments -!
@@ -453,35 +452,35 @@ contains
     !=============================!
     !- DECLARATIONS of ARGUMENTS -!
     !=============================!
-    real(kind = rprec), dimension(:,:,:), pointer , intent(in) :: array_r3D
+    real(kind = rp), dimension(:,:,:), pointer , intent(in) :: array_r3D
     character(len = *)                  , optional, intent(in) :: vname
     character(len = *)                  , optional, intent(in) :: netcdf_file_name
-    integer(kind = iprec)               , optional, intent(in) :: rank
-    integer(kind = iprec)               , optional, intent(in) :: iter
+    integer(kind = ip)               , optional, intent(in) :: rank
+    integer(kind = ip)               , optional, intent(in) :: iter
 
     !===================================!
     !- DECLARATIONS of LOCAL VARIABLES -!
     !===================================!
-    integer(kind = iprec), parameter :: nb_digit = 5
+    integer(kind = ip), parameter :: nb_digit = 5
 
     character(len=48)     :: cmft
-    integer(kind = iprec) :: size_string
+    integer(kind = ip) :: size_string
 
     character(len = 32)   :: final_netcdf_file_name
     character(len = 32)   :: final_vname
-    integer(kind = iprec) :: fiter
-    integer(kind = iprec) :: is_err
-    integer(kind = iprec) :: add_rank
+    integer(kind = ip) :: fiter
+    integer(kind = ip) :: is_err
+    integer(kind = ip) :: add_rank
 
-    integer(kind = iprec) :: dim1
-    integer(kind = iprec) :: dim2
-    integer(kind = iprec) :: dim3
+    integer(kind = ip) :: dim1
+    integer(kind = ip) :: dim2
+    integer(kind = ip) :: dim3
 
-    integer(kind = iprec) :: nc_id
-    integer(kind = iprec) :: var_id
-    integer(kind = iprec) :: dim1_id
-    integer(kind = iprec) :: dim2_id
-    integer(kind = iprec) :: dim3_id
+    integer(kind = ip) :: nc_id
+    integer(kind = ip) :: var_id
+    integer(kind = ip) :: dim1_id
+    integer(kind = ip) :: dim2_id
+    integer(kind = ip) :: dim3_id
 
     !======================================!
     !- SECTION 1: test optional arguments -!
@@ -665,37 +664,37 @@ contains
     !=============================!
     !- DECLARATIONS of ARGUMENTS -!
     !=============================!
-    real(kind = rprec), dimension(:,:,:,:), pointer , intent(in) :: array_r4D
+    real(kind = rp), dimension(:,:,:,:), pointer , intent(in) :: array_r4D
     character(len = *)                    , optional, intent(in) :: vname
     character(len = *)                    , optional, intent(in) :: netcdf_file_name
-    integer(kind = iprec)                 , optional, intent(in) :: rank
-    integer(kind = iprec)                 , optional, intent(in) :: iter
+    integer(kind = ip)                 , optional, intent(in) :: rank
+    integer(kind = ip)                 , optional, intent(in) :: iter
 
     !===================================!
     !- DECLARATIONS of LOCAL VARIABLES -!
     !===================================!
-    integer(kind = iprec), parameter :: nb_digit = 5
+    integer(kind = ip), parameter :: nb_digit = 5
 
     character(len=48)     :: cmft
-    integer(kind = iprec) :: size_string
+    integer(kind = ip) :: size_string
 
     character(len = 32)   :: final_netcdf_file_name
     character(len = 32)   :: final_vname
-    integer(kind = iprec) :: fiter
-    integer(kind = iprec) :: is_err
-    integer(kind = iprec) :: add_rank
+    integer(kind = ip) :: fiter
+    integer(kind = ip) :: is_err
+    integer(kind = ip) :: add_rank
 
-    integer(kind = iprec) :: dim1
-    integer(kind = iprec) :: dim2
-    integer(kind = iprec) :: dim3
-    integer(kind = iprec) :: dim4
+    integer(kind = ip) :: dim1
+    integer(kind = ip) :: dim2
+    integer(kind = ip) :: dim3
+    integer(kind = ip) :: dim4
 
-    integer(kind = iprec) :: nc_id
-    integer(kind = iprec) :: var_id
-    integer(kind = iprec) :: dim1_id
-    integer(kind = iprec) :: dim2_id
-    integer(kind = iprec) :: dim3_id
-    integer(kind = iprec) :: dim4_id
+    integer(kind = ip) :: nc_id
+    integer(kind = ip) :: var_id
+    integer(kind = ip) :: dim1_id
+    integer(kind = ip) :: dim2_id
+    integer(kind = ip) :: dim3_id
+    integer(kind = ip) :: dim4_id
 
     !======================================!
     !- SECTION 1: test optional arguments -!
