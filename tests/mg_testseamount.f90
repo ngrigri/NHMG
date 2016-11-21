@@ -2,9 +2,10 @@ program mg_testseamount
 
   use mg_mpi
   use mg_tictoc
-  use mg_setup_tests
+  use mg_zr_zw
   use mg_mpi_exchange_ijk
-  use nhydro
+  use mg_setup_tests
+  use nhmg
 
   implicit none
 
@@ -18,8 +19,6 @@ program mg_testseamount
   integer(kind=ip) :: nx, ny, nz  ! local dimensions
 
   real(kind=rp), dimension(:,:,:), allocatable, target :: u,v,w
-  real(kind=rp), dimension(:,:,:), allocatable, target :: tmp_rnd
-  real(kind=rp), dimension(:,:,:), allocatable, target :: tmp_rnd2
   real(kind=rp), dimension(:,:,:), pointer :: up,vp,wp
   real(kind=rp) :: Lx, Ly, Htot
 
@@ -27,12 +26,15 @@ program mg_testseamount
 
   integer(kind=ip) :: it, nit
 
-  real(kind=rp), dimension(:,:), pointer :: dx, dy, zeta, h
-  real(kind=rp), dimension(:,:), pointer :: rmask
+  real(kind=rp), dimension(:,:), pointer :: dx , dy, zeta, h
+  real(kind=rp), dimension(:,:), pointer :: dxu, dyv
   real(kind=rp) :: hc, theta_b, theta_s
 
-  integer(kind=ip) :: pi, pj
-  integer(kind=ip) :: ib, ie, jb, je, kb, ke
+  real(kind=rp), dimension(:,:,:), pointer :: z_r
+  real(kind=rp), dimension(:,:,:), pointer :: z_w
+
+  !  integer(kind=ip) :: pi, pj
+  !  integer(kind=ip) :: ib, ie, jb, je, kb, ke
 
   call tic(1,'mg_bench_seamount')
 
@@ -62,11 +64,11 @@ program mg_testseamount
   nz = nzg
 
   !---------------------!
-  !- Initialise nhydro -!
+  !- Initialise nhmg -!
   !---------------------!
-  if (rank == 0) write(*,*)'Initialise nhydro grids'
+  if (rank == 0) write(*,*)'Initialise nhmg grids'
 
-  call nhydro_init(nx,ny,nz,npxg,npyg)
+  call nhmg_init(nx,ny,nz,npxg,npyg)
 
   !---------------------!
   !- Setup seamount    -!
@@ -87,21 +89,29 @@ program mg_testseamount
      write(*,*)'hc, theta_b, theta_s:',hc, theta_b, theta_s
   endif
 
-  allocate(   dx(0:ny+1,0:nx+1))
-  allocate(   dy(0:ny+1,0:nx+1))
-  allocate( zeta(0:ny+1,0:nx+1))
-  allocate(    h(0:ny+1,0:nx+1))
+  allocate(    h(0:nx+1,0:ny+1))
+  allocate( zeta(0:nx+1,0:ny+1))
 
-  call setup_seamount(nx,ny,nz,npxg,npyg,Lx,Ly,Htot,dx,dy,zeta,h)
+  allocate(  dx (0:nx+1,0:ny+1))
+  allocate(  dy (0:nx+1,0:ny+1))
+  allocate(  dxu(0:nx+1,0:ny+1))
+  allocate(  dyv(0:nx+1,0:ny+1))
 
-  allocate(rmask(0:ny+1,0:nx+1))
-  rmask(:,:) = 1._rp
-  if (bmask) then
-     !- Mask the boundaries
-     call fill_halo_2D_bmask(1,rmask)   !- Generic n procs
-  endif
+  allocate(   z_r(0:nx+1,0:ny+1,1:nz))
+  allocate(   z_w(0:nx+1,0:ny+1,1:nz+1))
 
-  call nhydro_matrices(dx,dy,zeta,h,rmask,hc,theta_b,theta_s)
+  call setup_seamount(  &
+       nx,ny,npxg,npyg, &
+       Lx,Ly,Htot,      &
+       dx,dy,           &
+       dxu,dyv,         &
+       zeta,h        )
+
+  !TODO -> calculate correctly dxu, dyu
+  call nhmg_set_horiz_grids(nx,ny,dx,dy,dxu,dyv)
+
+  call setup_zr_zw(hc,theta_b,theta_s,zeta,h,z_r,z_w,'new_s_coord')
+  call nhmg_set_vert_grids(nx,ny,nz,z_r,z_w)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
@@ -145,7 +155,7 @@ program mg_testseamount
 !!$  allocate(tmp_rnd (1:nxg,1:nyg,1:nzg))
 !!$  allocate(tmp_rnd2(1:nxg,1:nyg,0:nzg))
 !!$
-     do it = 1, nit
+  do it = 1, nit
 !!$
 !!$     kb = 1
 !!$     ke = nz
@@ -177,28 +187,18 @@ program mg_testseamount
         call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=myrank,iter=it)
      endif
 
-     !----------------------!
-     !- Call nhydro solver -!
-     !----------------------!
-     if (rank == 0) write(*,*)'Call nhydro solver'
 
-     call nhydro_solve(nx,ny,nz,rmask,u,v,w)
+     !----------------------!
+     !- Call nhmg solver -!
+     !----------------------!
+     if (rank == 0) write(*,*)'Call nhmg solver'
+
+     call nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
         call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=myrank,iter=it)
         call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=myrank,iter=it)
         call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=myrank,iter=it)
-     endif
-
-     !------------------------------------------------------------!
-     !- Check if nh correction is correct                        -!
-     !------------------------------------------------------------!
-     if (rank == 0) write(*,*)'Check nondivergence'
-
-     call nhydro_check_nondivergence(nx,ny,nz,rmask,u,v,w)
-
-     if (netcdf_output) then
-        call write_netcdf(grid(1)%b,vname='bc',netcdf_file_name='bc.nc',rank=myrank,iter=it)
      endif
 
   enddo
@@ -210,7 +210,7 @@ program mg_testseamount
   !- Deallocate memory -!
   !---------------------!
   if (rank == 0) write(*,*)'Clean memory before to finish the program.'
-  call nhydro_clean()
+  call nhmg_clean()
 
   !----------------------!
   !- End Bench-seamount -!

@@ -2,8 +2,10 @@ program mg_testcuc
 
   use mg_mpi 
   use mg_tictoc
+  use mg_zr_zw
+  use mg_mpi_exchange_ijk
   use mg_setup_tests
-  use nhydro
+  use nhmg
 
   implicit none
 
@@ -22,7 +24,10 @@ program mg_testcuc
   real(kind=8) :: Lx, Ly, Htot
   real(kind=8) :: hc, theta_b, theta_s
   real(kind=8), dimension(:,:), pointer :: dx, dy, zeta, h
-  real(kind=8), dimension(:,:), pointer :: rmask
+  real(kind=rp), dimension(:,:), pointer :: dxu, dyv
+
+  real(kind=rp), dimension(:,:,:), pointer :: z_r
+  real(kind=rp), dimension(:,:,:), pointer :: z_w
 
   call tic(1,'mg_testcuc')
 
@@ -52,11 +57,11 @@ program mg_testcuc
   nz = nzg
 
   !---------------------!
-  !- Initialise nhydro -!
+  !- Initialise nhmg -!
   !---------------------!
-  if (rank == 0) write(*,*)'Initialise nhydro grids'
+  if (rank == 0) write(*,*)'Initialise nhmg grids'
 
-  call nhydro_init(nx,ny,nz,npxg,npyg)
+  call nhmg_init(nx,ny,nz,npxg,npyg)
 
   !---------------!
   !- Setup CUC   -!
@@ -81,20 +86,27 @@ program mg_testcuc
   !- dx,dy,h and U,V,W initialisation (model vars) -!
   !-------------------------------------------------!
   allocate(   h(0:ny+1,0:nx+1))
-  allocate(  dx(0:ny+1,0:nx+1))
   allocate(zeta(0:ny+1,0:nx+1))
+
+  allocate(  dx(0:ny+1,0:nx+1))
   allocate(  dy(0:ny+1,0:nx+1))
+  allocate(  dxu(0:nx+1,0:ny+1))
+  allocate(  dyv(0:nx+1,0:ny+1))
 
-  call setup_cuc(nx,ny,nz,npxg,npyg,Lx,Ly,Htot,dx,dy,zeta,h)
+  allocate(   z_r(0:nx+1,0:ny+1,1:nz))
+  allocate(   z_w(0:nx+1,0:ny+1,1:nz+1))
 
-  allocate(rmask(0:ny+1,0:nx+1))
-  rmask(:,:) = 1._rp
-  if (bmask) then
-     !- Mask the boundaries
-     call fill_halo_2D_bmask(1,rmask)   !- Generic n procs
-  endif
+  call setup_cuc(       &
+       nx,ny,npxg,npyg, &
+       dx,dy,           &
+       dxu,dyv,         &
+       zeta,h)
 
-  call nhydro_matrices(dx,dy,zeta,h,rmask,hc,theta_b,theta_s)
+  !TODO -> calculate (or read) correct dxu, dyu
+  call nhmg_set_horiz_grids(nx,ny,dx,dy,dxu,dyv)
+
+  call setup_zr_zw(hc,theta_b,theta_s,zeta,h,z_r,z_w,'new_s_coord')
+  call nhmg_set_vert_grids(nx,ny,nz,z_r,z_w)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
@@ -119,25 +131,15 @@ program mg_testcuc
      endif
 
      !----------------------!
-     !- Call nhydro solver -!
+     !- Call nhmg solver -!
      !----------------------!
-     if (rank == 0) write(*,*)'Call nhydro solver'
-     call  nhydro_solve(nx,ny,nz,rmask,u,v,w)
+     if (rank == 0) write(*,*)'Call nhmg solver'
+     call  nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
         call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=myrank,iter=it)
         call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=myrank,iter=it)
         call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=myrank,iter=it)
-     endif
-
-     !------------------------------------------------------------!
-     !- Call nhydro correct to check if nh correction is correct -!
-     !------------------------------------------------------------!
-     if (rank == 0) write(*,*)'Check nondivergence'
-     call nhydro_check_nondivergence(nx,ny,nz,rmask,u,v,w)
-
-     if (netcdf_output) then
-        call write_netcdf(grid(1)%b,vname='bc',netcdf_file_name='bc.nc',rank=myrank,iter=it)
      endif
 
   enddo
@@ -146,7 +148,7 @@ program mg_testcuc
   !- Deallocate memory -!
   !---------------------!
   if (rank == 0) write(*,*)'Cleaning memory before to finish the program.'
-  call nhydro_clean()
+  call nhmg_clean()
 
   !------------------!
   !- End test-model -!
