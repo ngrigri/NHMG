@@ -165,8 +165,9 @@ contains
 
     real(kind=rp), dimension(:,:)  ,   pointer :: su_integr,sv_integr
     real(kind=rp), dimension(:,:)  ,   pointer :: uf_integr,vf_integr
-    real(kind=rp), dimension(:,:,:),   pointer :: uf_integr_tmp,vf_integr_tmp !!dirty
     real(kind=rp), dimension(:,:,:),   pointer :: wc
+
+    real(kind=rp), dimension(:,:,:),   pointer :: uf_integr_tmp,vf_integr_tmp !!dirty
 
     integer(kind=ip), save :: iter_coupling_in=0
     iter_coupling_in = iter_coupling_in + 1

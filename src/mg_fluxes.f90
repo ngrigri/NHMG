@@ -28,8 +28,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: cw
 
-    real(kind=rp), dimension(:,:,:), pointer :: uf_tmp,vf_tmp !!dirty
-
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
@@ -47,7 +45,7 @@ contains
     zxdy => grid(1)%zxdy
     zydx => grid(1)%zydx
 
-    !- UF -!
+    !- uf -!
 
     ! lower level
     k = 1
@@ -92,13 +90,9 @@ contains
        enddo
     enddo
 
-    allocate(uf_tmp(1:nz,0:ny+1,0:nx+1))
-    uf_tmp(:,1:ny,1:nx+1)=uf(:,1:ny,1:nx+1)
-    call fill_halo(1,uf_tmp,lbc_null='u')
-    uf(:,0:ny+1,1:nx+1)=uf_tmp(:,0:ny+1,1:nx+1)
-    deallocate(uf_tmp)
+    call fill_halo(1,uf,lbc_null='u')
 
-    !- VF -!
+    !- vf -!
 
     !lower level
     k = 1
@@ -143,11 +137,7 @@ contains
        enddo
     enddo
 
-    allocate(vf_tmp(1:nz,0:ny+1,0:nx+1))
-    vf_tmp(:,1:ny+1,1:nx)=vf(:,1:ny+1,1:nx)
-    call fill_halo(1,vf_tmp,lbc_null='v')
-    vf(:,1:ny+1,0:nx+1)=vf_tmp(:,1:ny+1,0:nx+1)
-    deallocate(vf_tmp)
+    call fill_halo(1,vf,lbc_null='v')
 
   end subroutine set_fluxes
  

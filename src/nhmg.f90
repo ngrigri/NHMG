@@ -231,7 +231,7 @@ contains
 !!! dirty reshape arrays indexing ijk -> kji !!!
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
     real(kind=rp), dimension(:,:,:), allocatable, target :: ufb,vfb
-!!!
+!!! dirty reshape arrays indexing ijk -> kji !!!
 
     integer(kind=ip) :: i,j,k
 
@@ -243,8 +243,8 @@ contains
     call tic(1,'nhmg_fluxes')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(ub(1:nz,0:ny+1,  nx+1))
-    allocate(vb(1:nz,  ny+1,0:nx+1))
+    allocate(ub(1:nz  ,0:ny+1,0:nx+1)) ! modified i : 0:nx+1
+    allocate(vb(1:nz  ,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
@@ -253,6 +253,7 @@ contains
         enddo
       enddo
     enddo
+!
     do i = 0,nx+1
       do j = 1,ny+1
         do k = 1,nz
@@ -260,6 +261,7 @@ contains
         enddo
       enddo
     enddo
+!
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz+1
@@ -271,11 +273,11 @@ contains
     v => vb
     w => wb
 
-    allocate(ufb(1:nz,0:ny+1,  nx+1))
-    allocate(vfb(1:nz,  ny+1,0:nx+1))
+    allocate(ufb(1:nz,0:ny+1,0:nx+1)) ! modified i : 0:nx+1
+    allocate(vfb(1:nz,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
     uf => ufb
     vf => vfb
-!!!
+!!! dirty reshape arrays indexing ijk -> kji !!!
 
 !    u => ua
 !    v => va
@@ -311,7 +313,7 @@ contains
         enddo
       enddo
     enddo
-!!!
+!!! dirty reshape arrays indexing kji -> ijk !!!
 
     if (associated(u)) u => null()
     if (associated(v)) v => null()
@@ -325,7 +327,7 @@ contains
     deallocate(wb)
     deallocate(ufb)
     deallocate(vfb)
-!!!
+!!! dirty reshape arrays indexing kji -> ijk !!!
 
     call toc(1,'nhmg_fluxes')	
  
@@ -352,9 +354,7 @@ contains
     real(kind=rp), dimension(:,:),   allocatable, target :: uf_barb,vf_barb 
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
     real(kind=rp), dimension(:,:,:), allocatable, target :: ufb,vfb
-!!! 
-
-    real(kind=rp), dimension(:,:,:), pointer :: Tmp3Darray
+!!! dirty reshape arrays indexing ijk -> kji !!!
 
     integer(kind=ip) :: i,j,k
 
@@ -366,31 +366,21 @@ contains
     call tic(1,'nhmg_coupling')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(uf_barb(0:ny+1,  nx+1))
-    allocate(vf_barb(  ny+1,0:nx+1))
-    allocate(ub(1:nz,0:ny+1,  nx+1))
-    allocate(vb(1:nz,  ny+1,0:nx+1))
+    allocate(uf_barb(0:ny+1,0:nx+1))   ! modified i : 0:nx+1
+    allocate(vf_barb(0:ny+1,0:nx+1))   ! modified j : 0:ny+1
+    allocate(ub(1:nz  ,0:ny+1,0:nx+1)) ! modified i : 0:nx+1
+    allocate(vb(1:nz  ,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
           uf_barb(j,i) = uf_bara(i,j)
       enddo
     enddo
-    allocate(Tmp3Darray(1:nz,0:ny+1, 0:nx+1))
-    Tmp3Darray(:,:,:) = zero
-    Tmp3Darray(1,0:ny+1,1:nx+1)=uf_barb(0:ny+1,1:nx+1)
-    call fill_halo(1,Tmp3Darray,lbc_null='u')
-    uf_barb(0:ny+1,1:nx+1)=Tmp3Darray(1,0:ny+1,1:nx+1)
     do i = 0,nx+1
       do j = 1,ny+1
           vf_barb(j,i) = vf_bara(i,j)
       enddo
     enddo
-    Tmp3Darray(:,:,:) = zero
-    Tmp3Darray(1,1:ny+1,0:nx+1)=vf_barb(1:ny+1,0:nx+1)
-    call fill_halo(1,Tmp3Darray,lbc_null='v')
-    vf_barb(1:ny+1,0:nx+1)=Tmp3Darray(1,1:ny+1,0:nx+1)
-    deallocate(Tmp3Darray)
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
@@ -417,15 +407,18 @@ contains
     u => ub
     v => vb
     w => wb
-
-    call fill_halo(1,w)
-!!!
+!!! dirty reshape arrays indexing ijk -> kji !!!
 
 !    uf_bar => uf_bara
 !    vf_bar => vf_bara
 !    u => ua
 !    v => va
 !    w => wa
+
+    call fill_halo(1,uf_bar,lbc_null='u')
+    call fill_halo(1,vf_bar,lbc_null='v')
+!no fill_halo needed for u and w?
+    call fill_halo(1,w)
 
        if (check_output) then
           call write_netcdf(uf_bar,vname='uf_bar',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
@@ -508,7 +501,7 @@ contains
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
-!!!
+!!! dirty reshape arrays indexing kji -> ijk !!!
 
     call toc(1,'nhmg_coupling')
 
@@ -543,8 +536,8 @@ contains
     call tic(1,'nhmg_solve')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate( ub(1:nz,0:ny+1,0:nx+1))
-    allocate( vb(1:nz,0:ny+1,0:nx+1))
+    allocate( ub(1:nz,0:ny+1,0:nx+1)) ! modified i : 0:nx+1 
+    allocate( vb(1:nz,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
     allocate( wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
@@ -587,6 +580,7 @@ contains
     call fill_halo(1,u,lbc_null='u')
     call fill_halo(1,v,lbc_null='v')
     call fill_halo(1,w)
+
     !    u => ua
     !    v => va
     !    w => wa
