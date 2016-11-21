@@ -19,6 +19,8 @@ Makefile
 *.log
 # Ignore all files Makefile
 Makefile
+# Ignore all files libtool
+libtool
 # Ignore all files *.nc
 *.nc
 # Ignore all files *.pdf
