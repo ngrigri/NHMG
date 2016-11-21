@@ -336,9 +336,8 @@ contains
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(1:nx+1,0:ny+1),      target, intent(in) :: uf_bara
-    real(kind=rp), dimension(0:nx+1,1:ny+1),      target, intent(in) :: vf_bara
-  
+    real(kind=rp), dimension(1:nx+1,0:ny+1),        target, intent(in) :: uf_bara
+    real(kind=rp), dimension(0:nx+1,1:ny+1),        target, intent(in) :: vf_bara
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
     real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa !vertical indexing different than croco

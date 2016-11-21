@@ -87,11 +87,11 @@ contains
           do k = 2,nz-1 
  
              uf(k,j,i) = Arx(k,j,i)/dxu(j,i) *dxu(j,i)*u(k,j,i) &
-
-                  - qrt * ( zxdy(k,j,i  ) *dzw(k  ,j,i  )*w(k  ,j,i  ) &
-                           +zxdy(k,j,i  ) *dzw(k+1,j,i  )*w(k+1,j,i  ) &
-                           +zxdy(k,j,i-1) *dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-                           +zxdy(k,j,i-1) *dzw(k+1,j,i-1)*w(k+1,j,i-1) )
+                  - qrt * ( &
+                  + zxdy(k,j,i  ) *dzw(k  ,j,i  )*w(k  ,j,i  ) &
+                  + zxdy(k,j,i  ) *dzw(k+1,j,i  )*w(k+1,j,i  ) &
+                  + zxdy(k,j,i-1) *dzw(k  ,j,i-1)*w(k  ,j,i-1) &
+                  + zxdy(k,j,i-1) *dzw(k+1,j,i-1)*w(k+1,j,i-1) )
           enddo
        enddo
     enddo
@@ -165,11 +165,11 @@ contains
           do k = 2,nz-1
 
              vf(k,j,i) = Ary(k,j,i)/dyv(j,i) *dyv(j,i)*v(k,j,i) &
-
-                  - qrt * ( zydx(k,j  ,i) *dzw(k  ,j  ,i)*w(k  ,j  ,i) &
-                           +zydx(k,j  ,i) *dzw(k+1,j  ,i)*w(k+1,j  ,i) &
-                           +zydx(k,j-1,i) *dzw(k  ,j-1,i)*w(k  ,j-1,i) &
-                           +zydx(k,j-1,i) *dzw(k+1,j-1,i)*w(k+1,j-1,i) )
+                  - qrt * ( &
+                  + zydx(k,j  ,i) *dzw(k  ,j  ,i)*w(k  ,j  ,i) &
+                  + zydx(k,j  ,i) *dzw(k+1,j  ,i)*w(k+1,j  ,i) &
+                  + zydx(k,j-1,i) *dzw(k  ,j-1,i)*w(k  ,j-1,i) &
+                  + zydx(k,j-1,i) *dzw(k+1,j-1,i)*w(k+1,j-1,i) )
           enddo
        enddo
     enddo
@@ -179,11 +179,11 @@ contains
        do j = 1,ny+1
 
             vf(k,j,i) = Ary(k,j,i)/dyv(j,i) *dyv(j,i)*v(k,j,i) &
-
-                  - qrt * ( zydx(k,j  ,i) *      dzw(k  ,j  ,i)*w(k  ,j  ,i) &
-                           +zydx(k,j  ,i) * two *dzw(k+1,j  ,i)*w(k+1,j  ,i) &
-                           +zydx(k,j-1,i) *      dzw(k  ,j-1,i)*w(k  ,j-1,i) &
-                           +zydx(k,j-1,i) * two *dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
+                  - qrt * ( &
+                  + zydx(k,j  ,i)       *dzw(k  ,j  ,i)*w(k  ,j  ,i) &
+                  + zydx(k,j  ,i) * two *dzw(k+1,j  ,i)*w(k+1,j  ,i) &
+                  + zydx(k,j-1,i)       *dzw(k  ,j-1,i)*w(k  ,j-1,i) &
+                  + zydx(k,j-1,i) * two *dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
        enddo
     enddo
 
@@ -230,16 +230,16 @@ contains
           do k = 2,nz
 
              wf(k,j,i) = cw(k,j,i) *dzw(k,j,i)*w(k,j,i) &
-
-                  - qrt * ( zxdy(k  ,j,i) *dxu(j,i  )*u(k  ,j,i  ) &
-                           +zxdy(k  ,j,i) *dxu(j,i+1)*u(k  ,j,i+1) &
-                           +zxdy(k-1,j,i) *dxu(j,i  )*u(k-1,j,i  ) &
-                           +zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
-
-                  - qrt * ( zydx(k  ,j,i) *dyv(j  ,i)*v(k  ,j  ,i) &
-                           +zydx(k  ,j,i) *dyv(j+1,i)*v(k  ,j+1,i) &
-                           +zydx(k-1,j,i) *dyv(j  ,i)*v(k-1,j  ,i) &
-                           +zydx(k-1,j,i) *dyv(j+1,i)*v(k-1,j+1,i) )
+                  - qrt * ( &
+                  + zxdy(k  ,j,i) *dxu(j,i  )*u(k  ,j,i  ) &
+                  + zxdy(k  ,j,i) *dxu(j,i+1)*u(k  ,j,i+1) &
+                  + zxdy(k-1,j,i) *dxu(j,i  )*u(k-1,j,i  ) &
+                  + zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
+                  - qrt * ( &
+                  + zydx(k  ,j,i) *dyv(j  ,i)*v(k  ,j  ,i) &
+                  + zydx(k  ,j,i) *dyv(j+1,i)*v(k  ,j+1,i) &
+                  + zydx(k-1,j,i) *dyv(j  ,i)*v(k-1,j  ,i) &
+                  + zydx(k-1,j,i) *dyv(j+1,i)*v(k-1,j+1,i) )
           enddo
        enddo
     enddo
@@ -250,12 +250,12 @@ contains
        do j = 1,ny
 
           wf(k,j,i) = cw(k,j,i) *dzw(k,j,i)*w(k,j,i) &
-
-                  - hlf * ( zxdy(k-1,j,i) *dxu(j,i  )*u(k-1,j,i  ) &
-                           +zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
-
-                  - hlf * ( zydx(k-1,j,i) *dyv(j  ,i)*v(k-1,j  ,i) &
-                           +zydx(k-1,j,i) *dyv(j+1,i)*v(k-1,j+1,i) )
+                  - hlf * ( &
+                  + zxdy(k-1,j,i) *dxu(j,i  )*u(k-1,j,i  ) &
+                  +zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
+                  - hlf * ( &
+                  + zydx(k-1,j,i) *dyv(j  ,i)*v(k-1,j  ,i) &
+                  + zydx(k-1,j,i) *dyv(j+1,i)*v(k-1,j+1,i) )
        enddo
     enddo
 
