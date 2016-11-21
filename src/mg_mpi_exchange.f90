@@ -21,10 +21,11 @@ contains
   !----------------------------------------------------------------------------
   !- Nonblocking MPI exchanges -!
   !-----------------------------!
-  subroutine fill_halo_2D(lev, a2D)
+  subroutine fill_halo_2D(lev,a2D,lbc_null)
 
     integer(kind=ip), intent(in):: lev
     real(kind=rp), dimension(:,:), pointer, intent(inout)::a2D
+    character(len=1), optional, intent(in) :: lbc_null
 
     integer(kind=ip) :: nx, ny
     integer(kind=ip) :: nh
@@ -33,6 +34,9 @@ contains
 
     integer(kind=ip) :: sntag, ewtag, nstag, wetag
     integer(kind=ip) :: swnetag, senwtag, nwsetag, neswtag
+
+    logical :: lbc
+    character(len=1) :: cuv
 
     integer(kind=ip) :: i, j
     integer(kind=ip) :: icount
@@ -51,6 +55,13 @@ contains
     real(kind=rp), dimension(:,:), pointer :: sendE,recvE,sendW,recvW
     real(kind=rp), dimension(:,:), pointer :: sendSW,recvSW,sendSE,recvSE
     real(kind=rp), dimension(:,:), pointer :: sendNW,recvNW,sendNE,recvNE
+
+    if (present(lbc_null)) then
+       cuv=trim(lbc_null)
+       lbc=.true.
+    else
+       lbc=.false.
+    endif
 
     nx = grid(lev)%nx
     ny = grid(lev)%ny
@@ -110,6 +121,8 @@ contains
             recvS,nx*nh,MPI_DOUBLE_PRECISION,south, &
             nstag,MPI_COMM_WORLD,req(1),ierr)
        comm(1)=1
+    elseif ((lbc).and.(trim(cuv)=='v')) then
+       a2d(1,:) = zero
     else !!Homogenous Neumann  
        a2D(1-nh:0,1:nx) = a2D(nh:1:-1,1:nx)
     endif
@@ -119,6 +132,8 @@ contains
             recvE,ny*nh,MPI_DOUBLE_PRECISION,east, &
             wetag,MPI_COMM_WORLD,req(2),ierr)
        comm(2)=2
+    elseif ((lbc).and.(trim(cuv)=='u')) then
+       a2d(:,nx+1) = zero
     else !!Homogenous Neumann 
        a2D(1:ny,nx+1) = a2D(1:ny,nx)
     endif
@@ -128,6 +143,8 @@ contains
             recvN,nx*nh,MPI_DOUBLE_PRECISION,north, &
             sntag,MPI_COMM_WORLD,req(3),ierr)
        comm(3)=3
+    elseif ((lbc).and.(trim(cuv)=='v')) then 
+       a2d(ny+1,:) = zero
     else !!Homogenous Neumann  
        a2D(ny+1:ny+nh,1:nx) = a2D(ny:ny-nh+1:-1,1:nx)
     endif
@@ -137,6 +154,8 @@ contains
             recvW,ny*nh,MPI_DOUBLE_PRECISION,west, &
             ewtag,MPI_COMM_WORLD,req(4),ierr)
        comm(4)=4
+    elseif ((lbc).and.(trim(cuv)=='u')) then
+       a2d(:,1) = zero
     else !!Homogenous Neumann
        a2D(1:ny,1-nh:0) = a2D(1:ny,nh:1:-1)
     endif
@@ -148,6 +167,8 @@ contains
             recvSW,nh*nh,MPI_DOUBLE_PRECISION,southwest, &
             neswtag,MPI_COMM_WORLD,req(5),ierr)
        comm(5)=5
+    elseif ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
+       a2d(1-nh:0,1-nh:0) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_sw_s = .true.
     elseif (west.ne.MPI_PROC_NULL) then
@@ -163,6 +184,8 @@ contains
             recvSE,nh*nh,MPI_DOUBLE_PRECISION,southeast, &
             nwsetag,MPI_COMM_WORLD,req(6),ierr)
        comm(6)=6
+    elseif ((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
+       a2d(1-nh:0,nx+1:nx+nh) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_se_s = .true.
     elseif (east.ne.MPI_PROC_NULL) then
@@ -178,6 +201,9 @@ contains
             recvNE,nh*nh,MPI_DOUBLE_PRECISION,northeast, &
             swnetag,MPI_COMM_WORLD,req(7),ierr)
        comm(7)=7
+    elseif (((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
+         ((lbc).and.(trim(cuv)=='v')) ) then
+       a2d(ny+1:ny+nh,nx+1:nx+nh) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_ne_n = .true.
     elseif (east.ne.MPI_PROC_NULL) then
@@ -193,6 +219,9 @@ contains
             recvNW,nh*nh,MPI_DOUBLE_PRECISION,northwest, &
             senwtag,MPI_COMM_WORLD,req(8),ierr)
        comm(8)=8
+    elseif ( ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
+         ((lbc).and.(trim(cuv)=='v')) ) then
+       a2d(ny+1:ny+nh,1-nh:0) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_nw_n = .true.
     elseif (west.ne.MPI_PROC_NULL) then
@@ -1176,7 +1205,7 @@ contains
 
     enddo      !<-- while
 
-    !- corners on physicical boundarie if a flag is true-!
+    !- corners on physical boundarie if a flag is true-!
     if (flag_sw_s) then
        p(:,1-nh:0,1-nh:0) = p(:,1-nh:0,nh:1:-1)
     elseif (flag_sw_w) then
