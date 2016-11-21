@@ -586,10 +586,7 @@ contains
     !    w => wa
 
        if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then 
           call write_netcdf(u,vname='uin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
           call write_netcdf(v,vname='vin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
           call write_netcdf(w,vname='win',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
@@ -600,10 +597,7 @@ contains
     call set_rhs(u,v,w)
 
     if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
        call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !       endif
     endif
@@ -615,10 +609,7 @@ contains
     call solve_p()
 
     if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
        call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !       endif
@@ -628,10 +619,7 @@ contains
     call correct_uvw(u,v,w)
 
        if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
           call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
           call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
           call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
@@ -647,10 +635,7 @@ contains
        call bc2bt_coupling(dt,ru,rv)
 
        if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
           call write_netcdf(ru,vname='ru',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
           call write_netcdf(rv,vname='rv',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !          endif
@@ -662,10 +647,7 @@ contains
     call set_rhs(u,v,w)
 
     if (check_output) then
-!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200) .OR. &
-!           (iter_solve .EQ. 999) .OR. (iter_solve .EQ. 1000) .OR. &
-!           (iter_solve .EQ. 1999) .OR. (iter_solve .EQ. 2000) .OR. &
-!           (iter_solve .GE. 3499)) then
+!       if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
        call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !       endif
     endif
