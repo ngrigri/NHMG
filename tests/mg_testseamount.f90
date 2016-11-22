@@ -1,5 +1,6 @@
 program mg_testseamount
 
+  use mg_cst
   use mg_mpi
   use mg_tictoc
   use mg_zr_zw
@@ -9,46 +10,89 @@ program mg_testseamount
 
   implicit none
 
-  integer(kind=ip):: nxg    ! global x dimension
-  integer(kind=ip):: nyg    ! global y dimension
-  integer(kind=ip):: nzg    ! z dimension
-
-  integer(kind=ip):: npxg   ! number of processes in x
-  integer(kind=ip):: npyg   ! number of processes in y
-
   integer(kind=ip) :: nx, ny, nz  ! local dimensions
+  integer(kind=ip) :: it          ! iteration
+  integer(kind=ip) :: np, ierr, rank
+
+  real(kind=rp), dimension(:,:), pointer :: dx, dy
+  real(kind=rp), dimension(:,:), pointer :: dxu, dyv
+  real(kind=rp), dimension(:,:), pointer :: zeta, h
+  real(kind=rp), dimension(:,:,:), pointer :: z_r
+  real(kind=rp), dimension(:,:,:), pointer :: z_w
 
   real(kind=rp), dimension(:,:,:), allocatable, target :: u,v,w
   real(kind=rp), dimension(:,:,:), pointer :: up,vp,wp
-  real(kind=rp) :: Lx, Ly, Htot
-
-  integer(kind=ip) :: np, ierr, rank
-
-  integer(kind=ip) :: it, nit
-
-  real(kind=rp), dimension(:,:), pointer :: dx , dy, zeta, h
-  real(kind=rp), dimension(:,:), pointer :: dxu, dyv
-  real(kind=rp) :: hc, theta_b, theta_s
-
-  real(kind=rp), dimension(:,:,:), pointer :: z_r
-  real(kind=rp), dimension(:,:,:), pointer :: z_w
 
   !  integer(kind=ip) :: pi, pj
   !  integer(kind=ip) :: ib, ie, jb, je, kb, ke
 
-  call tic(1,'mg_bench_seamount')
+  integer(kind=ip) :: nit=1
+  integer(kind=ip):: nxg  = 64       ! global x dimension
+  integer(kind=ip):: nyg  = 64       ! global y dimension
+  integer(kind=ip):: nzg  = 64       ! z dimension
+  integer(kind=ip):: npxg  = 1       ! number of processes in x
+  integer(kind=ip):: npyg  = 1       ! number of processes in y
+  real(kind=rp) :: Lx      = 1.e4_rp ! Domain length in x [meter]
+  real(kind=rp) :: Ly      = 1.e4_rp ! Domain length in y [meter]
+  real(kind=rp) :: Htot    = 4.e3_rp ! Depth [meter]
+  real(kind=rp) :: hc      = 4.e3_rp !
+  real(kind=rp) :: theta_b = 0._rp   !
+  real(kind=rp) :: theta_s = 0._rp   !
 
-  nit = 1
+  integer(kind=ip)  :: lun_nml = 4
+  logical :: nml_exist=.false.
+
+  namelist/tsparam/ &
+       nit        , &
+       nxg        , &
+       nyg        , &
+       nzg        , &
+       npxg       , &
+       npyg       , &
+       Lx         , &
+       Ly         , &
+       Htot       , &
+       hc         , &
+       theta_b    , &
+       theta_s
+
+  call tic(1,'test_seamount')
+
+  !---------------------!
+  !- Namelist (or not) -!
+  !---------------------!
+
+  !- Check if a ts_namelist file exist
+  inquire(file='ts_namelist', exist=nml_exist)
+
+  !- Read namelist file if it is present, else use default values
+  if (nml_exist) then
+     if (myrank == 0) write(*,*)'- Reading ts_namelist file'
+     open(unit=lun_nml, File='ts_namelist', ACTION='READ')
+     rewind(unit=lun_nml)
+     read(unit=lun_nml, nml=tsparam)
+  endif
+
+  if (myrank == 0) then
+     write(*,*)'test seamount parameters:'
+     write(*,*)'  - nit     : ', nit 
+     write(*,*)'  - nxg     : ', nxg
+     write(*,*)'  - nyg     : ', nyg
+     write(*,*)'  - nzg     : ', nzg
+     write(*,*)'  - npxg    : ', npxg 
+     write(*,*)'  - npyg    : ', npyg
+     write(*,*)'  - Lx      : ', Lx
+     write(*,*)'  - Ly      : ', Ly
+     write(*,*)'  - Htot    : ', Htot
+     write(*,*)'  - hc      : ', hc
+     write(*,*)'  - theta_b : ', theta_b
+     write(*,*)'  - theta_s : ', theta_s
+     write(*,*)'  '
+  endif
 
   !---------------------!
   !- Global/local dim  -!
   !---------------------!
-  nxg   = 64
-  nyg   = 64
-  nzg   = 64
-
-  npxg  = 2
-  npyg  = 2
 
   call mpi_init(ierr)
   call mpi_comm_rank(mpi_comm_world, rank, ierr)
@@ -63,9 +107,9 @@ program mg_testseamount
   ny = nyg / npyg
   nz = nzg
 
-  !---------------------!
+  !-------------------!
   !- Initialise nhmg -!
-  !---------------------!
+  !-------------------!
   if (rank == 0) write(*,*)'Initialise nhmg grids'
 
   call nhmg_init(nx,ny,nz,npxg,npyg)
@@ -73,15 +117,7 @@ program mg_testseamount
   !---------------------!
   !- Setup seamount    -!
   !---------------------!
-  if (rank == 0) write(*,*)'Initialise seamount bench'
-
-  Lx   =  1.e4_rp
-  Ly   =  1.e4_rp
-  Htot =  4.e3_rp 
-
-  hc      = 4.e3_rp
-  theta_b =  0._rp
-  theta_s =  0._rp
+  if (rank == 0) write(*,*)'Initialise seamount test'
 
   if (myrank==0) then
      write(*,*)''
@@ -217,7 +253,7 @@ program mg_testseamount
   !----------------------!
   call mpi_finalize(ierr)
 
-  call toc(1,'mg_bench_seamount')
+  call toc(1,'test_seamount')
   if(myrank == 0) call print_tictoc(myrank)
 
 end program mg_testseamount
