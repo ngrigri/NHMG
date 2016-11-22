@@ -35,7 +35,7 @@ AC_PREREQ([2.59])
 #
 ## Initialize autoconf with name of project, version, bug report 
 ## and support email address.
-AC_INIT([NHMG],[0.0.2],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
+AC_INIT([NHMG],[0.0.3],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
 #
 #
 ## Set the directory that contains support scripts such as install-sh
@@ -740,7 +740,9 @@ AC_SUBST(TESTLIBS,[$TESTLIBS])
 AC_MSG_NOTICE([generating makefiles])
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 tests/Makefile ])
+                 tests/Makefile
+                 examples/Makefile
+                 examples/matlab/Makefile ])
 
 AC_OUTPUT()
 
