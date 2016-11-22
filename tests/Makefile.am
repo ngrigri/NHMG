@@ -24,9 +24,9 @@ SUBDIRS	       = .
 #tests_DATA  = nhmg_namelist
 #EXTRA_DIST     = $(tests_DATA)
 
-#bin_PROGRAMS   = \
-#    testseamount \
-#	testcuc
+bin_PROGRAMS   = \
+    testseamount \
+	testcuc
 
 ##
 testseamount_SOURCES=       \
