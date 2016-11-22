@@ -16,7 +16,7 @@ contains
        dxu, dyv,           &
        zeta, h         )
 
-    integer(kind=ip), intent(in) :: nx,ny  ! local dims
+    integer(kind=ip), intent(in) :: nx,ny  ! local dimsg
     integer(kind=ip), intent(in) :: npxg,npyg ! nb procs
     real(kind=rp), dimension(:,:), pointer, intent(out) :: dx, dy, zeta, h
     real(kind=rp), dimension(:,:), pointer, intent(out) :: dxu, dyv

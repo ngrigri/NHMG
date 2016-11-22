@@ -1,5 +1,6 @@
 program mg_testcuc
 
+  use mg_cst
   use mg_mpi 
   use mg_tictoc
   use mg_zr_zw
@@ -9,40 +10,84 @@ program mg_testcuc
 
   implicit none
 
-  integer(kind=4):: nxg        ! global x dimension
-  integer(kind=4):: nyg        ! global y dimension
-  integer(kind=4):: nzg        ! z dimension
-  integer(kind=4):: npxg       ! number of processes in x
-  integer(kind=4):: npyg       ! number of processes in y
+  integer(kind=ip) :: it
+  integer(kind=4):: ierr, np, rank
   integer(kind=4):: nx, ny, nz ! local dimensions
 
-  integer(kind=4):: ierr, np, rank
-  integer(kind=ip) :: it, nit
-
-  real(kind=8), dimension(:,:,:), pointer :: u,v,w
-
-  real(kind=8) :: Lx, Ly, Htot
-  real(kind=8) :: hc, theta_b, theta_s
-  real(kind=8), dimension(:,:), pointer :: dx, dy, zeta, h
+  real(kind=rp), dimension(:,:), pointer :: dx, dy 
+  real(kind=rp), dimension(:,:), pointer :: zeta, h
   real(kind=rp), dimension(:,:), pointer :: dxu, dyv
-
   real(kind=rp), dimension(:,:,:), pointer :: z_r
   real(kind=rp), dimension(:,:,:), pointer :: z_w
+  real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+
+  !- Namelist parameters -!
+  integer(kind=ip) :: nit=1
+  integer(kind=ip):: nxg  = 1024       ! global x dimension
+  integer(kind=ip):: nyg  = 1024       ! global y dimension
+  integer(kind=ip):: nzg  = 64         ! z dimension
+  integer(kind=ip):: npxg  = 2         ! number of processes in x
+  integer(kind=ip):: npyg  = 2         ! number of processes in y
+  real(kind=rp) :: Lx      = 200.e3_rp ! Domain length in x [meter]
+  real(kind=rp) :: Ly      = 200.e3_rp ! Domain length in y [meter]
+  real(kind=rp) :: Htot    = 4.e3_rp   ! Depth [meter]
+  real(kind=rp) :: hc      = 250._rp   !
+  real(kind=rp) :: theta_b =   6._rp   !
+  real(kind=rp) :: theta_s =   6._rp   !
+
+  integer(kind=ip)  :: lun_nml = 4 ! Logical Unit Number
+  logical :: nml_exist=.false.
 
   call tic(1,'mg_testcuc')
 
-  nit = 1
+  namelist/cucparam/ &
+       nit        , &
+       nxg        , &
+       nyg        , &
+       nzg        , &
+       npxg       , &
+       npyg       , &
+       Lx         , &
+       Ly         , &
+       Htot       , &
+       hc         , &
+       theta_b    , &
+       theta_s
+
+  !---------------------!
+  !- Namelist (or not) -!
+  !---------------------!
+  !- Check if a cuc_namelist file exist
+  inquire(file='cuc_namelist', exist=nml_exist)
+
+  !- Read namelist file if it is present, else use default values
+  if (nml_exist) then
+     if (myrank == 0) write(*,*)'- Reading cuc_namelist file'
+     open(unit=lun_nml, File='cuc_namelist', ACTION='READ')
+     rewind(unit=lun_nml)
+     read(unit=lun_nml, nml=cucparam)
+  endif
+
+  if (myrank == 0) then
+     write(*,*)'test CUC parameters:'
+     write(*,*)'  - nit     : ', nit 
+     write(*,*)'  - nxg     : ', nxg
+     write(*,*)'  - nyg     : ', nyg
+     write(*,*)'  - nzg     : ', nzg
+     write(*,*)'  - npxg    : ', npxg 
+     write(*,*)'  - npyg    : ', npyg
+     write(*,*)'  - Lx      : ', Lx
+     write(*,*)'  - Ly      : ', Ly
+     write(*,*)'  - Htot    : ', Htot
+     write(*,*)'  - hc      : ', hc
+     write(*,*)'  - theta_b : ', theta_b
+     write(*,*)'  - theta_s : ', theta_s
+     write(*,*)'  '
+  endif
 
   !---------------!
   !- Ocean model -!
   !---------------!
-  nxg  = 1024
-  nyg  = 1024
-  nzg  =   64
-
-  npxg  = 2
-  npyg  = 2
-
   call mpi_init(ierr)
   call mpi_comm_rank(mpi_comm_world, rank, ierr)
   call mpi_comm_size(mpi_comm_world, np, ierr)
@@ -67,14 +112,6 @@ program mg_testcuc
   !- Setup CUC   -!
   !---------------!
   if (rank == 0) write(*,*)'Initialise cuc bench'
-
-  Lx   = 200d3
-  Ly   = 200d3
-  Htot = 4d3
-
-  hc      = 250._rp
-  theta_b =   6._rp
-  theta_s =   6._rp
 
   if (myrank==0) then
      write(*,*)''
