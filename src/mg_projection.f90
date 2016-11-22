@@ -101,11 +101,11 @@ contains
        do j = 1,ny 
 
            uf(k,j,i) = Arx(k,j,i)/dxu(j,i) *dxu(j,i)*u(k,j,i) &
-
-                  - qrt * ( zxdy(k,j,i  ) *      dzw(k  ,j,i  )*w(k  ,j,i  ) &
-                           +zxdy(k,j,i  ) * two *dzw(k+1,j,i  )*w(k+1,j,i  ) &
-                           +zxdy(k,j,i-1) *      dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-                           +zxdy(k,j,i-1) * two *dzw(k+1,j,i-1)*w(k+1,j,i-1) )
+                  - qrt * ( &
+                  + zxdy(k,j,i  ) *      dzw(k  ,j,i  )*w(k  ,j,i  ) &
+                  + zxdy(k,j,i  ) * two *dzw(k+1,j,i  )*w(k+1,j,i  ) &
+                  + zxdy(k,j,i-1) *      dzw(k  ,j,i-1)*w(k  ,j,i-1) &
+                  + zxdy(k,j,i-1) * two *dzw(k+1,j,i-1)*w(k+1,j,i-1) )
        enddo
     enddo
 
