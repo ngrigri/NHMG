@@ -117,12 +117,17 @@ contains
 
     nx = grid(lev)%nx
     ny = grid(lev)%ny
-    nz = grid(lev)%nz
+    !21112016   nz = grid(lev)%nz
+    nz = size(x,dim=1) ! k,j,i convention
 
     ! numel(x)
-    Ng = grid(lev)%Ng
-
-    buffer => grid(lev)%gatherbuffer
+    if (nz > grid(lev)%nz) then
+       Ng = grid(lev)%Ngp
+       buffer => grid(lev)%gatherbufferp
+    else
+       Ng = grid(lev)%Ng
+       buffer => grid(lev)%gatherbuffer
+    endif
 
     call MPI_ALLGATHER( x, Ng, MPI_DOUBLE_PRECISION, buffer, Ng, MPI_DOUBLE_PRECISION, grid(lev)%localcomm,ierr)
     !       if(myrank==0)write(*,*)'gather lev, Ng=',lev,Ng,ngx,ngy,nx,ny

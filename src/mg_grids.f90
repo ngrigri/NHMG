@@ -26,7 +26,7 @@ module mg_grids
      integer(kind=ip) :: nx,ny,nz                     ! Subdomain dimensions (whithout halo points)
      integer(kind=ip) :: npx, npy                     ! Number of processes
      integer(kind=ip) :: incx, incy                   ! ??
-     integer(kind=ip) :: Ng2D, Ng                     ! Size for 2D and 3D arrays (included halo)
+     integer(kind=ip) :: Ng2D, Ng ,Ngp                ! Size for 2D and 3D arrays (included halo=1)
      integer(kind=ip) :: gather                       ! Gathering activated (1) or not (0)
      integer(kind=ip) :: ngx, ngy                     ! Gathering in x and y (is 1 or 2 (and generally 2))
      integer(kind=ip) :: key                          ! Gathering key
@@ -60,9 +60,10 @@ module mg_grids
      real(kind=rp),dimension(:,:,:),pointer :: dummy3Dnzp  => null()
 
      ! Gathering buffers, allocated only if gathering is activated (coarsen grids!)
-     real(kind=rp),dimension(:,:,:)    ,pointer :: dummy3 => null()        ! A dummy 3D array for gathering
-     real(kind=rp),dimension(:,:,:,:)  ,pointer :: gatherbuffer2D => null()! 2D
-     real(kind=rp),dimension(:,:,:,:,:),pointer :: gatherbuffer => null()  ! 3D
+     real(kind=rp),dimension(:,:,:)    ,pointer :: dummy3 => null()         ! A dummy 3D array for gathering
+     real(kind=rp),dimension(:,:,:,:)  ,pointer :: gatherbuffer2D => null() ! 2D
+     real(kind=rp),dimension(:,:,:,:,:),pointer :: gatherbuffer   => null() ! 3D nz
+     real(kind=rp),dimension(:,:,:,:,:),pointer :: gatherbufferp  => null() ! 3D nz+1
 
   end type grid_type
 
@@ -724,11 +725,13 @@ contains
           allocate(grid(lev)%dummy3(nz,0:ny+1,0:nx+1))
 
           allocate(grid(lev)%gatherbuffer2D(0:ny+1,0:nx+1,0:ngx-1,0:ngy-1))
-          allocate(grid(lev)%gatherbuffer(nz,0:ny+1,0:nx+1,0:ngx-1,0:ngy-1))
+          allocate(grid(lev)%gatherbuffer (1:nz  ,0:ny+1,0:nx+1,0:ngx-1,0:ngy-1))
+          allocate(grid(lev)%gatherbufferp(1:nz+1,0:ny+1,0:nx+1,0:ngx-1,0:ngy-1))
 
           ! number of elements of dummy3
           grid(lev)%Ng2D=(nx+2)*(ny+2)
           grid(lev)%Ng  =(nx+2)*(ny+2)*nz
+          grid(lev)%Ngp  =(nx+2)*(ny+2)*(nz+1)
 
        endif
 
