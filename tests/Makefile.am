@@ -20,9 +20,9 @@ TESTS          = $(F90_TESTS)
 
 ##
 SUBDIRS	       = .
-#testsdir    = $(prefix)
-#tests_DATA  = nhmg_namelist
-#EXTRA_DIST     = $(tests_DATA)
+testsdir    = $(prefix)
+tests_DATA  = nhmg_namelist ts_namelist cuc_namelist
+EXTRA_DIST     = $(tests_DATA)
 
 bin_PROGRAMS   = \
     testseamount \
