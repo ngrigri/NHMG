@@ -200,8 +200,7 @@ contains
                + zxdy(k,j,i  )* two * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
                + zxdy(k,j,i  )*       dzw(k+1,j,i  )*w(k+1,j,i  ) & 
                + zxdy(k,j,i-1)* two * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1,j,i-1) &
-               )
+               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1,j,i-1) )
 
           do k = 2,nz-1 ! interior levels
              su_integr(j,i) = su_integr(j,i) + Arx(k,j,i)
@@ -210,8 +209,7 @@ contains
                   + zxdy(k,j,i  ) * dzw(k  ,j,i  ) * w(k  ,j,i  ) &
                   + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * w(k+1,j,i  ) &
                   + zxdy(k,j,i-1) * dzw(k  ,j,i-1) * w(k  ,j,i-1) & 
-                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) &
-                  )
+                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) )
           enddo
 
           k = nz ! upper level
@@ -221,8 +219,7 @@ contains
                + zxdy(k,j,i  )*       dzw(k  ,j,i  )*w(k  ,j,i  ) & 
                + zxdy(k,j,i  )* two * dzw(k+1,j,i  )*w(k+1,j,i  ) & 
                + zxdy(k,j,i-1)*       dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1,j,i-1) & 
-               ) 
+               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1,j,i-1) ) 
 
        enddo
     enddo
@@ -240,8 +237,7 @@ contains
                + zydx(k,j  ,i)* two * dzw(k  ,j  ,i) * w(k  ,j  ,i) & 
                + zydx(k,j  ,i)*       dzw(k+1,j  ,i) * w(k+1,j  ,i) & 
                + zydx(k,j-1,i)* two * dzw(k  ,j-1,i) * w(k  ,j-1,i) & 
-               + zydx(k,j-1,i)*       dzw(k+1,j-1,i) * w(k+1,j-1,i) &  
-               )
+               + zydx(k,j-1,i)*       dzw(k+1,j-1,i) * w(k+1,j-1,i) )
 
           do k = 2,nz-1 ! interior levels
              sv_integr(j,i) = sv_integr(j,i) + Ary(k,j,i)
@@ -250,8 +246,7 @@ contains
                   + zydx(k,j  ,i) * dzw(k  ,j  ,i) * w(k  ,j  ,i) & 
                   + zydx(k,j  ,i) * dzw(k+1,j  ,i) * w(k+1,j  ,i) & 
                   + zydx(k,j-1,i) * dzw(k  ,j-1,i) * w(k  ,j-1,i) & 
-                  + zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i) & 
-                  )
+                  + zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i) )
           enddo
 
           k = nz ! upper level
@@ -261,8 +256,7 @@ contains
                + zydx(k,j  ,i)*       dzw(k  ,j  ,i) * w(k  ,j  ,i) & 
                + zydx(k,j  ,i)* two * dzw(k+1,j  ,i) * w(k+1,j  ,i) &
                + zydx(k,j-1,i)*       dzw(k  ,j-1,i) * w(k  ,j-1,i) & 
-               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i) * w(k+1,j-1,i) & 
-               )
+               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i) * w(k+1,j-1,i) )
 
        enddo
     enddo
@@ -350,6 +344,12 @@ contains
     enddo
 
     call fill_halo(1,wc)
+
+    if (check_output) then
+       if ((iter_coupling_in .EQ. 199) .OR. (iter_coupling_in .EQ. 200)) then
+          call write_netcdf(wc,vname='wc',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
+       endif
+    endif
 
     do i = 1,nx+1  
        do j = 1,ny 
@@ -465,8 +465,7 @@ contains
                + zxdy(k,j,i  )* two * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
                + zxdy(k,j,i  )*       dzw(k+1,j,i  )*w(k+1,j,i  ) & 
                + zxdy(k,j,i-1)* two * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1,j,i-1) & 
-               ) 
+               + zxdy(k,j,i-1)*       dzw(k+1,j,i-1)*w(k+1,j,i-1) ) 
 
           do k = 2,nz-1 ! interior levels            
              uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
@@ -474,8 +473,7 @@ contains
                   + zxdy(k,j,i  ) * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
                   + zxdy(k,j,i  ) * dzw(k+1,j,i  )*w(k+1,j,i  ) & 
                   + zxdy(k,j,i-1) * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1)*w(k+1,j,i-1) &
-                  )
+                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1)*w(k+1,j,i-1) )
           enddo
 
           k = nz ! upper level
@@ -484,8 +482,7 @@ contains
                + zxdy(k,j,i  )*       dzw(k  ,j,i  )*w(k  ,j,i  ) & 
                + zxdy(k,j,i  )* two * dzw(k+1,j,i  )*w(k+1,j,i  ) & 
                + zxdy(k,j,i-1)*       dzw(k  ,j,i-1)*w(k  ,j,i-1) &
-               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1,j,i-1) & 
-               )
+               + zxdy(k,j,i-1)* two * dzw(k+1,j,i-1)*w(k+1,j,i-1) )
 
        enddo
     enddo
@@ -502,8 +499,7 @@ contains
                + zydx(k,j  ,i)* two * dzw(k  ,j  ,i)*w(k  ,j  ,i) & 
                + zydx(k,j  ,i)*       dzw(k+1,j  ,i)*w(k+1,j  ,i) &  
                + zydx(k,j-1,i)* two * dzw(k  ,j-1,i)*w(k  ,j-1,i) & 
-               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*w(k+1,j-1,i) & 
-               ) 
+               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
 
           do k = 2,nz-1 ! interior levels
              vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
@@ -511,8 +507,7 @@ contains
                   + zydx(k,j  ,i) * dzw(k  ,j  ,i)*w(k  ,j  ,i) &
                   + zydx(k,j  ,i) * dzw(k+1,j  ,i)*w(k+1,j  ,i) &
                   + zydx(k,j-1,i) * dzw(k  ,j-1,i)*w(k  ,j-1,i) &
-                  + zydx(k,j-1,i) * dzw(k+1,j-1,i)*w(k+1,j-1,i) &
-                  ) 
+                  + zydx(k,j-1,i) * dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
           enddo
 
           k = nz ! upper level
@@ -521,8 +516,7 @@ contains
                + zydx(k,j  ,i)*       dzw(k  ,j  ,i)*w(k  ,j  ,i) & 
                + zydx(k,j  ,i)* two * dzw(k+1,j  ,i)*w(k+1,j  ,i) & 
                + zydx(k,j-1,i)*       dzw(k  ,j-1,i)*w(k  ,j-1,i) & 
-               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*w(k+1,j-1,i) & 
-               ) 
+               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
 
        enddo
     enddo
