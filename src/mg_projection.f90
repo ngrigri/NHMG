@@ -226,7 +226,7 @@ contains
           wf(k,j,i) = cw(k,j,i) *dzw(k,j,i)*w(k,j,i) &
                   - hlf * ( &
                   + zxdy(k-1,j,i) *dxu(j,i  )*u(k-1,j,i  ) &
-                  +zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
+                  + zxdy(k-1,j,i) *dxu(j,i+1)*u(k-1,j,i+1) ) &
                   - hlf * ( &
                   + zydx(k-1,j,i) *dyv(j  ,i)*v(k-1,j  ,i) &
                   + zydx(k-1,j,i) *dyv(j+1,i)*v(k-1,j+1,i) )
