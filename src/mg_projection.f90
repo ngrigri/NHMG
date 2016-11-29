@@ -493,7 +493,7 @@ contains
 
              dxu = hlf * (dx(j,i)+dx(j,i-1))
 
-             u(k,j,i) = u(k,j,i) - one / dxu * (p(k,j,i)-p(k,j,i-1))
+             u(k,j,i) = u(k,j,i) - one / dxu * (p(k,j,i  )-p(k,j,i-1))
 
           enddo
        enddo
@@ -507,7 +507,7 @@ contains
 
              dyv = hlf * (dy(j,i)+dy(j-1,i))
 
-             v(k,j,i) = v(k,j,i) - one / dyv * (p(k,j,i)-p(k,j-1,i  ))
+             v(k,j,i) = v(k,j,i) - one / dyv * (p(k,j  ,i)-p(k,j-1,i))
 
           enddo
        enddo
@@ -522,7 +522,7 @@ contains
 
           do k = 2,nz !interior levels
              dzw = zr(k,j,i)-zr(k-1,j,i)
-             w(k,j,i) = w(k,j,i) - one / dzw * (p(k,j,i)-p(k-1,j,i))
+             w(k,j,i) = w(k,j,i) - one / dzw * (p(k  ,j,i)-p(k-1,j,i))
           enddo
 
           k = nz+1 !surface
