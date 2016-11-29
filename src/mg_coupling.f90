@@ -144,7 +144,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: dzw
     real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
-    real(kind=rp), dimension(:,:,:), pointer :: zxw,zyw
     real(kind=rp), dimension(:,:,:), pointer :: cw
 
     real(kind=rp), dimension(:,:)  , pointer :: su_integr,sv_integr
@@ -170,8 +169,6 @@ contains
     cw  => grid(1)%cw
     zxdy => grid(1)%zxdy
     zydx => grid(1)%zydx
-    zxw => grid(1)%zxw
-    zyw => grid(1)%zyw
 
     !------------------------------------------
     ! compute integrated transport anomalies
@@ -290,7 +287,7 @@ contains
     !-------------------------------
     ! correct u,v,w at each depth
 
-    ! weak part ------------------------------
+! weak part ------------------------------
 
     allocate(wc(1:nz+1,0:ny+1,0:nx+1))
     wc(:,:,:) = zero
@@ -400,7 +397,7 @@ contains
        endif
     endif
 
-    ! weak part ------------------------------
+! weak part ------------------------------
 
     do i = 1,nx+1  
 !    do i = 2,nx !XXXXXXXXX
