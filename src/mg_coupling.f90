@@ -52,20 +52,18 @@ contains
 
           k = 1
 
-             ru(i,j) = ru(i,j) &
-
-                  - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
-                  + qrt * (  & 
-                  + & ! zero in our flat bottom case
-                  + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i  )-p(k  ,j,i  )) & 
-                  + & ! zero in our flat bottom case
-                  + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) )
+          ru(i,j) = ru(i,j) &               
+               - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) &
+               + qrt * (  & 
+               + & ! zero in our flat bottom case
+               + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i  )-p(k  ,j,i  )) & 
+               + & ! zero in our flat bottom case
+               + dx(j,i-1)*zxdy(k,j,i-1) * (p(k+1,j,i-1)-p(k  ,j,i-1)) )
 
           do k = 2,nz-1
 
              ru(i,j) = ru(i,j) &
-
-                     - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
+                     - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) &
                      + qrt * ( &
                      + dx(j,i  )*zxdy(k,j,i  ) * (p(k  ,j,i)-p(k-1,j,i)) & 
                      + dx(j,i  )*zxdy(k,j,i  ) * (p(k+1,j,i)-p(k  ,j,i)) & 
@@ -75,15 +73,14 @@ contains
 
           k = nz
 
-             ru(i,j) = ru(i,j) &
-
-                     - Arx(k,j,i) * (p(k,j,i)-p(k,j,i-1)) &
-                     + qrt * ( dx(j,i  )*zxdy(k,j,i  ) * (p(k  ,j,i)-p(k-1,j,i)) & 
-                             + dx(j,i  )*zxdy(k,j,i  ) * two * (-p(k  ,j,i)) & 
-                             + dx(j,i-1)*zxdy(k,j,i-1) * (p(k  ,j,i-1)-p(k-1,j,i-1)) & 
-                             + dx(j,i-1)*zxdy(k,j,i-1) * two * (-p(k  ,j,i-1)) &
-                             )
-
+          ru(i,j) = ru(i,j) &
+               - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) &
+               + qrt * ( &
+               + dx(j,i  )*zxdy(k,j,i  )       * (p(k  ,j,i)-p(k-1,j,i)) & 
+               + dx(j,i  )*zxdy(k,j,i  ) * two * (-p(k  ,j,i)) & 
+               + dx(j,i-1)*zxdy(k,j,i-1) *       (p(k  ,j,i-1)-p(k-1,j,i-1)) & 
+               + dx(j,i-1)*zxdy(k,j,i-1) * two * (-p(k  ,j,i-1)) )
+          
           ru(i,j) = ru(i,j)/dt
 
        enddo
@@ -95,42 +92,35 @@ contains
 
           k = 1
 
-             rv(i,j) = rv(i,j) &
-
-                     - Ary(k,j,i) * (p(k,j,i)-p(k,j-1,i)) &
-
-                     + qrt * (  & ! zero in our flat bottom case
-                             + dy(j  ,i)*zydx(k,j  ,i) * (p(k+1,j,i)-p(k  ,j,i)) & 
-                             +  & ! zero in our flat bottom case
-                             + dy(j-1,i)*zydx(k,j-1,i) * (p(k+1,j-1,i)-p(k  ,j-1,i)) &
-                             )
-
+          rv(i,j) = rv(i,j) &
+               - Ary(k,j,i) * (p(k,j  ,i)-p(k,j-1,i)) &               
+               + qrt * (  & 
+               + & ! zero in our flat bottom case
+               + dy(j  ,i)*zydx(k,j  ,i) * (p(k+1,j,i)-p(k  ,j,i)) & 
+               + & ! zero in our flat bottom case
+               + dy(j-1,i)*zydx(k,j-1,i) * (p(k+1,j-1,i)-p(k  ,j-1,i)) )
+          
           do k = 2,nz-1
 
              rv(i,j) = rv(i,j) &
-
                      - Ary(k,j,i) * (p(k,j,i)-p(k,j-1,i)) &
-
-                     + qrt * ( dy(j  ,i)*zydx(k,j  ,i) * (p(k  ,j,i)-p(k-1,j,i)) & 
-                             + dy(j  ,i)*zydx(k,j  ,i) * (p(k+1,j,i)-p(k  ,j,i)) & 
-                             + dy(j-1,i)*zydx(k,j-1,i) * (p(k  ,j-1,i)-p(k-1,j-1,i)) & 
-                             + dy(j-1,i)*zydx(k,j-1,i) * (p(k+1,j-1,i)-p(k  ,j-1,i)) &
-                             )
-
+                     + qrt * ( &
+                     + dy(j  ,i)*zydx(k,j  ,i) * (p(k  ,j,i)-p(k-1,j,i)) & 
+                     + dy(j  ,i)*zydx(k,j  ,i) * (p(k+1,j,i)-p(k  ,j,i)) & 
+                     + dy(j-1,i)*zydx(k,j-1,i) * (p(k  ,j-1,i)-p(k-1,j-1,i)) & 
+                     + dy(j-1,i)*zydx(k,j-1,i) * (p(k+1,j-1,i)-p(k  ,j-1,i)) )
           enddo
 
           k = nz
 
-             rv(i,j) = rv(i,j) &
-
-                     - Ary(k,j,i) * (p(k,j,i)-p(k,j-1,i)) &
-
-                     + qrt * ( dy(j  ,i)*zydx(k,j  ,i) * (p(k  ,j,i)-p(k-1,j,i)) & 
-                             + dy(j  ,i)*zydx(k,j  ,i) * two * (-p(k  ,j,i)) & 
-                             + dy(j-1,i)*zydx(k,j-1,i) * (p(k  ,j-1,i)-p(k-1,j-1,i)) & 
-                             + dy(j-1,i)*zydx(k,j-1,i) * two * (-p(k  ,j-1,i)) &
-                             )
-
+          rv(i,j) = rv(i,j) &     
+               - Ary(k,j,i) * (p(k,j,i)-p(k,j-1,i)) &
+               + qrt * ( & 
+               + dy(j  ,i)*zydx(k,j  ,i)       * (p(k  ,j,i)-p(k-1,j,i)) & 
+               + dy(j  ,i)*zydx(k,j  ,i) * two * (-p(k  ,j,i)) & 
+               + dy(j-1,i)*zydx(k,j-1,i)       * (p(k  ,j-1,i)-p(k-1,j-1,i)) & 
+               + dy(j-1,i)*zydx(k,j-1,i) * two * (-p(k  ,j-1,i)) )
+          
           rv(i,j) = rv(i,j)/dt
 
        enddo
@@ -149,10 +139,12 @@ contains
     integer(kind=ip):: nx,ny,nz
 
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
+    real(kind=rp), dimension(:,:)  , pointer :: dxu,dyv
     real(kind=rp), dimension(:,:,:), pointer :: zr,zw
     real(kind=rp), dimension(:,:,:), pointer :: dzw
     real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
+    real(kind=rp), dimension(:,:,:), pointer :: zxw,zyw
     real(kind=rp), dimension(:,:,:), pointer :: cw
 
     real(kind=rp), dimension(:,:)  , pointer :: su_integr,sv_integr
@@ -168,6 +160,8 @@ contains
 
     dx => grid(1)%dx
     dy => grid(1)%dy
+    dxu => grid(1)%dxu
+    dyv => grid(1)%dyv
     zr => grid(1)%zr
     zw => grid(1)%zw
     dzw => grid(1)%dzw
@@ -176,6 +170,8 @@ contains
     cw  => grid(1)%cw
     zxdy => grid(1)%zxdy
     zydx => grid(1)%zydx
+    zxw => grid(1)%zxw
+    zyw => grid(1)%zyw
 
     !------------------------------------------
     ! compute integrated transport anomalies
@@ -294,15 +290,16 @@ contains
     !-------------------------------
     ! correct u,v,w at each depth
 
+    ! weak part ------------------------------
+
     allocate(wc(1:nz+1,0:ny+1,0:nx+1))
     wc(:,:,:) = zero
 
     do i = 1,nx
        do j = 1,ny
-
-! weak part ------------------------------
-          
+        
           k = 1 ! bottom
+
           wc(k,j,i) = ( &
 
                + hlf *( &
@@ -313,9 +310,21 @@ contains
                  (zydx(k,j,i)/dx(j,i)) * &
                  ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
                   +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
+
                       )
+!!$               
+!!$               + hlf * ( &
+!!$               + zxdy(k,j,i) *dxu(j,i  )*uf_integr(j,i  )/su_integr(j,i  ) &
+!!$               + zxdy(k,j,i) *dxu(j,i+1)*uf_integr(j,i+1)/su_integr(j,i+1) ) &
+!!$               + hlf * ( &
+!!$               + zydx(k,j,i) *dyv(j  ,i)*vf_integr(j  ,i)/sv_integr(j  ,i) &
+!!$               + zydx(k,j,i) *dyv(j+1,i)*vf_integr(j+1,i)/sv_integr(j+1,i) ) &
+!!$               
+!!$               ) / (cw(k,j,i)*dzw(k,j,i))
+!!$!               ) / (dx(j,i)*dy(j,i))
 
           do k = 2,nz ! interior levels
+
              wc(k,j,i) = ( &
 
                - (zw(k,j,i)-zw(1,j,i))/(zw(nz+1,j,i)-zw(1,j,i)) &
@@ -329,11 +338,30 @@ contains
                  (zydx(k-1,j,i)/dx(j,i)+zydx(k,j,i)/dx(j,i)) * &
                  ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
                   +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
+
                           )
+
+!!$               - (zw(k,j,i)-zw(1,j,i))/(zw(nz+1,j,i)-zw(1,j,i)) * &
+!!$               (uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i)) &
+!!$
+!!$               + qrt * ( &
+!!$               + zxdy(k  ,j,i) *dxu(j,i  )*uf_integr(j,i  )/su_integr(j,i  ) &
+!!$               + zxdy(k  ,j,i) *dxu(j,i+1)*uf_integr(j,i+1)/su_integr(j,i+1) &
+!!$               + zxdy(k-1,j,i) *dxu(j,i  )*uf_integr(j,i  )/su_integr(j,i  ) &
+!!$               + zxdy(k-1,j,i) *dxu(j,i+1)*uf_integr(j,i+1)/su_integr(j,i+1) ) &
+!!$               + qrt * ( &
+!!$               + zydx(k  ,j,i) *dyv(j  ,i)*vf_integr(j  ,i)/sv_integr(j  ,i) &
+!!$               + zydx(k  ,j,i) *dyv(j+1,i)*vf_integr(j+1,i)/sv_integr(j+1,i) &
+!!$               + zydx(k-1,j,i) *dyv(j  ,i)*vf_integr(j  ,i)/sv_integr(j  ,i) &
+!!$               + zydx(k-1,j,i) *dyv(j+1,i)*vf_integr(j+1,i)/sv_integr(j+1,i) ) &
+!!$
+!!$               ) / (cw(k,j,i)*dzw(k,j,i))
+!!$!               ) / (dx(j,i)*dy(j,i))
 
           enddo
 
           k = nz+1 ! surface
+
           wc(k,j,i) = ( &
 
                - ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
@@ -346,9 +374,20 @@ contains
                  (zydx(k-1,j,i)/dx(j,i)) * &
                  ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
                   +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
-                                 )
 
-! weak part ------------------------------
+                                 )
+              
+!!$               - one*(uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i)) &
+!!$               
+!!$               + hlf * ( &
+!!$               + zxdy(k-1,j,i) *dxu(j,i  )*uf_integr(j,i  )/su_integr(j,i  ) &
+!!$               + zxdy(k-1,j,i) *dxu(j,i+1)*uf_integr(j,i+1)/su_integr(j,i+1) ) &
+!!$               + hlf * ( &
+!!$               + zydx(k-1,j,i) *dyv(j  ,i)*vf_integr(j  ,i)/sv_integr(j  ,i) &
+!!$               + zydx(k-1,j,i) *dyv(j+1,i)*vf_integr(j+1,i)/sv_integr(j+1,i) ) &
+!!$               
+!!$               ) / (cw(k,j,i)*dzw(k,j,i))
+!!$!               ) / (dx(j,i)*dy(j,i))
 
        enddo
     enddo
@@ -361,10 +400,32 @@ contains
        endif
     endif
 
+    ! weak part ------------------------------
+
     do i = 1,nx+1  
+!    do i = 2,nx !XXXXXXXXX
        do j = 1,ny 
 !       do j = 0,ny+1
 
+!!$          ! JM 
+!!$          do k = 1,nz ! all levels
+!!$
+!!$             u(k,j,i) = u(k,j,i) - ( &
+!!$
+!!$                  hlf * ( &
+!!$                  + (one + (zxdy(k,j,i-1)/dy(j,i-1))**2) &
+!!$                  + (one + (zxdy(k,j,i  )/dy(j,i  ))**2) )* &
+!!$                  uf_integr(j,i  )/su_integr(j,i  ) &
+!!$                  
+!!$                  + hlf * (zr(k,j,i-1)-zw(1,j,i-1))/(zw(nz+1,j,i-1)-zw(1,j,i-1)) &
+!!$                  * ( uf_integr(j,i)-uf_integr(j,i-1)+vf_integr(j+1,i-1)-vf_integr(j,i-1) ) / (dx(j,i-1)*dy(j,i-1)) &
+!!$                  * (zxdy(k,j,i-1  )/dy(j,i-1  )) &
+!!$                  
+!!$                  + hlf * (zr(k,j,i  )-zw(1,j,i  ))/(zw(nz+1,j,i  )-zw(1,j,i  )) &
+!!$                  * ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
+!!$                  * (zxdy(k,j,i  )/dy(j,i  )) )
+!!$          enddo
+          
           k = 1 ! lower level
           u(k,j,i) = u(k,j,i) - ( &
 
@@ -374,8 +435,9 @@ contains
                + zxdy(k,j,i  )* two *dzw(k  ,j,i  )*wc(k  ,j,i  ) & 
                + zxdy(k,j,i  )      *dzw(k+1,j,i  )*wc(k+1,j,i  ) &
                + zxdy(k,j,i-1)* two *dzw(k  ,j,i-1)*wc(k  ,j,i-1) & 
-               + zxdy(k,j,i-1)      *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) )
-          
+               + zxdy(k,j,i-1)      *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) &
+               )                  
+
           do k = 2,nz-1 ! interior levels
              u(k,j,i) = u(k,j,i) - ( &
 
@@ -385,7 +447,8 @@ contains
                   + zxdy(k,j,i  ) *dzw(k  ,j,i  )*wc(k  ,j,i  ) & 
                   + zxdy(k,j,i  ) *dzw(k+1,j,i  )*wc(k+1,j,i  ) &
                   + zxdy(k,j,i-1) *dzw(k  ,j,i-1)*wc(k  ,j,i-1) & 
-                  + zxdy(k,j,i-1) *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) )
+                  + zxdy(k,j,i-1) *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) &
+                  )
           enddo
 
           k = nz !upper level
@@ -397,7 +460,8 @@ contains
                + zxdy(k,j,i  )      *dzw(k  ,j,i  )*wc(k  ,j,i  ) & 
                + zxdy(k,j,i  )* two *dzw(k+1,j,i  )*wc(k+1,j,i  ) &
                + zxdy(k,j,i-1)      *dzw(k  ,j,i-1)*wc(k  ,j,i-1) & 
-               + zxdy(k,j,i-1)* two *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) )
+               + zxdy(k,j,i-1)* two *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) &
+               )
           
        enddo
     enddo
@@ -407,6 +471,26 @@ contains
     do i = 1,nx
 !    do i = 0,nx+1
        do j = 1,ny+1
+!       do j = 2,ny !XXXXXXXXX
+
+!!$          !JM
+!!$          do k = 1,nz ! all levels
+!!$
+!!$             v(k,j,i) = v(k,j,i) - ( &
+!!$                  
+!!$                  hlf * ( &
+!!$                  + (one + (zydx(k,j-1,i)/dx(j-1,i))**2) &
+!!$                  + (one + (zydx(k,j  ,i)/dx(j  ,i))**2) )* &
+!!$                  vf_integr(j,i  )/sv_integr(j,i  ) &
+!!$                  
+!!$                  + hlf * (zr(k,j-1,i)-zw(1,j-1,i))/(zw(nz+1,j-1,i)-zw(1,j-1,i)) &
+!!$                  * ( uf_integr(j-1,i+1)-uf_integr(j-1,i)+vf_integr(j,i)-vf_integr(j-1,i) ) / (dx(j-1,i)*dy(j-1,i)) &
+!!$                  * (zydx(k,j-1,i  )/dx(j-1,i  )) &
+!!$                  
+!!$                  + hlf * (zr(k,j  ,i)-zw(1,j  ,i))/(zw(nz+1,j  ,i)-zw(1,j  ,i)) &
+!!$                  * ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
+!!$                  * (zydx(k,j,i  )/dx(j,i  )) )
+!!$          enddo
 
           k = 1 ! lower level
           v(k,j,i) = v(k,j,i) - ( &
@@ -417,7 +501,8 @@ contains
                + zydx(k,j  ,i)* two * dzw(k  ,j  ,i)*wc(k  ,j  ,i) & 
                + zydx(k,j  ,i)*       dzw(k+1,j  ,i)*wc(k+1,j  ,i) & 
                + zydx(k,j-1,i)* two * dzw(k  ,j-1,i)*wc(k  ,j-1,i) & 
-               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) )
+               + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) &
+               )
           
           do k = 2,nz-1 ! interior levels
              v(k,j,i) = v(k,j,i) - ( &
@@ -428,7 +513,8 @@ contains
                   + zydx(k,j  ,i)* dzw(k  ,j  ,i)*wc(k  ,j  ,i) & 
                   + zydx(k,j  ,i)* dzw(k+1,j  ,i)*wc(k+1,j  ,i) &  
                   + zydx(k,j-1,i)* dzw(k  ,j-1,i)*wc(k  ,j-1,i) & 
-                  + zydx(k,j-1,i)* dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) )
+                  + zydx(k,j-1,i)* dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) &
+                  )
           enddo
           
           k = nz !upper level
@@ -440,7 +526,8 @@ contains
                + zydx(k,j  ,i)*       dzw(k  ,j  ,i)*wc(k  ,j  ,i) & 
                + zydx(k,j  ,i)* two * dzw(k+1,j  ,i)*wc(k+1,j  ,i) & 
                + zydx(k,j-1,i)*       dzw(k  ,j-1,i)*wc(k  ,j-1,i) & 
-               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) )
+               + zydx(k,j-1,i)* two * dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) &
+               )
           
        enddo
     enddo
