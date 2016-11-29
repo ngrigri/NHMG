@@ -34,7 +34,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
     real(kind=rp), dimension(:,:,:), pointer :: zydx,zxdy
     real(kind=rp), dimension(:,:,:), pointer :: cw
-    real(kind=rp) :: Arz
 
     integer(kind=ip) :: i,j,k
 
@@ -118,9 +117,9 @@ contains
 
        dx => grid(lev)%dx
        dy => grid(lev)%dy
-
        zr => grid(lev)%zr
        zw => grid(lev)%zw
+
        dzw => grid(lev)%dzw
        Arx => grid(lev)%Arx
        Ary => grid(lev)%Ary 
@@ -147,21 +146,8 @@ contains
              dzw(nz+1,j,i) = zw(nz+1,j,i)-zr(nz,j,i) 
           enddo
        enddo
-!!$    !! Cell widths
-!!$    allocate(dxu(0:ny+1,nx+1))
-!!$    do i = 1,nx+1
-!!$       do j = 0,ny+1
-!!$          dxu(j,i) = hlf*(dx(j,i)+dx(j,i-1))
-!!$       enddo
-!!$    enddo
-!!$    allocate(dyv(ny+1,0:nx+1))
-!!$    do i = 0,nx+1
-!!$       do j = 1,ny+1
-!!$          dyv(j,i) = hlf*(dy(j,i)+dy(j-1,i))
-!!$       enddo
-!!$    enddo
-       !!  Areas
 
+       !!  Areas
        do i = 1,nx+1
           do j = 0,ny+1
              do k = 1,nz
@@ -172,7 +158,6 @@ contains
              enddo
           enddo
        enddo
-
        do i = 0,nx+1
           do j = 1,ny+1
              do k = 1,nz
@@ -189,6 +174,7 @@ contains
 !!$          Arz(j,i) = dx(j,i)*dy(j,i)
 !!$       enddo
 !!$    enddo
+
 !!$    !! Slopes in x- and y-direction defined at rho-points
 !!$    allocate(zx(nz,0:ny+1,0:nx+1))
 !!$    allocate(zy(nz,0:ny+1,0:nx+1))
@@ -206,52 +192,20 @@ contains
        do i = 0,nx+1        ! because of the special fill_halo of zr, the slopes zxdy and 
           do j = 0,ny+1     ! zydx in the halo are equal to the slopes at the first interior points 
              do k = 1, nz
-                zxdy(k,j,i) = hlf * (( zr(k,j  ,i+1) - zr(k,j  ,i-1) ) / dx(j,i) ) * dy(j,i)
-                zydx(k,j,i) = hlf * (( zr(k,j+1,i  ) - zr(k,j-1,i  ) ) / dy(j,i) ) * dx(j,i)
+                zxdy(k,j,i) = hlf * (zr(k,j  ,i+1)-zr(k,j  ,i-1)) / dx(j,i) * dy(j,i)
+                zydx(k,j,i) = hlf * (zr(k,j+1,i  )-zr(k,j-1,i  )) / dy(j,i) * dx(j,i)
              enddo
           enddo
        enddo
-!!$    allocate(zyw(nz+1,0:ny+1,0:nx+1))
-!!$    allocate(zxw(nz+1,0:ny+1,0:nx+1))
-!!$    do i = 1,nx
-!!$       do j = 1,ny
-!!$          do k = 1,nz+1
-!!$             zyw(k,j,i) = hlf*(zw(k,j+1,i)-zw(k,j-1,i))/dy(j,i)
-!!$             zxw(k,j,i) = hlf*(zw(k,j,i+1)-zw(k,j,i-1))/dx(j,i)
-!!$          enddo
-!!$       enddo
-!!$    enddo
-!!$    call fill_halo(1,zyw) ! copy interior value in the halo
-!!$    call fill_halo(1,zxw) ! copy interior value in the halo
 
        do i = 0,nx+1
           do j = 0,ny+1
-
-             !do k = 1,nz+1
-             !cw(k,j,i) = Arz(j,i)/dzw(k,j,i) * (one + zxw(k,j,i)*zxw(k,j,i)+zyw(k,j,i)*zyw(k,j,i))
-
-             Arz = dx(j,i)*dy(j,i)
-
-             k=1
-             cw(k,j,i) = ( Arz / dzw(k,j,i) ) * &
-                  (one + &
-                  ( hlf * (zw(k,j  ,i+1)-zw(k,j  ,i-1)) / dx(j,i) )**2 + &
-                  ( hlf * (zw(k,j+1,i  )-zw(k,j-1,i  )) / dy(j,i) )**2 )
-
-             do k = 2,nz
-                cw(k,j,i) = ( Arz / dzw(k,j,i) ) * &
-                     (one + &
-                     ( hlf * (zw(k,j  ,i+1)-zw(k,j  ,i-1)) / dx(j,i) )**2 + &
-                     ( hlf * (zw(k,j+1,i  )-zw(k,j-1,i  )) / dy(j,i) )**2 )
-
+             do k = 1,nz+1
+                cw(k,j,i) = dx(j,i)*dy(j,i) / dzw(k,j,i) * &
+                     ( one + &
+                     + ( hlf * (zw(k,j  ,i+1)-zw(k,j  ,i-1)) / dx(j,i) )**2 + &
+                     + ( hlf * (zw(k,j+1,i  )-zw(k,j-1,i  )) / dy(j,i) )**2 )
              enddo
-
-             k=nz+1
-             cw(k,j,i) = ( Arz / dzw(k,j,i) ) * &
-                  (one + &
-                  ( hlf * (zw(k,j  ,i+1)-zw(k,j  ,i-1)) / dx(j,i) )**2 + &
-                  ( hlf * (zw(k,j+1,i  )-zw(k,j-1,i  )) / dy(j,i) )**2 )
-
           enddo
        enddo
 
