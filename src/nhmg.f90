@@ -20,18 +20,10 @@ module nhmg
 contains
 
   !--------------------------------------------------------------
-  subroutine nhmg_init(nx,ny,nz,npxg,npyg,dxa,dya,dxua,dyva)
+  subroutine nhmg_init(nx,ny,nz,npxg,npyg)
       
     integer(kind=ip), intent(in) :: nx,ny,nz
     integer(kind=ip), intent(in) :: npxg,npyg
-
-    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxa,dya
-    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxua,dyva
-
-    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxb,dyb
-    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxub,dyvb
-    real(kind=rp), dimension(:,:)          , pointer    :: dx,dy
-    real(kind=rp), dimension(:,:)          , pointer    :: dxu,dyv
 
     if (myrank==0) write(*,*)' nhmg_init:'
 
@@ -45,53 +37,71 @@ contains
 
     call print_grids()
 
-    dxb = transpose(dxa)
-    dyb = transpose(dya)
-    dxub = transpose(dxua)
-    dyvb = transpose(dyva)
-    dx => dxb
-    dy => dyb
-    dxu => dxub
-    dyv => dyvb
-    call set_horiz_grids(dx,dy,dxu,dyv)
-
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
-  subroutine nhmg_matrices(nx,ny,nz,z_r,z_w)
+  subroutine nhmg_matrices(nx,ny,nz,zra,zwa,dxa,dya)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz  ), target, intent(in) :: z_r
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(in) :: z_w !vertical indexing different than croco!
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz  ),    intent(in) :: zra
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1),    intent(in) :: zwa !vertical indexing different than croco!
+
+    real(kind=rp), dimension(0:nx+1,0:ny+1), optional, intent(in) :: dxa
+    real(kind=rp), dimension(0:nx+1,0:ny+1), optional, intent(in) :: dya
 
     real(kind=rp), dimension(:,:,:), pointer :: zr,zw
+    real(kind=rp), dimension(:,:),   pointer :: dx,dy
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,zwb 
-!!!
-
+    real(kind=rp), dimension(1:nz,0:ny+1,0:nx+1),   target :: zrb
+    real(kind=rp), dimension(1:nz+1,0:ny+1,0:nx+1), target :: zwb 
+    real(kind=rp), dimension(0:ny+1,0:nx+1),        target :: dxb,dyb
     integer(kind=ip) :: i,j,k
+!!!
 
     integer(kind=ip), save :: iter_matrices=-1
     iter_matrices = iter_matrices + 1
 
     if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
 
+    ! horiz grids
+
+    if (present(dxa) .and. present(dya)) then
+
+       dxb = transpose(dxa)
+       dyb = transpose(dya)
+       dx => dxb
+       dy => dyb
+       
+       call set_horiz_grids(dx,dy)
+       
+       if (associated(dx)) dx => null()
+       if (associated(dy)) dy => null()
+
+       if (check_output) then
+          call write_netcdf(grid(1)%dx,vname='dx',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dy,vname='dy',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dxu,vname='dxu',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dyv,vname='dyv',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+       endif
+
+    end if
+
+    ! vert grids
+
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(zwb(1:nz+1,0:ny+1,0:nx+1))
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz
-          zrb(k,j,i) = z_r(i,j,k)
+          zrb(k,j,i) = zra(i,j,k)
         enddo
       enddo
     enddo
     do i = 0,nx+1
       do j = 0,ny+1
         do k = 1,nz+1
-          zwb(k,j,i) = z_w(i,j,k)
+          zwb(k,j,i) = zwa(i,j,k)
         enddo
       enddo
     enddo
@@ -104,10 +114,7 @@ contains
     if (associated(zr)) zr => null()
     if (associated(zw)) zw => null()
  
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(zrb)
-    deallocate(zwb)
-!!!
+    ! matrices
 
     call set_matrices()
 
@@ -648,23 +655,23 @@ contains
           endif
        endif
 
-    !- step 4 -
-    if ((present(dt)).and.(present(rua)).and.(present(rva))) then
-
-       ru => rua
-       rv => rva
-
-       call bc2bt_coupling(dt,ru,rv)
-
-       if (check_output) then
-!          if (iter_solve .EQ. 0) then
-          if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
-             call write_netcdf(ru,vname='ru',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-             call write_netcdf(rv,vname='rv',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          endif
-       endif
-
-    endif
+!!$    !- step 4 -
+!!$    if ((present(dt)).and.(present(rua)).and.(present(rva))) then
+!!$
+!!$       ru => rua
+!!$       rv => rva
+!!$
+!!$       call bc2bt_coupling(dt,ru,rv)
+!!$
+!!$       if (check_output) then
+!!$!          if (iter_solve .EQ. 0) then
+!!$          if ((iter_solve .EQ. 199) .OR. (iter_solve .EQ. 200)) then
+!!$             call write_netcdf(ru,vname='ru',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$             call write_netcdf(rv,vname='rv',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          endif
+!!$       endif
+!!$
+!!$    endif
 
     !- check the non-divergence of the projected u,v,w
     call set_rhs(u,v,w)

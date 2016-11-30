@@ -13,10 +13,9 @@ module mg_horiz_grids
 contains
 
   !----------------------------------------
-  subroutine set_horiz_grids(dx,dy,dxu,dyv)
+  subroutine set_horiz_grids(dx,dy)
 
     real(kind=rp), dimension(:,:), pointer, intent(in) :: dx,dy
-    real(kind=rp), dimension(:,:), pointer, intent(in) :: dxu,dyv
 
     integer(kind=ip) :: lev
     integer(kind=ip) :: nx,ny
@@ -39,8 +38,9 @@ contains
 
           grid(lev)%dx(0:ny+1,0:nx+1) = dx
           grid(lev)%dy(0:ny+1,0:nx+1) = dy
-          grid(lev)%dxu(0:ny+1,0:nx+1) = dxu
-          grid(lev)%dyv(0:ny+1,0:nx+1) = dyv
+
+          grid(lev)%dxu(0:ny+1,1:nx+1) = hlf*(dx(0:ny+1,0:nx)+dx(0:ny+1,1:nx+1))
+          grid(lev)%dyv(1:ny+1,0:nx+1) = hlf*(dy(0:ny,0:nx+1)+dy(1:ny+1,0:nx+1))
 
        else               ! coarsen dx,dy 
                           ! (needed when directly discretizing on coarser grids)
