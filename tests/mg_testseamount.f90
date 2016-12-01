@@ -140,18 +140,14 @@ program mg_testseamount
        nx,ny,npxg,npyg, &
        Lx,Ly,Htot,      &
        dx,dy,           &
-       dxu,dyv,         &
        zeta,h        )
 
-  !TODO -> calculate correctly dxu, dyu
-  call nhmg_set_horiz_grids(nx,ny,dx,dy)
-
 !- stretching vertical grid -!   
-!  call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
+  call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
 !- linear vertical grid -!
-  call setup_zr_hz(h,z_r,Hz)
+!  call setup_zr_hz(h,z_r,Hz)
 
-  call nhmg_set_vert_grids(nx,ny,nz,z_r,Hz)
+  call nhmg_matrices(nx,ny,nz,z_r,Hz,dx,dy)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!

@@ -100,7 +100,7 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
 	testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
-am_testcuc_OBJECTS = mg_zr_zw.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
+am_testcuc_OBJECTS = mg_zr_hz.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
 	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
 testcuc_OBJECTS = $(am_testcuc_OBJECTS)
 testcuc_LDADD = $(LDADD)
@@ -569,7 +569,7 @@ testrndtopo_SOURCES = \
 	mg_testrndtopo.f90
 
 testcuc_SOURCES = \
-	mg_zr_zw.f90            \
+	mg_zr_hz.f90            \
 	mg_mpi_exchange_ijk.f90 \
 	mg_setup_tests.f90      \
 	mg_testcuc.f90 

@@ -45,7 +45,7 @@ testrndtopo_SOURCES=        \
 ##testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a
 ##
 testcuc_SOURCES =           \
-	mg_zr_zw.f90            \
+	mg_zr_hz.f90            \
 	mg_mpi_exchange_ijk.f90 \
 	mg_setup_tests.f90      \
 	mg_testcuc.f90 

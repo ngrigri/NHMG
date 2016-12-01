@@ -13,13 +13,11 @@ contains
   subroutine setup_cuc(    &
        nx, ny, npxg, npyg, &
        dx, dy,             &
-       dxu, dyv,           &
        zeta, h         )
 
     integer(kind=ip), intent(in) :: nx,ny  ! local dimsg
     integer(kind=ip), intent(in) :: npxg,npyg ! nb procs
     real(kind=rp), dimension(:,:), pointer, intent(out) :: dx, dy, zeta, h
-    real(kind=rp), dimension(:,:), pointer, intent(out) :: dxu, dyv
 
     integer(kind=ip):: is_err,nc_id,varid
     integer(kind=ip):: i,j,i0,j0,pi,pj
@@ -104,10 +102,6 @@ contains
        enddo
     enddo
 
-    !TO IMPROVE !!!
-    dxu(:,:) = dx(:,:)
-    dyv(:,:) = dy(:,:)
-
     zeta(:,:) = 0._rp
 
   end subroutine setup_cuc
@@ -117,14 +111,12 @@ contains
        nx, ny, npxg, npyg,   &
        Lx, Ly, Htot,         &
        dx, dy,               &
-       dxu, dyv,             &
        zeta, h             )
 
     integer(kind=ip), intent(in) :: nx,ny  ! local dims
     integer(kind=ip), intent(in) :: npxg,npyg ! nb procs
     real(kind=rp)   , intent(in) :: Lx, Ly, Htot
     real(kind=rp), dimension(:,:), pointer, intent(out) :: dx, dy, zeta, h
-    real(kind=rp), dimension(:,:), pointer, intent(out) :: dxu, dyv
 
     integer(kind=ip), parameter :: ip=4, rp=8
     integer(kind=ip):: nxg, nyg  ! global dims
@@ -144,9 +136,6 @@ contains
 
     dx(:,:) = Lx/real(nxg,kind=rp)
     dy(:,:) = Ly/real(nyg,kind=rp)
-
-    dxu(:,:) =  dx(:,:)
-    dyv(:,:) =  dy(:,:)
 
     pj = myrank/npxg
     pi = myrank-pj*npxg
@@ -177,14 +166,12 @@ contains
        nx, ny, npxg, npyg,   &
        Lx, Ly, Htot,         &
        dx, dy,               &
-       dxu, dyv,             &
        zeta, h             )
 
     integer(kind=ip), intent(in) :: nx,ny  ! local dims
     integer(kind=ip), intent(in) :: npxg,npyg ! nb procs
     real(kind=rp)   , intent(in) :: Lx, Ly, Htot
     real(kind=rp), dimension(:,:), pointer, intent(out) :: dx, dy, zeta, h
-    real(kind=rp), dimension(:,:), pointer, intent(out) :: dxu, dyv
 
     integer(kind=ip), parameter :: ip=4, rp=8
     integer(kind=ip):: nxg, nyg  ! global dims
@@ -204,9 +191,6 @@ contains
 
     dx(:,:) = Lx/real(nxg,kind=rp)
     dy(:,:) = Ly/real(nyg,kind=rp)
-
-    dxu(:,:) =  dx(:,:)
-    dyv(:,:) =  dy(:,:)
 
     pj = myrank/npxg
     pi = myrank-pj*npxg
