@@ -34,7 +34,7 @@ config.status
 # Ignore executable file starting by tests
 testseamount
 testcuc
-mainmodel
+testrndtopo
 # Ignore files starting with fort.*
 fort.*
 # Ignore profiling files
