@@ -139,11 +139,9 @@ program mg_testcuc
        dxu,dyv,         &
        zeta,h)
 
-  !TODO -> calculate (or read) correct dxu, dyu
-  call nhmg_set_horiz_grids(nx,ny,dx,dy,dxu,dyv)
-
   call setup_zr_zw(hc,theta_b,theta_s,zeta,h,z_r,z_w,'new_s_coord')
-  call nhmg_set_vert_grids(nx,ny,nz,z_r,z_w)
+
+  call nhmg_matrices(nx,ny,nz,z_r,z_w,dx,dy)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
