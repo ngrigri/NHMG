@@ -78,6 +78,10 @@ contains
     !- Read namelist file if it is present, else use default values
     if (exist) then
 
+       if (vbrank == 0) then
+          write(*,*)"Opening and Reading namelist file:",fn_nml
+       endif
+
        open(unit=lun_nml, File=fn_nml, ACTION='READ')
 
        rewind(unit=lun_nml)

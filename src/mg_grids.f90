@@ -44,15 +44,19 @@ module mg_grids
      real(kind=rp),dimension(:,:)  ,pointer :: dxu => null()  ! Mesh in x  (1 halo point)
      real(kind=rp),dimension(:,:)  ,pointer :: dyv => null()  ! Mesh in y  (1 halo point)
      real(kind=rp),dimension(:,:,:),pointer :: zr => null()   ! Mesh in z at rho point (nz  , 2 halo points)
-     real(kind=rp),dimension(:,:,:),pointer :: zw => null()   ! Mesh in z at w point   (nz+1, 2 halo points)
+     real(kind=rp),dimension(:,:,:),pointer :: dz => null()   ! Mesh in z at w point   (nz  , 2 halo points)
 
-     ! All these variables are dependante of dx, dy, zr and zw
-     real(kind=rp),dimension(:,:,:),pointer :: dzw  => null() ! Cell height at w-points
-     real(kind=rp),dimension(:,:,:),pointer :: Arx  => null() ! Cell face surface at u-points
-     real(kind=rp),dimension(:,:,:),pointer :: Ary  => null() ! Cell face surface at v-points
-     real(kind=rp),dimension(:,:,:),pointer :: zxdy => null() ! Slopes in x-direction defined at rho-points * dy
-     real(kind=rp),dimension(:,:,:),pointer :: zydx => null() ! Slopes in y-direction defined at rho-points * dx
-     real(kind=rp),dimension(:,:,:),pointer :: cw   => null() ! All levels
+     ! All these variables are dependante of dx, dy, zr and dz
+     real(kind=rp),dimension(:,:,:),pointer :: dzw   => null() ! Cell height at w-points
+     real(kind=rp),dimension(:,:,:),pointer :: Arx   => null() ! Cell face surface at u-points
+     real(kind=rp),dimension(:,:,:),pointer :: Ary   => null() ! Cell face surface at v-points
+     real(kind=rp),dimension(:,:)  ,pointer :: Arz   => null() !
+     real(kind=rp),dimension(:,:)  ,pointer :: beta  => null() !
+     real(kind=rp),dimension(:,:)  ,pointer :: gamu  => null() !
+     real(kind=rp),dimension(:,:)  ,pointer :: gamv  => null() !
+     real(kind=rp),dimension(:,:,:),pointer :: zxdy  => null() ! Slopes in x-direction defined at rho-points * dy
+     real(kind=rp),dimension(:,:,:),pointer :: zydx  => null() ! Slopes in y-direction defined at rho-points * dx
+     real(kind=rp),dimension(:,:,:),pointer :: alpha => null() ! All levels
 
      ! Dummy array to calculate uf, vf and wf
      ! Remark: We can gain memory place using p instead of dummy3Dnz
@@ -72,7 +76,7 @@ module mg_grids
   !- to reserve memory for MPI exchanges at the boundaries
   !-
   type mpi_buffers
-     ! MPI: 2D array buffers (halo=1 and halo=2 => h, zr, zw)
+     ! MPI: 2D array buffers (halo=1 and halo=2 => h, zr, dz)
      real(kind=rp),dimension(:,:),pointer :: sendN2D1,recvN2D1,sendS2D1,recvS2D1
      real(kind=rp),dimension(:,:),pointer :: sendE2D1,recvE2D1,sendW2D1,recvW2D1
      real(kind=rp),dimension(:,:),pointer :: sendSW2D1,recvSW2D1,sendSE2D1,recvSE2D1
@@ -184,20 +188,24 @@ contains
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz
-       allocate(grid(lev)%zr(  nz,-1:ny+2,-1:nx+2)) ! 2 extra points
-       allocate(grid(lev)%zw(nz+1,-1:ny+2,-1:nx+2)) ! 2 extra points
+       allocate(grid(lev)%zr(nz,-1:ny+2,-1:nx+2)) ! 2 extra points
+       allocate(grid(lev)%dz(nz,-1:ny+2,-1:nx+2)) ! 2 extra points
     enddo
 
     do lev=1,nlevs ! set_vert_grids
        nx = grid(lev)%nx
        ny = grid(lev)%ny
        nz = grid(lev)%nz
-       allocate(grid(lev)%dzw( nz+1,0:ny+1,0:nx+1))
-       allocate(grid(lev)%Arx( nz  ,0:ny+1,1:nx+1))
-       allocate(grid(lev)%Ary( nz  ,1:ny+1,0:nx+1))
-       allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1))
-       allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1))
-       allocate(grid(lev)%cw(  nz+1,0:ny+1,0:nx+1))
+       allocate(grid(lev)%dzw( nz+1,0:ny+1,0:nx+1)) ! at w point
+       allocate(grid(lev)%Arx( nz  ,0:ny+1,1:nx+1)) ! at u point
+       allocate(grid(lev)%Ary( nz  ,1:ny+1,0:nx+1)) ! at v point
+       allocate(grid(lev)%Arz(      0:ny+1,0:nx+1)) ! at w point
+       allocate(grid(lev)%beta(     0:ny+1,0:nx+1)) !
+       allocate(grid(lev)%gamu(     0:ny+1,0:nx+1)) !
+       allocate(grid(lev)%gamv(     0:ny+1,0:nx+1)) !
+       allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1)) ! at rho point
+       allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1)) ! at rho point
+       allocate(grid(lev)%alpha(nz ,0:ny+1,0:nx+1)) ! at rho point
     enddo
 
     lev = 1 ! Some intermediate arrays for define matrices and compute rhs
@@ -329,7 +337,7 @@ contains
        allocate(gbuffers(lev)%recvNEp(nz+1,1,1))
     enddo
 
-    ! MPI exhanges for 3D arrays (halo=2 ) ZR and ZW
+    ! MPI exhanges for 3D arrays (halo=2 ) ZR and dz
     do lev=1,nlevs
        nx = grid(lev)%nx
        nz = grid(lev)%nz
@@ -781,11 +789,11 @@ contains
           if (associated(grid(lev)%dx))             deallocate(grid(lev)%dx)
           if (associated(grid(lev)%dy))             deallocate(grid(lev)%dy)
           if (associated(grid(lev)%zr))             deallocate(grid(lev)%zr)
-          if (associated(grid(lev)%zw))             deallocate(grid(lev)%zw)
+          if (associated(grid(lev)%dz))             deallocate(grid(lev)%dz)
           if (associated(grid(lev)%dzw))            deallocate(grid(lev)%dzw)
           if (associated(grid(lev)%zxdy))           deallocate(grid(lev)%zxdy)
           if (associated(grid(lev)%zydx))           deallocate(grid(lev)%zydx)
-          if (associated(grid(lev)%cw))             deallocate(grid(lev)%cw)
+          if (associated(grid(lev)%alpha))          deallocate(grid(lev)%alpha)
           if (associated(grid(lev)%dummy3Dnz))      deallocate(grid(lev)%dummy3Dnz)
           if (associated(grid(lev)%dummy3Dnzp))     deallocate(grid(lev)%dummy3Dnzp)
           if (associated(grid(lev)%dummy3))         deallocate(grid(lev)%dummy3)

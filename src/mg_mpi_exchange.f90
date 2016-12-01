@@ -16,6 +16,11 @@ module mg_mpi_exchange
           fill_halo_4D
   end interface fill_halo
 
+  interface set_phybound2zero
+     module procedure   &
+          set_phybound2zero_3D
+  end interface set_phybound2zero
+
 contains
 
   !----------------------------------------------------------------------------
@@ -837,6 +842,7 @@ contains
           recvNE => gbuffers(lev)%recvNEp
 
        else
+          write(*,*) 'mg_mpi_exchange: fill_halo_3D: pb 1 !'
           STOP
        endif
 
@@ -883,10 +889,12 @@ contains
           recvNE => gbuffers(lev)%recvNE3D2p
 
        else
+          write(*,*) 'mg_mpi_exchange: fill_halo_3D: pb 2 !'
           STOP
        endif
 
     else
+       write(*,*) 'mg_mpi_exchange: fill_halo_3D: pb 3 !', nh,nx,ny,nz
        stop
     endif
 
@@ -905,6 +913,8 @@ contains
 
     !-
     ! Fill_halo nh=2 for ZR and ZW 
+    !- If you don't have a neighbour
+    !- FOR Homogenous Neumann CONDITIONS
     !-
     ! With a halo of 1
     ! ... | D | C   | B      | A      | *           <= initial state
@@ -1322,7 +1332,7 @@ contains
             nstag,MPI_COMM_WORLD,req(1),ierr)
        comm(1)=1
     else !!Homogenous Neumann  
-!       cA(:,:,0,1:nx) = zero 
+       !       cA(:,:,0,1:nx) = zero 
     endif
 
     if (east.ne.MPI_PROC_NULL) then
@@ -1331,7 +1341,7 @@ contains
             wetag,MPI_COMM_WORLD,req(2),ierr)
        comm(2)=2
     else !!Homogenous Neumann
-!       cA(:,:,1:ny,nx+1) = zero
+       !       cA(:,:,1:ny,nx+1) = zero
     endif
 
     if (north.ne.MPI_PROC_NULL) then
@@ -1340,7 +1350,7 @@ contains
             sntag,MPI_COMM_WORLD,req(3),ierr)
        comm(3)=3
     else !!Homogenous Neumann  
-!       cA(:,:,ny+1,1:nx) = zero
+       !       cA(:,:,ny+1,1:nx) = zero
     endif
 
     if (west.ne.MPI_PROC_NULL) then
@@ -1349,7 +1359,7 @@ contains
             ewtag,MPI_COMM_WORLD,req(4),ierr)
        comm(4)=4
     else !!Homogenous Neumann
-!       cA(:,:,1:ny,0) = zero
+       !       cA(:,:,1:ny,0) = zero
     endif
 
     if (southwest.ne.MPI_PROC_NULL) then
@@ -1358,7 +1368,7 @@ contains
             neswtag,MPI_COMM_WORLD,req(5),ierr)
        comm(5)=5
     else !!Homogenous Neumann  
-!       cA(:,:,0,0) = zero
+       !       cA(:,:,0,0) = zero
     endif
 
     if (southeast.ne.MPI_PROC_NULL) then
@@ -1367,7 +1377,7 @@ contains
             nwsetag,MPI_COMM_WORLD,req(6),ierr)
        comm(6)=6
     else !!Homogenous Neumann  
-!       cA(:,:,0,nx+1) = zero
+       !       cA(:,:,0,nx+1) = zero
     endif
 
     if (northeast.ne.MPI_PROC_NULL) then
@@ -1376,7 +1386,7 @@ contains
             swnetag,MPI_COMM_WORLD,req(7),ierr)
        comm(7)=7
     else !!Homogenous Neumann  
-!       cA(:,:,ny+1,nx+1) = zero
+       !       cA(:,:,ny+1,nx+1) = zero
     endif
 
     if (northwest.ne.MPI_PROC_NULL) then
@@ -1385,7 +1395,7 @@ contains
             senwtag,MPI_COMM_WORLD,req(8),ierr)
        comm(8)=8
     else !!Homogenous Neumann  
-!       cA(:,:,ny+1,0) = zero
+       !       cA(:,:,ny+1,0) = zero
     endif
 
     !--------------------!
@@ -1511,6 +1521,41 @@ contains
     call toc(lev,'fill_halo_4D')
 
   end subroutine fill_halo_4D
+
+  !----------------------------------------
+  subroutine set_phybound2zero_3D(lev,a3D)
+
+    integer(kind=ip), intent(in):: lev
+    real(kind=rp), dimension(:,:,:), pointer, intent(inout)::a3D
+
+    integer(kind=ip) :: nx, ny
+    integer(kind=ip) :: south, east, north, west
+
+    nx = grid(lev)%nx
+    ny = grid(lev)%ny
+
+    south     = grid(lev)%neighb(1)
+    east      = grid(lev)%neighb(2)
+    north     = grid(lev)%neighb(3)
+    west      = grid(lev)%neighb(4)
+
+    if (south == MPI_PROC_NULL) then
+       a3D(:,:1,:) = zero
+    endif
+
+    if (east == MPI_PROC_NULL) then
+       a3D(:,:,nx:) = zero
+    endif
+
+    if (north == MPI_PROC_NULL) then
+       a3D(:,ny:,:) = zero
+    endif
+
+    if (west == MPI_PROC_NULL) then
+       a3D(:,:,:1) = zero
+    endif
+
+  end subroutine set_phybound2zero_3D
 
   !----------------------------------------
   subroutine global_max(maxloc)
