@@ -81,7 +81,8 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = $(am__EXEEXT_1)
 TESTS = $(am__EXEEXT_1)
-bin_PROGRAMS = testseamount$(EXEEXT) testcuc$(EXEEXT)
+bin_PROGRAMS = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
+	testcuc$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/./confdb/test-driver
@@ -95,8 +96,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(testsdir)"
-am__EXEEXT_1 = testseamount$(EXEEXT) testcuc$(EXEEXT)
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
+am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
+	testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 am_testcuc_OBJECTS = mg_zr_zw.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
 	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
@@ -106,11 +108,44 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am_testseamount_OBJECTS = mg_zr_zw.$(OBJEXT) \
+am_testrndtopo_OBJECTS = mg_zr_hz.$(OBJEXT) \
+	mg_mpi_exchange_ijk.$(OBJEXT) mg_setup_tests.$(OBJEXT) \
+	mg_testrndtopo.$(OBJEXT)
+testrndtopo_OBJECTS = $(am_testrndtopo_OBJECTS)
+testrndtopo_LDADD = $(LDADD)
+am_testseamount_OBJECTS = mg_zr_hz.$(OBJEXT) \
 	mg_mpi_exchange_ijk.$(OBJEXT) mg_setup_tests.$(OBJEXT) \
 	mg_testseamount.$(OBJEXT)
 testseamount_OBJECTS = $(am_testseamount_OBJECTS)
 testseamount_LDADD = $(LDADD)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+SCRIPTS = $(bin_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -139,8 +174,10 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(testcuc_SOURCES) $(testseamount_SOURCES)
-DIST_SOURCES = $(testcuc_SOURCES) $(testseamount_SOURCES)
+SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
+	$(testseamount_SOURCES)
+DIST_SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
+	$(testseamount_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -154,34 +191,6 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
-am__install_max = 40
-am__nobase_strip_setup = \
-  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
-am__nobase_strip = \
-  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
-am__nobase_list = $(am__nobase_strip_setup); \
-  for p in $$list; do echo "$$p $$p"; done | \
-  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
-  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
-    if (++n[$$2] == $(am__install_max)) \
-      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
-    END { for (dir in files) print dir, files[dir] }'
-am__base_list = \
-  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
-  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__uninstall_files_from_dir = { \
-  test -z "$$files" \
-    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
-    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
-         $(am__cd) "$$dir" && rm -f $$files; }; \
-  }
-DATA = $(tests_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -544,16 +553,20 @@ LIBNHMGDIR = ${SRCDIR}
 AM_FCFLAGS = ${AM_CPPFLAGS} $(FCFLAGS_f90) -I$(top_srcdir)/src
 AM_FFLAGS = ${AM_FCFLAGS}
 AM_LDFLAGS = $(TESTLIBS) ${top_builddir}/src/libnhmg.la -lnhmg
-F90_TESTS = testseamount testcuc
+F90_TESTS = testseamount testrndtopo testcuc
 SUBDIRS = .
-testsdir = $(prefix)
-tests_DATA = nhmg_namelist ts_namelist cuc_namelist
-EXTRA_DIST = $(tests_DATA)
+bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist cuc_namelist
 testseamount_SOURCES = \
-	mg_zr_zw.f90            \
+	mg_zr_hz.f90            \
 	mg_mpi_exchange_ijk.f90 \
     mg_setup_tests.f90      \
 	mg_testseamount.f90
+
+testrndtopo_SOURCES = \
+	mg_zr_hz.f90            \
+	mg_mpi_exchange_ijk.f90 \
+    mg_setup_tests.f90      \
+	mg_testrndtopo.f90
 
 testcuc_SOURCES = \
 	mg_zr_zw.f90            \
@@ -658,9 +671,48 @@ testcuc$(EXEEXT): $(testcuc_OBJECTS) $(testcuc_DEPENDENCIES) $(EXTRA_testcuc_DEP
 	@rm -f testcuc$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testcuc_OBJECTS) $(testcuc_LDADD) $(LIBS)
 
+testrndtopo$(EXEEXT): $(testrndtopo_OBJECTS) $(testrndtopo_DEPENDENCIES) $(EXTRA_testrndtopo_DEPENDENCIES) 
+	@rm -f testrndtopo$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(testrndtopo_OBJECTS) $(testrndtopo_LDADD) $(LIBS)
+
 testseamount$(EXEEXT): $(testseamount_OBJECTS) $(testseamount_DEPENDENCIES) $(EXTRA_testseamount_DEPENDENCIES) 
 	@rm -f testseamount$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testseamount_OBJECTS) $(testseamount_LDADD) $(LIBS)
+install-binSCRIPTS: $(bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(bindir)'; $(am__uninstall_files_from_dir)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -682,27 +734,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-testsDATA: $(tests_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(tests_DATA)'; test -n "$(testsdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(testsdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(testsdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(testsdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(testsdir)" || exit $$?; \
-	done
-
-uninstall-testsDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(tests_DATA)'; test -n "$(testsdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(testsdir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -951,6 +982,13 @@ testseamount.log: testseamount$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testrndtopo.log: testrndtopo$(EXEEXT)
+	@p='testrndtopo$(EXEEXT)'; \
+	b='testrndtopo'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testcuc.log: testcuc$(EXEEXT)
 	@p='testcuc$(EXEEXT)'; \
 	b='testcuc'; \
@@ -1032,10 +1070,10 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-recursive
-all-am: Makefile $(PROGRAMS) $(DATA)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(testsdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1093,13 +1131,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-testsDATA
+install-data-am:
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am: install-binPROGRAMS install-binSCRIPTS
 
 install-html: install-html-recursive
 
@@ -1138,7 +1176,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-testsDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
 
 .MAKE: $(am__recursive_targets) check-am install-am install-strip
 
@@ -1148,16 +1186,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-testsDATA
 	cscopelist-am ctags ctags-am distclean distclean-compile \
 	distclean-generic distclean-libtool distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip install-testsDATA installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
+	install-binPROGRAMS install-binSCRIPTS install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-testsDATA
+	uninstall-binPROGRAMS uninstall-binSCRIPTS
 
 
 clean-local:

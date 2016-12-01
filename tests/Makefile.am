@@ -12,7 +12,7 @@ AM_FFLAGS   = ${AM_FCFLAGS}
 AM_LDFLAGS  = $(TESTLIBS)
 AM_LDFLAGS += ${top_builddir}/src/libnhmg.la -lnhmg
 
-F90_TESTS = testseamount testcuc
+F90_TESTS = testseamount testrndtopo testcuc
 
 check_PROGRAMS = $(F90_TESTS)
 TESTS          = $(F90_TESTS)
@@ -20,20 +20,27 @@ TESTS          = $(F90_TESTS)
 
 ##
 SUBDIRS	       = .
-testsdir    = $(prefix)
-tests_DATA  = nhmg_namelist ts_namelist cuc_namelist
-EXTRA_DIST     = $(tests_DATA)
 
 bin_PROGRAMS   = \
     testseamount \
+	testrndtopo  \
 	testcuc
+
+bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist cuc_namelist
 
 ##
 testseamount_SOURCES=       \
-	mg_zr_zw.f90            \
+	mg_zr_hz.f90            \
 	mg_mpi_exchange_ijk.f90 \
     mg_setup_tests.f90      \
 	mg_testseamount.f90
+
+##
+testrndtopo_SOURCES=        \
+	mg_zr_hz.f90            \
+	mg_mpi_exchange_ijk.f90 \
+    mg_setup_tests.f90      \
+	mg_testrndtopo.f90
 
 ##testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a
 ##

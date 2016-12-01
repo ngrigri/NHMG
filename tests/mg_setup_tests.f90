@@ -172,4 +172,66 @@ contains
 
   end subroutine setup_seamount
 
+  !-------------------------------------------------------------------------     
+  subroutine setup_rndtopo( &
+       nx, ny, npxg, npyg,   &
+       Lx, Ly, Htot,         &
+       dx, dy,               &
+       dxu, dyv,             &
+       zeta, h             )
+
+    integer(kind=ip), intent(in) :: nx,ny  ! local dims
+    integer(kind=ip), intent(in) :: npxg,npyg ! nb procs
+    real(kind=rp)   , intent(in) :: Lx, Ly, Htot
+    real(kind=rp), dimension(:,:), pointer, intent(out) :: dx, dy, zeta, h
+    real(kind=rp), dimension(:,:), pointer, intent(out) :: dxu, dyv
+
+    integer(kind=ip), parameter :: ip=4, rp=8
+    integer(kind=ip):: nxg, nyg  ! global dims
+    integer(kind=ip):: pi, pj
+    integer(kind=ip):: i,j
+
+    real(kind=rp) :: x, y
+    real(kind=rp) :: x0, y0
+    integer(kind=ip) :: ierr
+
+    call mpi_comm_rank(mpi_comm_world, myrank, ierr)
+
+    nxg = npxg * nx
+    nyg = npyg * ny
+
+    ! grid definition
+
+    dx(:,:) = Lx/real(nxg,kind=rp)
+    dy(:,:) = Ly/real(nyg,kind=rp)
+
+    dxu(:,:) =  dx(:,:)
+    dyv(:,:) =  dy(:,:)
+
+    pj = myrank/npxg
+    pi = myrank-pj*npxg
+
+    call random_number(h(:,:)) ! between 0 and 1
+
+    x0 = Lx * 0.5_rp
+    y0 = Ly * 0.5_rp
+    do i = 0,nx+1 !!!  I need to know my global index range
+       do j = 0,ny+1
+          x = (real(i+(pi*nx),kind=rp)-0.5_rp) * dx(i,j)
+          y = (real(j+(pj*ny),kind=rp)-0.5_rp) * dy(i,j)
+          zeta(i,j) = 0._rp
+          h(i,j) = Htot * (20._rp/100._rp) * abs(h(i,j)) ! between 0% and 20% of Htot
+!          h(i,j) = Htot * (1._rp - 0.5_rp * exp(-(x-x0)**2._rp/(Lx/5._rp)**2._rp -(y-y0)**2._rp/(Ly/5._rp)**2._rp))
+       enddo
+    enddo
+
+    if (netcdf_output) then
+       call write_netcdf(dx,vname='dx',netcdf_file_name='dx.nc',rank=myrank)
+       call write_netcdf(dy,vname='dy',netcdf_file_name='dy.nc',rank=myrank)
+       call write_netcdf(zeta, vname= 'zeta',netcdf_file_name= 'zeta.nc',rank=myrank)
+       call write_netcdf(h, vname= 'h',netcdf_file_name= 'h.nc',rank=myrank)
+    endif
+
+  end subroutine setup_rndtopo
+
 end module mg_setup_tests

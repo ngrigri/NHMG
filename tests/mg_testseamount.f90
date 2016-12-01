@@ -3,7 +3,7 @@ program mg_testseamount
   use mg_cst
   use mg_mpi
   use mg_tictoc
-  use mg_zr_zw
+  use mg_zr_hz
   use mg_mpi_exchange_ijk
   use mg_setup_tests
   use nhmg
@@ -18,7 +18,7 @@ program mg_testseamount
   real(kind=rp), dimension(:,:), pointer :: dxu, dyv
   real(kind=rp), dimension(:,:), pointer :: zeta, h
   real(kind=rp), dimension(:,:,:), pointer :: z_r
-  real(kind=rp), dimension(:,:,:), pointer :: z_w
+  real(kind=rp), dimension(:,:,:), pointer :: Hz
 
   real(kind=rp), dimension(:,:,:), allocatable, target :: u,v,w
   real(kind=rp), dimension(:,:,:), pointer :: up,vp,wp
@@ -134,7 +134,7 @@ program mg_testseamount
   allocate(  dyv(0:nx+1,0:ny+1))
 
   allocate(   z_r(0:nx+1,0:ny+1,1:nz))
-  allocate(   z_w(0:nx+1,0:ny+1,1:nz+1))
+  allocate(   Hz (0:nx+1,0:ny+1,1:nz))
 
   call setup_seamount(  &
        nx,ny,npxg,npyg, &
@@ -143,9 +143,15 @@ program mg_testseamount
        dxu,dyv,         &
        zeta,h        )
 
-  call setup_zr_zw(hc,theta_b,theta_s,zeta,h,z_r,z_w,'new_s_coord')
+  !TODO -> calculate correctly dxu, dyu
+  call nhmg_set_horiz_grids(nx,ny,dx,dy)
 
-  call nhmg_matrices(nx,ny,nz,z_r,z_w,dx,dy)
+!- stretching vertical grid -!   
+!  call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
+!- linear vertical grid -!
+  call setup_zr_hz(h,z_r,Hz)
+
+  call nhmg_set_vert_grids(nx,ny,nz,z_r,Hz)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
