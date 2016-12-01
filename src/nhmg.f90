@@ -430,8 +430,8 @@ contains
 
     if ((present(ufa)).and.(present(vfa))) then
  
-       allocate(ufb(1:nz,0:ny+1,  nx+1))
-       allocate(vfb(1:nz,  ny+1,0:nx+1))
+       allocate(ufb(1:nz,0:ny+1,0:nx+1)) ! modified i : 0:nx+1
+       allocate(vfb(1:nz,0:ny+1,0:nx+1)) ! modified j : 0:ny+1
        uf => ufb
        vf => vfb
 
