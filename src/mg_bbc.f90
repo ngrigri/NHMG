@@ -40,34 +40,18 @@ contains
     zydx  => grid(1)%zydx
 
     !- bottom vertical momentum -!
-
-!! TODO !! 23 nov 2016
-!!$    do i = 1,nx  
-!!$       do j = 1,ny
-!!$
-!!$          k = 1 ! bottom
-!!$          w(k,j,i) = ( &
-!!$               + hlf * hlf * ( &
-!!$               + zxdy(k,j,i) * ( dx(j,i  ) + dx(j,i-1) ) * u(k,j,i  ) &
-!!$               + zxdy(k,j,i) * ( dx(j,i+1) + dx(j,i  ) ) * u(k,j,i+1) ) &
-!!$               + hlf * hlf * ( &
-!!$               + zydx(k,j,i) * ( dy(j  ,i) + dy(j-1,i) ) * v(k,j  ,i) &
-!!$               + zydx(k,j,i) * ( dy(j+1,i) + dy(j  ,i) ) * v(k,j+1,i) ) &
-!!$                      ) / (cw(k,j,i)*dzw(k,j,i))
-!!$
-!!$       enddo
-!!$    enddo
-!! TODO !! 23 nov 2016
-
     do i = 1,nx  
        do j = 1,ny
 
           k = 1 ! bottom
-          w(k,j,i) = 99999999999999999._rp
+
+          w(k,j,i) = ( &
+               - zxdy(k,j,i) / dy(j,i) * hlf * ( u(k,j,i) + u(k,j  ,i+1)) &
+               - zydx(k,j,i) / dx(j,i) * hlf * ( v(k,j,i) + v(k,j+1,i  )) ) &
+               / alpha(k,j,i)
 
        enddo
     enddo
-
 
   end subroutine set_bbc
  
