@@ -49,8 +49,8 @@ contains
     rv(:,:) = zero
 
     do i = 1,nx+1
-       do j = 0,ny+1 
-          !       do j = 1,ny
+       do j = 1,ny  !! 1 dec 2016 
+          !       do j = 0,ny+1
 
           k = 1
 
@@ -63,7 +63,7 @@ contains
                + qrt * ( &
                + dx(j,i  ) * zxdy(k,j,i  ) * (p(k+1,j  ,i  )-p(k,j  ,i  ))   &
                + dx(j,i-1) * zxdy(k,j,i-1) * (p(k+1,j  ,i-1)-p(k,j  ,i-1)) ) &
-               + dx(j,i-1) * beta(j,i-1)   * (p(k  ,j  ,i-1)-p(k,j-1,i-1))   &
+               + dx(j,i-1) * beta(j,i-1)   * (p(k  ,j  ,i-1)-p(k,j-1,i-1))   & !!!BUG j-1 with j = 0,ny+1
                + dx(j,i-1) * beta(j,i-1)   * (p(k  ,j+1,i-1)-p(k,j  ,i-1))   &
                + dx(j,i  ) * beta(j,i  )   * (p(k  ,j  ,i  )-p(k,j-1,i  ))   &
                + dx(j,i  ) * beta(j,i  )   * (p(k  ,j+1,i  )-p(k,j  ,i  ))
@@ -96,8 +96,8 @@ contains
        enddo
     enddo
 
-    do i = 0,nx+1
-       !    do i = 1,nx
+    !    do i = 0,nx+1
+    do i = 1,nx !! 1 dec 2016
        do j = 1,ny+1 
 
           k = 1
