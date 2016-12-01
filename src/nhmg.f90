@@ -40,77 +40,84 @@ contains
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
-  subroutine nhmg_set_horiz_grids(nx,ny,dxa,dya)
-
-    integer(kind=ip), intent(in) :: nx, ny
-
-    real(kind=rp), dimension(0:nx+1,0:ny+1), intent(in) :: dxa, dya
-    real(kind=rp), dimension(0:ny+1,0:nx+1), target     :: dxb, dyb
-    real(kind=rp), dimension(:,:)          , pointer    :: dx, dy
-
-    if (myrank==0) write(*,*)' nhmg_set_horiz_grids:'
-
-    dxb = transpose(dxa)
-    dyb = transpose(dya)
-    dx => dxb
-    dy => dyb
-
-    call set_horiz_grids(dx,dy)
-
-  end subroutine nhmg_set_horiz_grids
-
-  !--------------------------------------------------------------
-  subroutine nhmg_set_vert_grids(nx,ny,nz,z_r,Hza)
+  subroutine nhmg_matrices(nx,ny,nz,zra,Hza,dxa,dya)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: z_r
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz), target, intent(in) :: Hza
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz)          , intent(in) :: zra
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz)          , intent(in) :: Hza
+    real(kind=rp), dimension(0:nx+1,0:ny+1)     , optional, intent(in) :: dxa
+    real(kind=rp), dimension(0:nx+1,0:ny+1)     , optional, intent(in) :: dya
 
     real(kind=rp), dimension(:,:,:), pointer :: zr,Hz
+    real(kind=rp), dimension(:,:)  , pointer :: dx,dy
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    real(kind=rp), dimension(:,:,:), allocatable, target :: zrb,Hzb
+    integer(kind=ip) :: i,j,k
+    real(kind=rp), dimension(1:nz,0:ny+1,0:nx+1), target :: zrb
+    real(kind=rp), dimension(1:nz,0:ny+1,0:nx+1), target :: Hzb 
+    real(kind=rp), dimension(0:ny+1,0:nx+1),      target :: dxb,dyb
 !!!
 
-    integer(kind=ip) :: i,j,k
+    integer(kind=ip), save :: iter_matrices=-1
+    iter_matrices = iter_matrices + 1
 
-    integer(kind=ip), save :: iter_vert_grids=0
-    iter_vert_grids = iter_vert_grids + 1
+    if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
 
-    if (myrank==0) write(*,*)' nhmg_set_vert_grids: ',iter_vert_grids
+    !- horiz grids -!
+
+    if (present(dxa) .and. present(dya)) then ! optional !
+
+       dxb = transpose(dxa)
+       dyb = transpose(dya)
+       dx => dxb
+       dy => dyb
+
+       call set_horiz_grids(dx,dy)
+
+       if (associated(dx)) dx => null()
+       if (associated(dy)) dy => null()
+
+       if (check_output) then
+          call write_netcdf(grid(1)%dx,vname='dx',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dy,vname='dy',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dxu,vname='dxu',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+          call write_netcdf(grid(1)%dyv,vname='dyv',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+       endif
+
+    end if
+
+    !- vert grids -!
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(zrb(1:nz,0:ny+1,0:nx+1))
-    allocate(Hzb(1:nz,0:ny+1,0:nx+1))
     do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          zrb(k,j,i) = z_r(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          Hzb(k,j,i) = Hza(i,j,k)
-        enddo
-      enddo
+       do j = 0,ny+1
+          do k = 1,nz
+             zrb(k,j,i) = zra(i,j,k)
+             Hzb(k,j,i) = Hza(i,j,k)
+          enddo
+       enddo
     enddo
     zr => zrb
     Hz => Hzb
 !!!
+
     call set_vert_grids(zr,Hz)
 
     if (associated(zr)) zr => null()
     if (associated(Hz)) Hz => null()
 
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(zrb)
-    deallocate(Hzb)
-!!!
+    ! matrices
 
-  end subroutine nhmg_set_vert_grids
+    call set_matrices()
+
+    if (check_output) then
+       if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200)) then
+          call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='ma.nc',rank=myrank,iter=iter_matrices)
+       endif
+    endif
+
+  end subroutine nhmg_matrices
 
   !--------------------------------------------------------------
   subroutine nhmg_bbc(nx,ny,nz,ua,va,wa)
