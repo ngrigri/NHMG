@@ -178,8 +178,8 @@ contains
           enddo
        enddo
 
-       call set_phybound2zero(lev,zxdy) ! 
-       call set_phybound2zero(lev,zydx)
+       call set_phybound2zero(lev,zxdy,gt='u') ! 
+       call set_phybound2zero(lev,zydx,gt='v')
 
        do i = 0,nx+1
           do j = 0,ny+1

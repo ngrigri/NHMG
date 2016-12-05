@@ -34,7 +34,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
     real(kind=rp), dimension(:,:,:), pointer :: rhs
 
-    integer(kind=ip), save :: iter_rhs=-2
+    integer(kind=ip), save :: iter_rhs=-1
     iter_rhs = iter_rhs + 1
 
     if (myrank==0) write(*,*)'- set rhs:',iter_rhs
@@ -115,6 +115,10 @@ contains
 
     call fill_halo(1,uf,lbc_null='u')
 
+    if (check_output) then
+       call write_netcdf(u,vname='uf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
+    endif
+
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
@@ -180,6 +184,10 @@ contains
 
     call fill_halo(1,vf,lbc_null='v')
 
+    if (check_output) then
+       call write_netcdf(vf,vname='vf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
+    endif
+
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
@@ -238,6 +246,10 @@ contains
 
        enddo
     enddo
+
+    if (check_output) then
+       call write_netcdf(wf,vname='wf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
+    endif
 
     do i = 1,nx
        do j = 1,ny 
