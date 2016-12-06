@@ -34,10 +34,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
     real(kind=rp), dimension(:,:,:), pointer :: rhs
 
-    integer(kind=ip), save :: iter_rhs=-1
-    iter_rhs = iter_rhs + 1
-
-    if (myrank==0) write(*,*)'- set rhs:',iter_rhs
+    if (myrank==0) write(*,*)'- set rhs:'
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -115,10 +112,6 @@ contains
 
     call fill_halo(1,uf,lbc_null='u')
 
-    if (check_output) then
-       call write_netcdf(u,vname='uf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
-    endif
-
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
@@ -184,10 +177,6 @@ contains
 
     call fill_halo(1,vf,lbc_null='v')
 
-    if (check_output) then
-       call write_netcdf(vf,vname='vf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
-    endif
-
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
@@ -247,10 +236,6 @@ contains
        enddo
     enddo
 
-    if (check_output) then
-       call write_netcdf(wf,vname='wf',netcdf_file_name='rhs.nc',rank=myrank,iter=iter_rhs)
-    endif
-
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
@@ -293,10 +278,7 @@ contains
     real(kind=rp), dimension(:,:),     pointer :: gamv
     real(kind=rp), dimension(:,:,:,:), pointer :: cA
 
-    integer(kind=ip), save :: iter_mat=-1
-    iter_mat = iter_mat + 1
-
-    if (myrank==0) write(*,*)'- set matrices:',iter_mat
+    if (myrank==0) write(*,*)'- set matrices:'
 
     do lev = 1, nlevs
 
@@ -322,7 +304,7 @@ contains
        zydx  => grid(lev)%zydx  !
        cA    => grid(lev)%cA    !
 
-       !! interaction coeff with neighbours
+       !! interaction coeff with neighbours !!
 
        !---------------!
        !- lower level -!
@@ -333,20 +315,18 @@ contains
              ! couples with k+1,j-1
              cA(3,k,j,i) = qrt * ( zydx(k+1,j,i) + zydx(k,j-1,i) )
              ! couples with j-1
-
              cA(4,k,j,i) = hlf * (gamv(j,i) + gamv(j-1,i)) * Ary(k,j,i) / dyv(j,i) &
                   - qrt * ( zydx(k,j-1,i) - zydx(k,j,i) )
           enddo
        enddo
+
        do i = 1,nx+1
           do j = 1,ny
              ! couples with k+1,i-1
              cA(6,k,j,i) = qrt * ( zxdy(k+1,j,i) + zxdy(k,j,i-1) )
              ! couples with i-1
-
              cA(7,k,j,i) = hlf * (gamu(j,i) + gamu(j,i-1))  * Arx(k,j,i) / dxu(j,i) &
                   - qrt * ( zxdy(k,j,i-1) - zxdy(k,j,i) )
-
           enddo
        enddo
 
@@ -377,6 +357,7 @@ contains
              enddo
           enddo
        enddo
+
        do i = 1,nx
           do j = 1,ny+1
              do k = 2,nz-1 
@@ -389,6 +370,7 @@ contains
              enddo
           enddo
        enddo
+
        do i = 1,nx+1
           do j = 1,ny 
              do k = 2,nz-1 
@@ -412,6 +394,7 @@ contains
              cA(2,k,j,i) = (Arz(j,i)/dzw(k,j,i)) * hlf * ( alpha(k,j,i) + alpha(k-1,j,i) )
           enddo
        enddo
+
        do i = 1,nx
           do j = 1,ny+1
              ! couples with j-1
@@ -421,6 +404,7 @@ contains
              cA(5,k,j,i) = - qrt * ( zydx(k-1,j,i) + zydx(k,j-1,i) )
           enddo
        enddo
+
        do i = 1,nx+1
           do j = 1,ny 
              ! couples with i-1
@@ -433,7 +417,8 @@ contains
 
        call fill_halo(lev,cA)
 
-       !! self-interaction coeff
+       !! self-interaction coeff !!
+
        do i = 1,nx
           do j = 1,ny
 

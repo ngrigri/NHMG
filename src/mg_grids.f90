@@ -337,7 +337,7 @@ contains
        allocate(gbuffers(lev)%recvNEp(nz+1,1,1))
     enddo
 
-    ! MPI exhanges for 3D arrays (halo=2 ) ZR and dz
+    ! MPI exhanges for 3D arrays (halo=2 ) zr and dz
     do lev=1,nlevs
        nx = grid(lev)%nx
        nz = grid(lev)%nz

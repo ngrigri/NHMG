@@ -21,8 +21,6 @@ contains
     integer(kind=ip):: nx,ny,nz
 
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
-    real(kind=rp), dimension(:,:,:), pointer :: zr, dz
-    real(kind=rp), dimension(:,:,:), pointer :: dzw
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: alpha
 
@@ -32,12 +30,9 @@ contains
 
     dx    => grid(1)%dx
     dy    => grid(1)%dy
-    zr    => grid(1)%zr
-    dz    => grid(1)%dz
-    dzw   => grid(1)%dzw
-    alpha => grid(1)%alpha
     zxdy  => grid(1)%zxdy
     zydx  => grid(1)%zydx
+    alpha => grid(1)%alpha
 
     !- bottom vertical momentum -!
     do i = 1,nx  
