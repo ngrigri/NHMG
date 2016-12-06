@@ -16,7 +16,7 @@ setenv MPI_LIB /appli/intel/impi/5.0.3.048/intel64/lib
 setenv NETCDF_LIB $NETCDF/lib
 setenv NETCDF_INC $NETCDF/include
 
-./configure --prefix=/home2/caparmor/grima/NH_Multigrid/IntelMPI --enable-intel_mpi  --enable-netcdf [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-profiling]
+./configure --prefix=/home2/caparmor/grima/NHMH/INTEL_MPI --enable-intel_mpi  --enable-netcdf [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-profiling]
 make clean
 make 
 make install
