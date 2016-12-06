@@ -3,7 +3,7 @@
 ##- Date       : November 2016
 ########################################################################
 SUBDIRS	       = .
-matlabdir    = $(prefix)
+matlabdir    = $(prefix)/examples/matlab
 matlab_DATA  = *.m
 EXTRA_DIST     = $(matlab_DATA)
 

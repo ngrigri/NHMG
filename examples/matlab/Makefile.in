@@ -328,7 +328,7 @@ top_srcdir = @top_srcdir@
 ########################################################################
 ########################################################################
 SUBDIRS = .
-matlabdir = $(prefix)
+matlabdir = $(prefix)/examples/matlab
 matlab_DATA = *.m
 EXTRA_DIST = $(matlab_DATA)
 all: all-recursive
