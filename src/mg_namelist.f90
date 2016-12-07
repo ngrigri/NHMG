@@ -79,7 +79,7 @@ contains
     if (exist) then
 
        if (vbrank == 0) then
-          write(*,*)"Opening and Reading namelist file:",fn_nml
+          write(*,*)"  Opening and Reading namelist file:", TRIM(fn_nml)
        endif
 
        open(unit=lun_nml, File=fn_nml, ACTION='READ')
@@ -110,7 +110,7 @@ contains
        endif
 
        if (rank == 0) then
-          write(*,*)'Non hydrostatic parameters:'
+          write(*,*)'  Non hydrostatic parameters:'
           write(*,*)'  - solver_prec   : ', solver_prec
           write(*,*)'  - solver_maxiter: ', solver_maxiter
           write(*,*)'  - nsmall        : ', nsmall 

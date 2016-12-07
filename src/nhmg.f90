@@ -751,15 +751,9 @@ contains
 
     real(kind=rp) :: tstart,tend,perf
 
-    call cpu_time(tstart)
-
     call grids_dealloc()
 
     call print_tictoc()
-
-    call cpu_time(tend)
-
-    if (myrank == 0) write(*,*)'nhmg_clean time:',tend-tstart
 
   end subroutine nhmg_clean
 
