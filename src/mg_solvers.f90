@@ -26,7 +26,7 @@ contains
     real(kind=rp) :: rnxg,rnyg,rnzg
     real(kind=rp) :: rnpxg,rnpyg
 
-    if (myrank==0) write(*,*)'- solve p:'
+    if (myrank==0) write(*,*)'   - solve p:'
 
     grid(1)%p(:,:,:) = zero
 
@@ -86,13 +86,13 @@ contains
        ! the rescaled time should be expressed in terms of error reduction,
        ! therefore the ratio rnorm/rnorm0 [the rnorm0 was missing prior Dec 11th]
        perf = (tend-tstart)*(rnpxg*rnpyg)/(-log(rnorm/rnorm0)/log(10._rp))/(rnxg*rnyg*rnzg)
-       write(*,*)'--- summary ---'
-       write(*,'(A,F8.3,A)')"time spent to solve :",tend-tstart," s"
-       write(*,'(A,E10.3)')"rescaled performance:",perf
-       write(*,*)'---------------'
+       write(*,*)'     --- summary ---'
+       write(*,'(A,F8.3,A)')"     time spent to solve :",tend-tstart," s"
+       write(*,'(A,E10.3)') "     rescaled performance:",perf
+       write(*,*)'     ---------------'
     end if
 
-10  format("ite = ",I2,": res = ",E10.3," / conv = ",F10.3)
+10  format("     ite = ",I2,": res = ",E10.3," / conv = ",F10.3)
 
   end subroutine solve_p
 

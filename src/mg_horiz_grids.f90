@@ -27,23 +27,23 @@ contains
     real(kind=rp), dimension(:,:), pointer :: dxuf,dxuc
     real(kind=rp), dimension(:,:), pointer :: dyvf,dyvc
 
-    do lev = 1, nlevs
+    if (myrank==0) write(*,*)'   - set horizontal grids:' 
 
-       if (myrank==0) write(*,*)'   lev=',lev
+    do lev = 1, nlevs
 
        nx=grid(lev)%nx
        ny=grid(lev)%ny
 
        if (lev == 1) then ! dx,dy from croco
 
-          grid(lev)%dx(0:ny+1,0:nx+1) = dx
+          grid(lev)%dx(0:ny+1,0:nx+1) = dxg
           grid(lev)%dy(0:ny+1,0:nx+1) = dy
 
           grid(lev)%dxu(0:ny+1,1:nx+1) = hlf*(dx(0:ny+1,0:nx)+dx(0:ny+1,1:nx+1))
           grid(lev)%dyv(1:ny+1,0:nx+1) = hlf*(dy(0:ny,0:nx+1)+dy(1:ny+1,0:nx+1))
 
        else               ! coarsen dx,dy 
-                          ! (needed when directly discretizing on coarser grids)
+          ! (needed when directly discretizing on coarser grids)
 
           nxf =grid(lev-1)%nx
           nyf =grid(lev-1)%ny
