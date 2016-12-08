@@ -122,9 +122,9 @@ contains
 
        dx => grid(lev)%dx
        dy => grid(lev)%dy
-
        zr    => grid(lev)%zr
        dz    => grid(lev)%dz
+
        dzw   => grid(lev)%dzw
        Arx   => grid(lev)%Arx
        Ary   => grid(lev)%Ary
@@ -136,6 +136,7 @@ contains
        gamu  => grid(lev)%gamu
        gamv  => grid(lev)%gamv
 
+       !! Cell height 
        do i = 0,nx+1
           do j = 0,ny+1
              dzw(1,j,i) = hlf * dz(1,j,i)
@@ -146,7 +147,7 @@ contains
           enddo
        enddo
 
-       !!  Areas
+       !!  Cell faces area
        do i = 1,nx+1
           do j = 0,ny+1
              do k = 1,nz
@@ -154,7 +155,6 @@ contains
              enddo
           enddo
        enddo
-
        do i = 0,nx+1
           do j = 1,ny+1
              do k = 1,nz
@@ -162,13 +162,13 @@ contains
              enddo
           enddo
        enddo
-
        do i = 0,nx+1
           do j = 1,ny+1
              Arz(j,i) = dx(j,i) * dy(j,i)
           enddo
        enddo
 
+       !! Slopes
        do i = 0,nx+1        ! We need zr with 2 halo points !
           do j = 0,ny+1     !
              do k = 1, nz
@@ -178,35 +178,30 @@ contains
           enddo
        enddo
 
-       call set_phybound2zero(lev,zxdy,gt='u') ! 
+       call set_phybound2zero(lev,zxdy,gt='u')
        call set_phybound2zero(lev,zydx,gt='v')
 
+       !!- Used in set_matrices and fluxes
        do i = 0,nx+1
           do j = 0,ny+1
              do k = 1, nz
-                alpha(k,j,i) =  one + (zxdy(k,j,i)/dy(j,i))**2 + (zydx(k,j,i)/dx(j,i))**2
+                alpha(k,j,i) = one + (zxdy(k,j,i)/dy(j,i))**2 + (zydx(k,j,i)/dx(j,i))**2
              enddo
           enddo
        enddo
 
        do i = 0,nx+1
           do j = 0,ny+1
-
-             gamu(j,i) =   one - hlf * ( zxdy(1,j,i) / dy(j,i) )**2 / alpha(1,j,i) 
-
+             gamu(j,i) = one - hlf * ( zxdy(1,j,i) / dy(j,i) )**2 / alpha(1,j,i) 
           enddo
        enddo
 
        do i = 0,nx+1
           do j = 0,ny+1
-
-             gamv(j,i) =  one - hlf * ( zydx(1,j,i) / dx(j,i) )**2 / alpha(1,j,i) 
-
+             gamv(j,i) = one - hlf * ( zydx(1,j,i) / dx(j,i) )**2 / alpha(1,j,i) 
           enddo
        enddo
 
-
-       !- Used in set_matrices and fluxes
        do i = 0,nx+1
           do j = 0,ny+1
              beta(j,i) = eighth * zxdy(1,j,i)/dy(j,i) * zydx(1,j,i)/dx(j,i) * dz(1,j,i) / alpha(1,j,i)
@@ -214,6 +209,7 @@ contains
        end do
 
        if (netcdf_output) then
+          call write_netcdf(grid(lev)%dzw,vname='dzw',netcdf_file_name='dzw.nc',rank=myrank,iter=lev)
           call write_netcdf(grid(lev)%zxdy,vname='zxdy',netcdf_file_name='zxdy.nc',rank=myrank,iter=lev)
           call write_netcdf(grid(lev)%zydx,vname='zydx',netcdf_file_name='zydx.nc',rank=myrank,iter=lev)
           call write_netcdf(grid(lev)%alpha,vname='alpha',netcdf_file_name='alpha.nc',rank=myrank,iter=lev)

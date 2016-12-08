@@ -20,7 +20,6 @@ contains
     integer(kind=ip):: k, j, i
     integer(kind=ip):: nx, ny, nz
 
-
     real(kind=rp) :: gamma
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
     real(kind=rp), dimension(:,:)  , pointer :: dxu,dyv
@@ -36,9 +35,9 @@ contains
 
     dx    => grid(1)%dx
     dy    => grid(1)%dy
-    dxu => grid(1)%dxu
-    dyv => grid(1)%dyv
-    dzw => grid(1)%dzw
+    dxu   => grid(1)%dxu
+    dyv   => grid(1)%dyv
+    dzw   => grid(1)%dzw
     alpha => grid(1)%alpha
     beta  => grid(1)%beta
     Arx   => grid(1)%Arx
@@ -63,10 +62,10 @@ contains
                + dx(j,i  )*zxdy(k,j,i  ) * dzw(k+1,j,i  ) * w(k+1,j,i  ) &
                + dx(j,i-1)*zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) )  &
 
-               - beta(j,i-1)   * dyv(j  ,i-1)   * v(k,j  ,i-1) & !lack a length
-               - beta(j,i-1)   * dyv(j+1,i-1)   * v(k,j+1,i-1) & !lack a length
-               - beta(j,i  )   * dyv(j  ,i  )   * v(k,j  ,i  ) & !lack a length
-               - beta(j,i  )   * dyv(j+1,i  )   * v(k,j+1,i  )   !lack a length
+               - beta(j,i-1)   * dyv(j  ,i-1)   * v(k,j  ,i-1) &
+               - beta(j,i-1)   * dyv(j+1,i-1)   * v(k,j+1,i-1) &
+               - beta(j,i  )   * dyv(j  ,i  )   * v(k,j  ,i  ) &
+               - beta(j,i  )   * dyv(j+1,i  )   * v(k,j+1,i  )  
 
           do k = 2,nz-1
              ru(j,i) = ru(j,i) &    
@@ -106,10 +105,10 @@ contains
                + dy(j  ,i)*zydx(k,j  ,i) * dzw(k+1,j  ,i) * w(k+1,j  ,i  ) &
                + dy(j-1,i)*zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i  ) ) &
 
-               - beta(j-1,i)   * dxu(j-1,i  )   * u(k  ,j-1,i  ) & !lack a length
-               - beta(j-1,i)   * dxu(j-1,i+1)   * u(k  ,j-1,i+1) & !lack a length
-               - beta(j  ,i)   * dxu(j  ,i  )   * u(k  ,j  ,i  ) & !lack a length
-               - beta(j  ,i)   * dxu(j  ,i+1)   * u(k  ,j  ,i+1)   !lack a length
+               - beta(j-1,i)   * dxu(j-1,i  )   * u(k  ,j-1,i  ) &
+               - beta(j-1,i)   * dxu(j-1,i+1)   * u(k  ,j-1,i+1) &
+               - beta(j  ,i)   * dxu(j  ,i  )   * u(k  ,j  ,i  ) &
+               - beta(j  ,i)   * dxu(j  ,i+1)   * u(k  ,j  ,i+1)  
 
           do k = 2,nz-1
              rv(j,i) = rv(j,i) &
@@ -191,7 +190,7 @@ contains
 
     do i = 1,nx+1  
        do j = 1,ny 
-          !       do j = 0,ny +1
+       !do j = 0,ny +1
 
           k = 1 ! lower level
           su_integr(j,i) =  Arx(k,j,i)
@@ -224,10 +223,8 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,uf_integr,lbc_null='u')
-
     do i = 1,nx
-       !    do i = 0,nx+1
+    !do i = 0,nx+1
        do j = 1,ny+1
 
           k = 1 ! lower level
@@ -261,8 +258,6 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,vf_integr,lbc_null='v')
-
     if (check_output) then
        if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then
           !if ((iter_coupling_in .EQ. 199) .OR. (iter_coupling_in .EQ. 200)) then
@@ -273,17 +268,20 @@ contains
 
     do i = 1,nx+1  
        do j = 1,ny
-          !       do j = 0,ny+1
+       !do j = 0,ny+1
           uf_integr(j,i) = uf_integr(j,i) - uf_bar(j,i)
        enddo
     enddo
 
     do i = 1,nx
-       !    do i = 0,nx+1
+    !do i = 0,nx+1
        do j = 1,ny+1
           vf_integr(j,i) = vf_integr(j,i) - vf_bar(j,i)
        enddo
     enddo
+
+    call fill_halo(1,uf_integr,lbc_null='u')
+    call fill_halo(1,vf_integr,lbc_null='v')
 
     if (check_output) then
        if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then

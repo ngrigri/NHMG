@@ -66,7 +66,7 @@ contains
 
     !- horiz grids -!
 
-    if (present(dxa) .and. present(dya)) then ! optional !
+    if (present(dxa) .and. present(dya)) then
 
        dxb = transpose(dxa)
        dyb = transpose(dya)
@@ -299,18 +299,22 @@ contains
 !    uf => ufa
 !    vf => vfa
 
-!    if (check_output) then
-!       call write_netcdf(u,vname='u',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-!       call write_netcdf(v,vname='v',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-!       call write_netcdf(w,vname='w',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-!    endif
+    if (check_output) then
+       if ((iter_fluxes .EQ. 1)) then
+          call write_netcdf(u,vname='u',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(v,vname='v',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(w,vname='w',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+       endif
+    endif
 
     call set_fluxes(u,v,w,uf,vf)
 
-!    if (check_output) then
-!       call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-!       call write_netcdf(vf,vname='vf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-!    endif
+    if (check_output) then
+       if ((iter_fluxes .EQ. 1)) then
+          call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(vf,vname='vf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+       endif
+    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
    do i = 1,nx+1
@@ -431,7 +435,8 @@ contains
 
     call fill_halo(1,uf_bar,lbc_null='u')
     call fill_halo(1,vf_bar,lbc_null='v')
-!no fill_halo needed for u and w?
+    call fill_halo(1,u,lbc_null='u')
+    call fill_halo(1,v,lbc_null='v')
     call fill_halo(1,w)
 
     if (check_output) then

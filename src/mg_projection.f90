@@ -19,9 +19,8 @@ contains
 
     integer(kind=ip):: k,j,i
     integer(kind=ip):: nx,ny,nz
+
     real(kind=rp) :: gamma
-
-
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
     real(kind=rp), dimension(:,:),   pointer :: dxu,dyv
     real(kind=rp), dimension(:,:,:), pointer :: dzw
@@ -30,7 +29,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: alpha
     real(kind=rp), dimension(:,:)  , pointer :: beta
-
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
     real(kind=rp), dimension(:,:,:), pointer :: rhs
 
@@ -205,7 +203,7 @@ contains
        do j = 1,ny
           do k = 2,nz
 
-             wf(k,j,i) = hlf * (alpha(k-1,j,i) + alpha(k,j,i) ) * Arz(j,i) * w(k,j,i) &
+             wf(k,j,i) = hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * w(k,j,i) &
                   - qrt * ( &
                   + zxdy(k  ,j,i) * dxu(j,i  ) * u(k  ,j,i  ) &
                   + zxdy(k  ,j,i) * dxu(j,i+1) * u(k  ,j,i+1) &
@@ -423,7 +421,6 @@ contains
           do j = 1,ny
 
              k = 1 !lower level
-
              cA(1,k,j,i) = &
                   - Arz(j,i) / dzw(k+1,j,i) * hlf * (alpha(k+1,j,i) + alpha(k,j,i)) &
                   - Arx(k,j,i  )/dxu(j,i  ) * hlf * (gamu(j,i) + gamu(j  ,i-1)) &
@@ -431,7 +428,7 @@ contains
                   - Ary(k,j  ,i)/dyv(j  ,i) * hlf * (gamv(j,i) + gamv(j-1,i  )) &
                   - Ary(k,j+1,i)/dyv(j+1,i) * hlf * (gamv(j,i) + gamv(j+1,i  ))
 
-             do k = 2,nz-1 !interior levels and upper level
+             do k = 2,nz-1 !interior levels
                 cA(1,k,j,i) = &
                      - Arz(j,i) / dzw(k+1,j,i) * hlf * (alpha(k+1,j,i) + alpha(k,j,i)) &
                      - Arz(j,i) / dzw(k  ,j,i) * hlf * (alpha(k-1,j,i) + alpha(k,j,i)) &
@@ -441,8 +438,7 @@ contains
                      - Ary(k,j+1,i)/dyv(j+1,i)
              enddo
 
-             ! upper level
-             k=nz
+             k=nz ! upper level
              cA(1,k,j,i) = &
                   - Arz(j,i) / dzw(k+1,j,i) * alpha(k,j,i) &
                   - Arz(j,i) / dzw(k  ,j,i) * hlf * (alpha(k-1,j,i) + alpha(k,j,i)) &
@@ -524,6 +520,8 @@ contains
 
        enddo
     enddo
+
+    call fill_halo(1,w)
 
   end subroutine correct_uvw
 

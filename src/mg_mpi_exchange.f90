@@ -127,7 +127,7 @@ contains
             nstag,MPI_COMM_WORLD,req(1),ierr)
        comm(1)=1
     elseif ((lbc).and.(trim(cuv)=='v')) then
-       a2d(1,:) = zero
+!       a2d(1,:) = zero
     else !!Homogenous Neumann  
        a2D(1-nh:0,1:nx) = a2D(nh:1:-1,1:nx)
     endif
@@ -138,7 +138,7 @@ contains
             wetag,MPI_COMM_WORLD,req(2),ierr)
        comm(2)=2
     elseif ((lbc).and.(trim(cuv)=='u')) then
-       a2d(:,nx+1) = zero
+!       a2d(:,nx+1) = zero
     else !!Homogenous Neumann 
        a2D(1:ny,nx+1) = a2D(1:ny,nx)
     endif
@@ -149,7 +149,7 @@ contains
             sntag,MPI_COMM_WORLD,req(3),ierr)
        comm(3)=3
     elseif ((lbc).and.(trim(cuv)=='v')) then 
-       a2d(ny+1,:) = zero
+!       a2d(ny+1,:) = zero
     else !!Homogenous Neumann  
        a2D(ny+1:ny+nh,1:nx) = a2D(ny:ny-nh+1:-1,1:nx)
     endif
@@ -160,7 +160,7 @@ contains
             ewtag,MPI_COMM_WORLD,req(4),ierr)
        comm(4)=4
     elseif ((lbc).and.(trim(cuv)=='u')) then
-       a2d(:,1) = zero
+!       a2d(:,1) = zero
     else !!Homogenous Neumann
        a2D(1:ny,1-nh:0) = a2D(1:ny,nh:1:-1)
     endif
@@ -173,7 +173,7 @@ contains
             neswtag,MPI_COMM_WORLD,req(5),ierr)
        comm(5)=5
     elseif ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
-       a2d(1-nh:0,1-nh:0) = zero
+!       a2d(1-nh:0,1-nh:0) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_sw_s = .true.
     elseif (west.ne.MPI_PROC_NULL) then
@@ -190,7 +190,7 @@ contains
             nwsetag,MPI_COMM_WORLD,req(6),ierr)
        comm(6)=6
     elseif ((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
-       a2d(1-nh:0,nx+1:nx+nh) = zero
+!       a2d(1-nh:0,nx+1:nx+nh) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_se_s = .true.
     elseif (east.ne.MPI_PROC_NULL) then
@@ -208,7 +208,7 @@ contains
        comm(7)=7
     elseif (((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
          ((lbc).and.(trim(cuv)=='v')) ) then
-       a2d(ny+1:ny+nh,nx+1:nx+nh) = zero
+!       a2d(ny+1:ny+nh,nx+1:nx+nh) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_ne_n = .true.
     elseif (east.ne.MPI_PROC_NULL) then
@@ -226,7 +226,7 @@ contains
        comm(8)=8
     elseif ( ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
          ((lbc).and.(trim(cuv)=='v')) ) then
-       a2d(ny+1:ny+nh,1-nh:0) = zero
+!       a2d(ny+1:ny+nh,1-nh:0) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_nw_n = .true.
     elseif (west.ne.MPI_PROC_NULL) then
@@ -358,7 +358,7 @@ contains
 
     enddo      !<-- while
 
-    !- corners on physicical boundarie if a flag is true-!
+    !- corners on physical boundarie if a flag is true-!
     if (flag_sw_s) then
        a2D(1-nh:0,1-nh:0) = a2D(1-nh:0,nh:1:-1)
     elseif (flag_sw_w) then
@@ -713,7 +713,7 @@ contains
 
     enddo      !<-- while
 
-    !- corners on physicical boundarie if a flag is true-!
+    !- corners on physical boundarie if a flag is true-!
     if (flag_sw_s) then
        p(:,1-nh:0,1-nh:0) = p(:,1-nh:0,nh:1:-1)
     elseif (flag_sw_w) then
@@ -971,7 +971,7 @@ contains
             wetag,MPI_COMM_WORLD,req(2),ierr)
        comm(2)=2
     elseif ((lbc).and.(trim(cuv)=='u')) then
-       p(:,:,nx+1) = zero !- assume that nh = 1
+!       p(:,:,nx+1) = zero !- assume that nh = 1
     else  !!Homogenous Neumann
 !!$       p(:,1:ny,nx+1:nx+nh) = p(:,1:ny,nx:nx-nh+1:-1)
        do ih = 1, nh
@@ -991,7 +991,7 @@ contains
             sntag,MPI_COMM_WORLD,req(3),ierr)
        comm(3)=3
     elseif ((lbc).and.(trim(cuv)=='v')) then 
-       p(:,ny+1,:) = zero !- assume that nh = 1
+!       p(:,ny+1,:) = zero !- assume that nh = 1
     else  !!Homogenous Neumann  
 !!$       p(:,ny+1:ny+nh,1:nx) = p(:,ny:ny-nh+1:-1,1:nx)
        do ih = 1, nh
@@ -1011,7 +1011,7 @@ contains
             ewtag,MPI_COMM_WORLD,req(4),ierr)
        comm(4)=4
     elseif ((lbc).and.(trim(cuv)=='u')) then
-       p(:,:,1) = zero !- assume that nh = 1
+!       p(:,:,1) = zero !- assume that nh = 1
     else   !!Homogenous Neumann
 !!$       p(:,1:ny,1-nh:0) = p(:,1:ny,nh:1:-1)
        do ih = 1, nh
@@ -1033,7 +1033,7 @@ contains
             neswtag,MPI_COMM_WORLD,req(5),ierr)
        comm(5)=5
     elseif ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
-       p(:,1-nh:0,1-nh:0) = zero
+!       p(:,1-nh:0,1-nh:0) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_sw_s = .true.
     elseif (west.ne.MPI_PROC_NULL) then
@@ -1068,7 +1068,7 @@ contains
        comm(7)=7
     elseif (((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
          ((lbc).and.(trim(cuv)=='v')) ) then
-       p(:,ny+1:ny+nh,nx+1:nx+nh) = zero
+!       p(:,ny+1:ny+nh,nx+1:nx+nh) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_ne_n = .true.
     elseif (east.ne.MPI_PROC_NULL) then
@@ -1086,7 +1086,7 @@ contains
        comm(8)=8
     elseif ( ((lbc).and.(west.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')).or. &
          ((lbc).and.(trim(cuv)=='v')) ) then
-       p(:,ny+1:ny+nh,1-nh:0) = zero
+!       p(:,ny+1:ny+nh,1-nh:0) = zero
     elseif (north.ne.MPI_PROC_NULL) then
        flag_nw_n = .true.
     elseif (west.ne.MPI_PROC_NULL) then

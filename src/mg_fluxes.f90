@@ -47,11 +47,10 @@ contains
 
     !- uf -!
 
-    ! lower level
     k = 1
     do i = 1,nx+1  
        do j = 1,ny 
-          !       do j = 0,ny+1
+       !do j = 0,ny+1 
 
           gamma = one - qrt * ( &
                (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
@@ -68,9 +67,9 @@ contains
        enddo
     enddo
 
-    !interior levels
     do i = 1,nx+1  
        do j = 1,ny 
+       !do j = 0,ny+1 
           do k = 2,nz-1 
 
              uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
@@ -83,9 +82,10 @@ contains
        enddo
     enddo
 
-    k = nz !upper level
+    k = nz
     do i = 1,nx+1  
        do j = 1,ny 
+       !do j = 0,ny+1 
 
           uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
                - qrt * ( &
@@ -100,16 +100,14 @@ contains
 
     !- vf -!
 
-    !lower level
     k = 1
     do i = 1,nx
-       !    do i = 0,nx+1
+    !do i = 0,nx+1
        do j = 1,ny+1
 
           gamma = one - qrt * ( &
                (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j,i  ) + &
                (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
-
 
           vf(k,j,i) = gamma * Ary(k,j,i) * v(k,j,i) &
                - qrt * ( &
@@ -119,12 +117,11 @@ contains
                - beta(j-1,i)   * dxu(j-1,i+1)   * u(k  ,j-1,i+1) &
                - beta(j  ,i)   * dxu(j  ,i  )   * u(k  ,j  ,i  ) &
                - beta(j  ,i)   * dxu(j  ,i+1)   * u(k  ,j  ,i+1)
-
        enddo
     enddo
 
-    !interior levels
     do i = 1,nx
+    !do i = 0,nx+1
        do j = 1,ny+1
           do k = 2,nz-1
 
@@ -138,8 +135,9 @@ contains
        enddo
     enddo
 
-    k = nz !upper level
+    k = nz
     do i = 1,nx
+    !do i = 0,nx+1
        do j = 1,ny+1
 
           vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &

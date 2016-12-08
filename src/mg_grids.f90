@@ -23,6 +23,7 @@ module mg_grids
   !- to reserve memory space for all the main variables of the multigrid solver.
   !-
   type grid_type
+
      integer(kind=ip) :: nx,ny,nz                     ! Subdomain dimensions (whithout halo points)
      integer(kind=ip) :: npx, npy                     ! Number of processes
      integer(kind=ip) :: incx, incy                   ! ??
@@ -46,7 +47,7 @@ module mg_grids
      real(kind=rp),dimension(:,:,:),pointer :: zr => null()   ! Mesh in z at rho point (nz  , 2 halo points)
      real(kind=rp),dimension(:,:,:),pointer :: dz => null()   ! Mesh in z at w point   (nz  , 2 halo points)
 
-     ! All these variables are dependante of dx, dy, zr and dz
+     ! All these variables are dependant of dx, dy, zr and dz
      real(kind=rp),dimension(:,:,:),pointer :: dzw   => null() ! Cell height at w-points
      real(kind=rp),dimension(:,:,:),pointer :: Arx   => null() ! Cell face surface at u-points
      real(kind=rp),dimension(:,:,:),pointer :: Ary   => null() ! Cell face surface at v-points
@@ -76,6 +77,7 @@ module mg_grids
   !- to reserve memory for MPI exchanges at the boundaries
   !-
   type mpi_buffers
+
      ! MPI: 2D array buffers (halo=1 and halo=2 => h, zr, dz)
      real(kind=rp),dimension(:,:),pointer :: sendN2D1,recvN2D1,sendS2D1,recvS2D1
      real(kind=rp),dimension(:,:),pointer :: sendE2D1,recvE2D1,sendW2D1,recvW2D1
