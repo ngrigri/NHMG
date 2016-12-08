@@ -27,9 +27,9 @@ contains
     real(kind=rp), dimension(:,:), pointer :: dxuf,dxuc
     real(kind=rp), dimension(:,:), pointer :: dyvf,dyvc
 
-    do lev = 1, nlevs
+    if (myrank==0) write(*,*)'   - set horizontal grids:' 
 
-       if (myrank==0) write(*,*)'   lev=',lev
+    do lev = 1, nlevs
 
        nx=grid(lev)%nx
        ny=grid(lev)%ny
@@ -43,7 +43,7 @@ contains
           grid(lev)%dyv(1:ny+1,0:nx+1) = hlf*(dy(0:ny,0:nx+1)+dy(1:ny+1,0:nx+1))
 
        else               ! coarsen dx,dy 
-                          ! (needed when directly discretizing on coarser grids)
+          ! (needed when directly discretizing on coarser grids)
 
           nxf =grid(lev-1)%nx
           nyf =grid(lev-1)%ny

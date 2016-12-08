@@ -64,8 +64,9 @@ contains
 
     if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
 
-    !- horiz grids -!
-
+    !--------------------!
+    !- Horizontal grids -!
+    !--------------------!
     if (present(dxa) .and. present(dya)) then
 
        dxb = transpose(dxa)
@@ -74,7 +75,7 @@ contains
        dy => dyb
 
        call set_horiz_grids(dx,dy)
-       
+
        if (check_output) then
           call write_netcdf(grid(1)%dx,vname='dx',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
           call write_netcdf(grid(1)%dy,vname='dy',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
@@ -85,8 +86,9 @@ contains
 
     end if
 
-    !- vert grids -!
-
+    !------------------!
+    !- Vertical grids -!
+    !------------------!
 !!! dirty reshape arrays indexing ijk -> kji !!!
     do i = 0,nx+1
        do j = 0,ny+1
@@ -104,7 +106,7 @@ contains
 
     if (check_output) then
        if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
-       !if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200)) then
+          !if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200)) then
           call write_netcdf(grid(1)%zr,vname='zr',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
           call write_netcdf(grid(1)%dz,vname='dz',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
        endif
@@ -113,13 +115,14 @@ contains
     if (associated(zr)) zr => null()
     if (associated(Hz)) Hz => null()
 
+    !------------!
     !- matrices -!
-
+    !------------!
     call set_matrices()
 
     if (check_output) then
        if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
-       !if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200)) then
+          !if ((iter_matrices .EQ. 199) .OR. (iter_matrices .EQ. 200)) then
           call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
        endif
     endif
@@ -753,15 +756,9 @@ contains
 
     real(kind=rp) :: tstart,tend,perf
 
-    call cpu_time(tstart)
-
     call grids_dealloc()
 
     call print_tictoc()
-
-    call cpu_time(tend)
-
-    if (myrank == 0) write(*,*)'nhmg_clean time:',tend-tstart
 
   end subroutine nhmg_clean
 

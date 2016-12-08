@@ -41,11 +41,11 @@ contains
 
     integer(kind=ip) :: i,j,k
 
+    if (myrank==0) write(*,*)'   - set vertical grids:'
+
     do lev = 1, nlevs
 
        !! fill and coarsen zr and dz
-
-       if (myrank==0) write(*,*)'   lev=',lev
 
        nx=grid(lev)%nx
        ny=grid(lev)%ny

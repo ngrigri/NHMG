@@ -32,7 +32,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
     real(kind=rp), dimension(:,:,:), pointer :: rhs
 
-    if (myrank==0) write(*,*)'- set rhs:'
+    if (myrank==0) write(*,*)'   - set rhs:'
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -276,11 +276,9 @@ contains
     real(kind=rp), dimension(:,:),     pointer :: gamv
     real(kind=rp), dimension(:,:,:,:), pointer :: cA
 
-    if (myrank==0) write(*,*)'- set matrices:'
+    if (myrank==0) write(*,*)'   - set matrices:'
 
     do lev = 1, nlevs
-
-       if (myrank==0) write(*,*)'   lev=',lev
 
        nx = grid(lev)%nx
        ny = grid(lev)%ny
@@ -479,7 +477,7 @@ contains
     dyv => grid(1)%dyv
     dzw => grid(1)%dzw
 
-    if (myrank==0) write(*,*)'- correct u,v,w:'
+    if (myrank==0) write(*,*)'   - correct u,v,w:'
 
     !! Correct
     p => grid(1)%p

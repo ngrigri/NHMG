@@ -107,8 +107,6 @@ contains
     !---------------------!
     if (trim(coord) == 'new_s_coord') then
 
-       write(*,*) trim(coord),nh, lbound(h)
-
        do i = 1-nh,nx+nh
 
           do j = 1-nh,ny+nh

@@ -146,8 +146,8 @@ contains
 
     integer(kind=ip) :: lev ! loop's variable on levels
 
-    if (myrank==0) write(*,*)'- define grids:'
-    if (myrank==0) write(*,*)'  - define grid levels'
+    if (myrank==0) write(*,*)'  - define grids:'
+    if (myrank==0) write(*,*)'    - define grid levels'
 
     ! Calculate the number of levels of the multigrid solver method
     call find_grid_levels(npxg, npyg, nxl, nyl, nzl)
@@ -167,7 +167,7 @@ contains
     grid(1)%incx=1
     grid(1)%incy=1
 
-    if (myrank==0) write(*,*)'  - define grid dims'
+    if (myrank==0) write(*,*)'    - define grid dims'
     ! define grid dimensions at each level
     call define_grid_dims()
 
@@ -466,7 +466,7 @@ contains
     ! Initialize pressure to zero
     grid(1)%p(:,:,:) = zero
 
-    if (myrank==0) write(*,*)'  - define gather informations'
+    if (myrank==0) write(*,*)'    - define gather informations'
     ! Call the routine which calculate gather informations
     call define_gather_informations()
 
@@ -595,7 +595,7 @@ contains
     integer(kind=ip) :: incx, incy
     integer(kind=ip) :: pi, pj
 
-    if (myrank==0) write(*,*)'  - define neighbours'
+    if (myrank==0) write(*,*)'    - define neighbours'
 
     npx = grid(1)%npx
     npy = grid(1)%npy
@@ -753,23 +753,23 @@ contains
   subroutine print_grids()
     integer(kind=ip) :: lev,ierr
 
-    if (myrank==0) write(*,*)'- print grid information:'
+    if (myrank==0) write(*,*)'    - print grid information:'
 
     call MPI_Barrier( MPI_COMM_WORLD ,ierr)
     if (myrank.eq.0)then
        do lev=1,nlevs
           if (grid(lev)%gather.eq.0)then
-             write(*,100)"  lev=",lev,": ", &
+             write(*,100)"    lev=",lev,": ", &
                   grid(lev)%nx,' x',grid(lev)%ny,' x',grid(lev)%nz, &
                   " on ",grid(lev)%npx,' x',grid(lev)%npy," procs"
           else
-             write(*,100)"  lev=",lev,": ", &
+             write(*,100)"    lev=",lev,": ", &
                   grid(lev)%nx,' x',grid(lev)%ny,' x',grid(lev)%nz, &
                   " on ",grid(lev)%npx,' x',grid(lev)%npy," procs / gather"
           endif
        enddo
     endif
-100 format (A6,I2,A,I3,A,I3,A,I3,A,I3,A,I3,A)
+100 format (A,I2,A,I3,A,I3,A,I3,A,I3,A,I3,A)
 
   end subroutine print_grids
 

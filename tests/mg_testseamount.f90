@@ -67,14 +67,14 @@ program mg_testseamount
 
   !- Read namelist file if it is present, else use default values
   if (nml_exist) then
-     if (myrank == 0) write(*,*)'- Reading ts_namelist file'
+     if (myrank == 0) write(*,*)' Reading ts_namelist file'
      open(unit=lun_nml, File='ts_namelist', ACTION='READ')
      rewind(unit=lun_nml)
      read(unit=lun_nml, nml=tsparam)
   endif
 
   if (myrank == 0) then
-     write(*,*)'test seamount parameters:'
+     write(*,*)'  test seamount parameters:'
      write(*,*)'  - nit     : ', nit 
      write(*,*)'  - nxg     : ', nxg
      write(*,*)'  - nyg     : ', nyg
@@ -110,19 +110,16 @@ program mg_testseamount
   !-------------------!
   !- Initialise nhmg -!
   !-------------------!
-  if (rank == 0) write(*,*)'Initialise nhmg grids'
-
   call nhmg_init(nx,ny,nz,npxg,npyg)
 
   !---------------------!
   !- Setup seamount    -!
   !---------------------!
-  if (rank == 0) write(*,*)'Initialise seamount test'
+  if (rank == 0) write(*,*)' Initialise seamount test'
 
   if (myrank==0) then
-     write(*,*)''
-     write(*,*)'Lx, Ly, Htot:',Lx, Ly, Htot
-     write(*,*)'hc, theta_b, theta_s:',hc, theta_b, theta_s
+     write(*,'(A,3(x,F12.2))')'    - Lx, Ly, Htot        :', Lx, Ly, Htot
+     write(*,'(A,3(x,F12.2))')'    - hc, theta_b, theta_s:', hc, theta_b, theta_s
   endif
 
   allocate(    h(0:nx+1,0:ny+1))
@@ -152,15 +149,14 @@ program mg_testseamount
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
   !-------------------------------------!
-  if (rank == 0) write(*,*)'Initialise u, v, w'
+  if (rank == 0) write(*,*)' Initialise u, v, w'
 
   allocate(u(1:nx+1,0:ny+1,1:nz))
   allocate(v(0:nx+1,1:ny+1,1:nz))
   allocate(w(0:nx+1,0:ny+1,0:nz))
 
   if (myrank==0) then
-     write(*,*)''
-     write(*,*)'U=0, V=0 and W=-1 except at bottom'
+     write(*,*)' U=0, V=0 and W=-1 except at bottom'
   endif
   u(:,:,:)    =  0._8
   v(:,:,:)    =  0._8
@@ -224,11 +220,9 @@ program mg_testseamount
      endif
 
 
-     !----------------------!
+     !--------------------!
      !- Call nhmg solver -!
-     !----------------------!
-     if (rank == 0) write(*,*)'Call nhmg solver'
-
+     !--------------------!
      call nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
@@ -245,7 +239,7 @@ program mg_testseamount
   !---------------------!
   !- Deallocate memory -!
   !---------------------!
-  if (rank == 0) write(*,*)'Clean memory before to finish the program.'
+  if (rank == 0) write(*,*)' Clean memory before to finish the program.'
   call nhmg_clean()
 
   !----------------------!
