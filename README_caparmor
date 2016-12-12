@@ -17,9 +17,16 @@ setenv NETCDF_LIB $NETCDF/lib
 setenv NETCDF_INC $NETCDF/include
 
 ./configure --prefix=/home2/caparmor/grima/NHMG/INTEL_MPI --enable-intel_mpi  --enable-netcdf [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-profiling]
-make clean
-make 
-make install
+
+==> HERE A TRICK TO USE MAKE WITH GIT ON A DIFFERENT COMPUTER: https://github.com/hyperrealm/libconfig/issues/22
+make clean   AUTOCONF=: AUTOHEADER=: AUTOMAKE=: ACLOCAL=:
+make         AUTOCONF=: AUTOHEADER=: AUTOMAKE=: ACLOCAL=:
+make install AUTOCONF=: AUTOHEADER=: AUTOMAKE=: ACLOCAL=:
+
+Libtool:
+--------
+error message ===> libtool: Version mismatch error.
+solution ====> autoreconf --force --install
 
 Submission:
 ----------
