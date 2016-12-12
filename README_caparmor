@@ -36,3 +36,16 @@ Debugging with DDT:
 ------------------
 module load ddt/4.2.2
 ddt &
+
+github :
+------
+
+git remote set-url origin git@github.com:ngrigri/NHMG.git
+
+ssh-keygen
+
+add a new key in the github settings: 
+https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
+ 
+to have the key to copy on github:
+more /home2/caparmor/grima/.ssh/id_dsa.pub
