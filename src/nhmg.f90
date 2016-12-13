@@ -20,6 +20,31 @@ module nhmg
 contains
 
   !--------------------------------------------------------------
+  subroutine nhmg_write(nx,ny,nz,ua,va,wa)
+
+    integer(kind=ip), intent(in) :: nx, ny, nz
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz), target, intent(in) :: ua
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz), target, intent(in) :: va
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wa !vertical indexing different than croco
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+
+    integer(kind=ip), save :: iter_write=0
+    iter_write = iter_write + 1
+
+    u => ua
+    v => va
+    w => wa
+
+    if ((iter_write .EQ. 1) .OR. (iter_write .EQ. 2)) then
+       call write_netcdf(u,vname='u',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
+       call write_netcdf(v,vname='v',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
+       call write_netcdf(w,vname='w',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
+    endif
+
+  end subroutine nhmg_write
+
+  !--------------------------------------------------------------
   subroutine nhmg_init(nx,ny,nz,npxg,npyg)
       
     integer(kind=ip), intent(in) :: nx, ny, nz
