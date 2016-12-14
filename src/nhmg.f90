@@ -36,11 +36,11 @@ contains
     v => va
     w => wa
 
-    if ((iter_write .EQ. 1) .OR. (iter_write .EQ. 2)) then
+!    if ((iter_write .EQ. 1)) then
        call write_netcdf(u,vname='u',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
        call write_netcdf(v,vname='v',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
        call write_netcdf(w,vname='w',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
-    endif
+!    endif
 
   end subroutine nhmg_write
 
