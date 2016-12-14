@@ -4,18 +4,23 @@ Intel compiler + Intel MPI
 
 Environment:
 -----------
-module load intel-comp intel-mpi netcdf-intel/3.6.3-11.1.073
+  module load intel-comp/2015.3.187 
+  module load intel-mpi/5.0.3.048  
+  module load netCDF/4.2.1-intel-12.1.5
 
-Currently Loaded Modulefiles:
-  1) intel-comp/2015.3.187         2) intel-mpi/5.0.3.048 3) netcdf-intel/3.6.3-11.1.073
+  setenv NETCDF /appli/netCDF/netcdf-4.2.1__intel-12.1.5
+
+  setenv MPI_INC /appli/intel/impi/5.0.3.048/intel64/include
+  setenv MPI_LIB /appli/intel/impi/5.0.3.048/intel64/lib
+  setenv NETCDF_LIB $NETCDF/lib
+  setenv NETCDF_INC $NETCDF/include
+
+Ncview:
+------
+module load ncview/2.1.2_intel
 
 Configuration and compilation:
 -----------------------------
-setenv MPI_INC /appli/intel/impi/5.0.3.048/intel64/include
-setenv MPI_LIB /appli/intel/impi/5.0.3.048/intel64/lib
-setenv NETCDF_LIB $NETCDF/lib
-setenv NETCDF_INC $NETCDF/include
-
 ./configure --prefix=/home2/caparmor/grima/NHMG/INTEL_MPI --enable-intel_mpi  --enable-netcdf [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-profiling]
 
 ==> HERE A TRICK TO USE MAKE WITH GIT ON A DIFFERENT COMPUTER: https://github.com/hyperrealm/libconfig/issues/22
@@ -30,7 +35,7 @@ solution ====> autoreconf --force --install
 
 Submission:
 ----------
-qsub run_mgroms_caparmor.pbs
+qsub run_nhmg_caparmor.pbs
 
 Debugging with DDT:
 ------------------
