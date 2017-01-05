@@ -951,7 +951,7 @@ contains
             nstag,MPI_COMM_WORLD,req(1),ierr)
        comm(1)=1
     elseif ((lbc).and.(trim(cuv)=='v')) then
-       p(:,1,:) = zero !- assume that nh = 1
+!       p(:,1,:) = zero !- assume that nh = 1
     else !!Homogenous Neumann
        !!       p(:,1-nh:0,1:nx) = p(:,nh:1:-1,1:nx)
        do ih = 1, nh
@@ -1050,7 +1050,7 @@ contains
             nwsetag,MPI_COMM_WORLD,req(6),ierr)
        comm(6)=6
     elseif ((lbc).and.(east.eq.MPI_PROC_NULL).and.(trim(cuv)=='u')) then
-       p(:,1-nh:0,nx+1:nx+nh) = zero
+!       p(:,1-nh:0,nx+1:nx+nh) = zero
     elseif (south.ne.MPI_PROC_NULL) then
        flag_se_s = .true.
     elseif (east.ne.MPI_PROC_NULL) then
