@@ -28,9 +28,9 @@ bin_PROGRAMS   = \
 
 bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist cuc_namelist
 
-nmldir    = $(prefix)/tests
-nml_DATA  = $(bin_SCRIPTS)
-EXTRA_DIST     = $(nml_DATA)
+#nmldir    = $(prefix)/tests
+#nml_DATA  = $(bin_SCRIPTS)
+EXTRA_DIST     = $(bin_SCRIPTS)
 
 ##
 testseamount_SOURCES=       \

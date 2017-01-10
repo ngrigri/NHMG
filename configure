@@ -783,6 +783,7 @@ enable_mpich
 enable_openmp
 enable_netcdf
 enable_hdf5
+enable_ada
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1443,6 +1444,7 @@ Optional Features:
   --enable-openmp - OpenMP parallelisation.
   --enable-netcdf - Netcdf library and includes.
   --enable-hdf5 - HDF5 for Netcdf 4.
+  --enable-ada - Netcdf libraries are explicitly added in LDFLAGS options.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -11636,6 +11638,18 @@ else
 fi
 
 
+#
+## IDRIS ada specific LDFLAGS options !?!
+##
+# Check whether --enable-ada was given.
+if test "${enable_ada+set}" = set; then :
+  enableval=$enable_ada; enable_ada=yes
+else
+  enable_ada=no
+
+fi
+
+
 
 
 
@@ -15182,8 +15196,14 @@ if test "$enable_netcdf" = "yes" ; then
         if test -f "${NETCDF_LIB}/libnetcdf.a"; then
           if test -f "${NETCDF_LIB}/libnetcdff.a"; then
             TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            fi
           else
   	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdf"
+            fi
           fi
         else
           as_fn_error $? "Can't find libnetcdf.a in ${NETCDF_LIB}" "$LINENO" 5

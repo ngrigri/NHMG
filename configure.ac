@@ -168,6 +168,16 @@ AC_ARG_ENABLE(
     enable_hdf5=no
              )
 
+#
+## IDRIS ada specific LDFLAGS options !?!
+##
+AC_ARG_ENABLE(
+    ada,
+    [  --enable-ada - Netcdf libraries are explicitly added in LDFLAGS options.],
+    enable_ada=yes,
+    enable_ada=no
+             )
+
 AC_ARG_VAR(MPI_LIB,Location of MPI library (compile-time))
 AC_ARG_VAR(MPI_INC,Location of MPI module (compile-time))
 
@@ -555,8 +565,14 @@ if test "$enable_netcdf" = "yes" ; then
         if test -f "${NETCDF_LIB}/libnetcdf.a"; then
           if test -f "${NETCDF_LIB}/libnetcdff.a"; then
             TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            fi
           else
   	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdf"
+            fi
           fi
         else
           AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
