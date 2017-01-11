@@ -82,7 +82,7 @@ host_triplet = @host@
 check_PROGRAMS = $(am__EXEEXT_1)
 TESTS = $(am__EXEEXT_1)
 bin_PROGRAMS = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testcuc$(EXEEXT)
+	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/./confdb/test-driver
@@ -98,7 +98,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testcuc$(EXEEXT)
+	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 am_testcuc_OBJECTS = mg_zr_hz.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
 	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
@@ -108,6 +108,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_testfillhalo_OBJECTS = mg_testfillhalo.$(OBJEXT)
+testfillhalo_OBJECTS = $(am_testfillhalo_OBJECTS)
+testfillhalo_LDADD = $(LDADD)
 am_testrndtopo_OBJECTS = mg_zr_hz.$(OBJEXT) \
 	mg_mpi_exchange_ijk.$(OBJEXT) mg_setup_tests.$(OBJEXT) \
 	mg_testrndtopo.$(OBJEXT)
@@ -174,10 +177,10 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
-DIST_SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
+SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
+	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
+DIST_SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
+	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -553,9 +556,9 @@ LIBNHMGDIR = ${SRCDIR}
 AM_FCFLAGS = ${AM_CPPFLAGS} $(FCFLAGS_f90) -I$(top_srcdir)/src
 AM_FFLAGS = ${AM_FCFLAGS}
 AM_LDFLAGS = $(TESTLIBS) ${top_builddir}/src/libnhmg.la -lnhmg
-F90_TESTS = testseamount testrndtopo testcuc
+F90_TESTS = testseamount testrndtopo testfillhalo testcuc
 SUBDIRS = .
-bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist cuc_namelist
+bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
 
 #nmldir    = $(prefix)/tests
 #nml_DATA  = $(bin_SCRIPTS)
@@ -571,6 +574,9 @@ testrndtopo_SOURCES = \
 	mg_mpi_exchange_ijk.f90 \
     mg_setup_tests.f90      \
 	mg_testrndtopo.f90
+
+testfillhalo_SOURCES = \
+	mg_testfillhalo.f90
 
 testcuc_SOURCES = \
 	mg_zr_hz.f90            \
@@ -674,6 +680,10 @@ clean-checkPROGRAMS:
 testcuc$(EXEEXT): $(testcuc_OBJECTS) $(testcuc_DEPENDENCIES) $(EXTRA_testcuc_DEPENDENCIES) 
 	@rm -f testcuc$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testcuc_OBJECTS) $(testcuc_LDADD) $(LIBS)
+
+testfillhalo$(EXEEXT): $(testfillhalo_OBJECTS) $(testfillhalo_DEPENDENCIES) $(EXTRA_testfillhalo_DEPENDENCIES) 
+	@rm -f testfillhalo$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(testfillhalo_OBJECTS) $(testfillhalo_LDADD) $(LIBS)
 
 testrndtopo$(EXEEXT): $(testrndtopo_OBJECTS) $(testrndtopo_DEPENDENCIES) $(EXTRA_testrndtopo_DEPENDENCIES) 
 	@rm -f testrndtopo$(EXEEXT)
@@ -989,6 +999,13 @@ testseamount.log: testseamount$(EXEEXT)
 testrndtopo.log: testrndtopo$(EXEEXT)
 	@p='testrndtopo$(EXEEXT)'; \
 	b='testrndtopo'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testfillhalo.log: testfillhalo$(EXEEXT)
+	@p='testfillhalo$(EXEEXT)'; \
+	b='testfillhalo'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
