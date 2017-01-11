@@ -15,6 +15,7 @@ program mg_testfillhalo
   real(kind=rp), dimension(:,:,:), pointer :: a3D
   real(kind=rp), dimension(:,:,:), pointer :: a3Dp
 
+  integer(kind=ip)  :: nbv =9
   real(kind=rp), dimension(:)  , pointer :: myres
   real(kind=rp), dimension(:,:), pointer :: res
 
@@ -91,7 +92,7 @@ program mg_testfillhalo
      allocate(res(npyg,npxg))
      res = reshape([(ii,ii=0,np-1)],[npyg,npxg])
      do ii=npyg,1,-1
-        write(20,'(16(x,I3))')int(res(ii,:))
+        write(20,'(16(x,I3))')int(res(:,ii))
      enddo
      deallocate(res)
   endif
@@ -99,8 +100,8 @@ program mg_testfillhalo
   if (rank == 0) write(*,*)' Allocate fill halo test arrays'
 
   ! S E N W SW SE NE NW '
-  allocate( myres(8))
-  allocate( res(8,0:np-1))
+  allocate( myres(nbv))
+  allocate( res(nbv,0:np-1))
 
   allocate( a2D (       0:ny+1,0:ny+1))
   allocate( a3D (1:nz  ,0:ny+1,0:nx+1))
@@ -126,22 +127,23 @@ program mg_testfillhalo
   !-----------------!
   call fill_halo(1,a2D)
 
-  myres(1) = sum(a2D(1:ny,   0))/ny ! S
-  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
-  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
-  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(1) = sum(a2D(   0,1:nx))/nx ! S
+  myres(2) = sum(a2D(1:ny,nx+1))/ny ! E
+  myres(3) = sum(a2D(ny+1,1:nx))/nx ! N
+  myres(4) = sum(a2D(1:ny,   0))/ny ! W
   myres(5) =     a2D(   0,   0)     ! SW
-  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(6) =     a2D(   0,nx+1)     ! SE
   myres(7) =     a2D(ny+1,nx+1)     ! NE
-  myres(8) =     a2D(   0,nx+1)     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) =     a2D(ny+1,   0)     ! NW
+  myres(9) = sum(a2D(1:ny,1:nx))/(ny*nx) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a2D results:'
      write(20,*)'------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW     =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -150,22 +152,23 @@ program mg_testfillhalo
   !-----------------!
   call fill_halo(1,a3D)
 
-  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
-  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
-  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
-  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(1) = sum(a3D(:,   0,1:nx))/(nx*nz) ! S
+  myres(2) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! E
+  myres(3) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! N
+  myres(4) = sum(a3D(:,1:ny,   0))/(ny*nz) ! W
   myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
-  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(6) = sum(a3D(:,   0,nx+1))/ nz     ! SE
   myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
-  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) = sum(a3D(:,ny+1,   0))/ nz     ! NW
+  myres(9) = sum(a3D(:,1:ny,1:nx))/(ny*nx*nz) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a3D(nz,:,:) results:'
      write(20,*)'--------------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW     =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -174,22 +177,23 @@ program mg_testfillhalo
   !------------------!
   call fill_halo(1,a3Dp)
 
-  myres(1) = sum(a3Dp(:,1:ny,   0))/(ny*(nz+1)) ! S
-  myres(2) = sum(a3Dp(:,ny+1,1:nx))/(nx*(nz+1)) ! E
-  myres(3) = sum(a3Dp(:,1:ny,nx+1))/(ny*(nz+1)) ! N
-  myres(4) = sum(a3Dp(:,   0,1:nx))/(nx*(nz+1)) ! W
+  myres(1) = sum(a3Dp(:,   0,1:nx))/(nx*(nz+1)) ! S
+  myres(2) = sum(a3Dp(:,1:ny,nx+1))/(ny*(nz+1)) ! E
+  myres(3) = sum(a3Dp(:,ny+1,1:nx))/(nx*(nz+1)) ! N
+  myres(4) = sum(a3Dp(:,1:ny,   0))/(ny*(nz+1)) ! W
   myres(5) = sum(a3Dp(:,   0,   0))/ (nz+1)     ! SW
-  myres(6) = sum(a3Dp(:,ny+1,   0))/ (nz+1)     ! SE
+  myres(6) = sum(a3Dp(:,   0,nx+1))/ (nz+1)     ! SE
   myres(7) = sum(a3Dp(:,ny+1,nx+1))/ (nz+1)     ! NE
-  myres(8) = sum(a3Dp(:,   0,nx+1))/ (nz+1)     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) = sum(a3Dp(:,ny+1,   0))/ (nz+1)     ! NW
+  myres(9) = sum(a3Dp(:,1:ny,1:nx))/(ny*nx*(nz+1)) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a3D(nz+1,:,:) results:'
      write(20,*)'----------------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r     S      E      N      W      SW     SE     NE     NW    =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -213,22 +217,23 @@ program mg_testfillhalo
   !-------------------!
   call fill_halo(1,a2D,lbc_null='u')
 
-  myres(1) = sum(a2D(1:ny,   0))/ny ! S
-  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
-  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
-  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(1) = sum(a2D(   0,1:nx))/nx ! S
+  myres(2) = sum(a2D(1:ny,nx+1))/ny ! E
+  myres(3) = sum(a2D(ny+1,1:nx))/nx ! N
+  myres(4) = sum(a2D(1:ny,   0))/ny ! W
   myres(5) =     a2D(   0,   0)     ! SW
-  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(6) =     a2D(   0,nx+1)     ! SE
   myres(7) =     a2D(ny+1,nx+1)     ! NE
-  myres(8) =     a2D(   0,nx+1)     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) =     a2D(ny+1,   0)     ! NW
+  myres(9) = sum(a2D(1:ny,1:nx))/(ny*nx) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a2D u results:'
      write(20,*)'--------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW    =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -237,22 +242,23 @@ program mg_testfillhalo
   !-------------------!
   call fill_halo(1,a3D,lbc_null='u')
 
-  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
-  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
-  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
-  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(1) = sum(a3D(:,   0,1:nx))/(nx*nz) ! S
+  myres(2) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! E
+  myres(3) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! N
+  myres(4) = sum(a3D(:,1:ny,   0))/(ny*nz) ! W
   myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
-  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(6) = sum(a3D(:,   0,nx+1))/ nz     ! SE
   myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
-  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) = sum(a3D(:,ny+1,   0))/ nz     ! NW
+  myres(9) = sum(a3D(:,1:ny,1:nx))/(ny*nx*nz) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a3D(nz,:,:) u results:'
      write(20,*)'----------------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW    =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -274,22 +280,23 @@ program mg_testfillhalo
   !-------------------!
   call fill_halo(1,a2D,lbc_null='v')
 
-  myres(1) = sum(a2D(1:ny,   0))/ny ! S
-  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
-  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
-  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(1) = sum(a2D(   0,1:nx))/nx ! S
+  myres(2) = sum(a2D(1:ny,nx+1))/ny ! E
+  myres(3) = sum(a2D(ny+1,1:nx))/nx ! N
+  myres(4) = sum(a2D(1:ny,   0))/ny ! W
   myres(5) =     a2D(   0,   0)     ! SW
-  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(6) =     a2D(   0,nx+1)     ! SE
   myres(7) =     a2D(ny+1,nx+1)     ! NE
-  myres(8) =     a2D(   0,nx+1)     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) =     a2D(ny+1,   0)     ! NW
+  myres(9) = sum(a2D(1:ny,1:nx))/(ny*nx) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a2D v results:'
      write(20,*)'--------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW    =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
@@ -298,22 +305,23 @@ program mg_testfillhalo
   !-------------------!
   call fill_halo(1,a3D,lbc_null='v')
 
-  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
-  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
-  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
-  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(1) = sum(a3D(:,   0,1:nx))/(nx*nz) ! S
+  myres(2) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! E
+  myres(3) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! N
+  myres(4) = sum(a3D(:,1:ny,   0))/(ny*nz) ! W
   myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
-  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(6) = sum(a3D(:,   0,nx+1))/ nz     ! SE
   myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
-  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
-  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  myres(8) = sum(a3D(:,ny+1,   0))/ nz     ! NW
+  myres(9) = sum(a3D(:,1:ny,1:nx))/(ny*nx*nz) ! domain
+  call MPI_GATHER(myres,nbv,MPI_DOUBLE_PRECISION,res,nbv, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
   if (rank == 0 ) then
      write(20,*)''
      write(20,*)'a3D(nz,:,:) v results:'
      write(20,*)'----------------------'
-     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     write(20,*)'r    S      E      N      W      SW     SE     NE     NW    =rank'
      do ii=0,np-1
-        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+        write(20,'(I2,a,9(x,F6.2))') ii,':',res(:,ii)
      enddo
   endif
 
