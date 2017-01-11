@@ -58,6 +58,10 @@ program mg_testseamount
 
   call tic(1,'test_seamount')
 
+  call mpi_init(ierr)
+  call mpi_comm_rank(mpi_comm_world, rank, ierr)
+  call mpi_comm_size(mpi_comm_world, np, ierr)
+
   !---------------------!
   !- Namelist (or not) -!
   !---------------------!
@@ -67,13 +71,13 @@ program mg_testseamount
 
   !- Read namelist file if it is present, else use default values
   if (nml_exist) then
-     if (myrank == 0) write(*,*)' Reading ts_namelist file'
+     if (rank == 0) write(*,*)' Reading ts_namelist file'
      open(unit=lun_nml, File='ts_namelist', ACTION='READ')
      rewind(unit=lun_nml)
      read(unit=lun_nml, nml=tsparam)
   endif
 
-  if (myrank == 0) then
+  if (rank == 0) then
      write(*,*)'  test seamount parameters:'
      write(*,*)'  - nit     : ', nit 
      write(*,*)'  - nxg     : ', nxg
@@ -94,10 +98,6 @@ program mg_testseamount
   !- Global/local dim  -!
   !---------------------!
 
-  call mpi_init(ierr)
-  call mpi_comm_rank(mpi_comm_world, rank, ierr)
-  call mpi_comm_size(mpi_comm_world, np, ierr)
-
   if (np /= (npxg*npyg)) then
      write(*,*) "Error: in number of processes !", np, npxg, npyg
      stop -1
@@ -117,7 +117,7 @@ program mg_testseamount
   !---------------------!
   if (rank == 0) write(*,*)' Initialise seamount test'
 
-  if (myrank==0) then
+  if (rank==0) then
      write(*,'(A,3(x,F12.2))')'    - Lx, Ly, Htot        :', Lx, Ly, Htot
      write(*,'(A,3(x,F12.2))')'    - hc, theta_b, theta_s:', hc, theta_b, theta_s
   endif
@@ -139,41 +139,32 @@ program mg_testseamount
        dx,dy,           &
        zeta,h        )
 
-!- stretching vertical grid -!   
+  !- stretching vertical grid -!   
   call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
-!- linear vertical grid -!
-!  call setup_zr_hz(h,z_r,Hz)
+  !- linear vertical grid -!
+  !  call setup_zr_hz(h,z_r,Hz)
 
   call nhmg_matrices(nx,ny,nz,z_r,Hz,dx,dy)
 
   !-------------------------------------!
   !- U,V,W initialisation (model vars) -!
   !-------------------------------------!
-  if (rank == 0) write(*,*)' Initialise u, v, w'
+  if (rank == 0) write(*,*)' Allocate u, v, w'
 
   allocate(u(1:nx+1,0:ny+1,1:nz))
   allocate(v(0:nx+1,1:ny+1,1:nz))
   allocate(w(0:nx+1,0:ny+1,0:nz))
 
-  if (myrank==0) then
-     write(*,*)' U=0, V=0 and W=-1 except at bottom'
-  endif
-  u(:,:,:)    =  0._8
-  v(:,:,:)    =  0._8
-
-  w(:,:,0)    =  0._8
-  w(:,:,1:nz) = -1._8
-
   up => u
   vp => v
   wp => w
 
-!!$  if (myrank==0) then
+!!$  if (rank==0) then
 !!$     write(*,*)''
 !!$     write(*,*)'U, V and W are initalized with random numbers /= on each process'
 !!$  endif
-!!$  pj = myrank/npxg
-!!$  pi = mod(myrank,npxg)
+!!$  pj = rank/npxg
+!!$  pi = mod(rank,npxg)
 !!$
 !!$  ib = 1 + pi * nx
 !!$  jb = 1 + pj * ny
@@ -188,6 +179,14 @@ program mg_testseamount
 !!$  allocate(tmp_rnd2(1:nxg,1:nyg,0:nzg))
 !!$
   do it = 1, nit
+
+     if (rank==0) then
+        write(*,*)' U=0, V=0 and W=-1 except at bottom'
+     endif
+     u(:,:,:)    =  0._8
+     v(:,:,:)    =  0._8
+     w(:,:,0)    =  0._8
+     w(:,:,1:nz) = -1._8
 !!$
 !!$     kb = 1
 !!$     ke = nz
@@ -214,9 +213,9 @@ program mg_testseamount
 !!$     call fill_halo_ijk(nx,ny,wp,'w') ! depend of mg_grids for MPI neighbours !
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=rank,iter=it)
      endif
 
 
@@ -226,9 +225,9 @@ program mg_testseamount
      call nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=rank,iter=it)
      endif
 
   enddo
@@ -248,7 +247,7 @@ program mg_testseamount
   call mpi_finalize(ierr)
 
   call toc(1,'test_seamount')
-  if(myrank == 0) call print_tictoc(myrank)
+  if(rank == 0) call print_tictoc(rank)
 
 end program mg_testseamount
 

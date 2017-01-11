@@ -58,6 +58,10 @@ program mg_testrndtopo
 
   call tic(1,'test_rndtopo')
 
+  call mpi_init(ierr)
+  call mpi_comm_rank(mpi_comm_world, rank, ierr)
+  call mpi_comm_size(mpi_comm_world, np, ierr)
+
   !---------------------!
   !- Namelist (or not) -!
   !---------------------!
@@ -67,13 +71,22 @@ program mg_testrndtopo
 
   !- Read namelist file if it is present, else use default values
   if (nml_exist) then
-     if (myrank == 0) write(*,*)'- Reading rt_namelist file'
+     if (rank == 0) write(*,*)'- Reading rt_namelist file'
      open(unit=lun_nml, File='rt_namelist', ACTION='READ')
      rewind(unit=lun_nml)
      read(unit=lun_nml, nml=rtparam)
   endif
 
-  if (myrank == 0) then
+  !---------------------!
+  !- Global/local dim  -!
+  !---------------------!
+
+  if (np /= (npxg*npyg)) then
+     write(*,*) "Error: in number of processes !", np, npxg, npyg
+     stop -1
+  endif
+
+  if (rank == 0) then
      write(*,*)'test rndtopo parameters:'
      write(*,*)'  - nit     : ', nit 
      write(*,*)'  - nxg     : ', nxg
@@ -88,19 +101,6 @@ program mg_testrndtopo
      write(*,*)'  - theta_b : ', theta_b
      write(*,*)'  - theta_s : ', theta_s
      write(*,*)'  '
-  endif
-
-  !---------------------!
-  !- Global/local dim  -!
-  !---------------------!
-
-  call mpi_init(ierr)
-  call mpi_comm_rank(mpi_comm_world, rank, ierr)
-  call mpi_comm_size(mpi_comm_world, np, ierr)
-
-  if (np /= (npxg*npyg)) then
-     write(*,*) "Error: in number of processes !", np, npxg, npyg
-     stop -1
   endif
 
   nx = nxg / npxg
@@ -119,7 +119,7 @@ program mg_testrndtopo
   !---------------------!
   if (rank == 0) write(*,*)'Initialise rndtopo test'
 
-  if (myrank==0) then
+  if (rank==0) then
      write(*,*)''
      write(*,*)'Lx, Ly, Htot:',Lx, Ly, Htot
      write(*,*)'hc, theta_b, theta_s:',hc, theta_b, theta_s
@@ -142,10 +142,10 @@ program mg_testrndtopo
        dx,dy,           &
        zeta,h        )
 
-!- stretching vertical grid -!   
+  !- stretching vertical grid -!   
   call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
-!- linear vertical grid -!
-!  call setup_zr_hz(h,z_r,Hz)
+  !- linear vertical grid -!
+  !  call setup_zr_hz(h,z_r,Hz)
 
   call nhmg_matrices(nx,ny,nz,z_r,Hz,dx,dy)
 
@@ -158,7 +158,7 @@ program mg_testrndtopo
   allocate(v(0:nx+1,1:ny+1,1:nz))
   allocate(w(0:nx+1,0:ny+1,0:nz))
 
-  if (myrank==0) then
+  if (rank==0) then
      write(*,*)''
      write(*,*)'U=0, V=0 and W=-1 except at bottom'
   endif
@@ -172,12 +172,12 @@ program mg_testrndtopo
   vp => v
   wp => w
 
-!!$  if (myrank==0) then
+!!$  if (rank==0) then
 !!$     write(*,*)''
 !!$     write(*,*)'U, V and W are initalized with random numbers /= on each process'
 !!$  endif
-!!$  pj = myrank/npxg
-!!$  pi = mod(myrank,npxg)
+!!$  pj = rank/npxg
+!!$  pi = mod(rank,npxg)
 !!$
 !!$  ib = 1 + pi * nx
 !!$  jb = 1 + pj * ny
@@ -218,9 +218,9 @@ program mg_testrndtopo
 !!$     call fill_halo_ijk(nx,ny,wp,'w') ! depend of mg_grids for MPI neighbours !
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=rank,iter=it)
      endif
 
 
@@ -232,9 +232,9 @@ program mg_testrndtopo
      call nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=rank,iter=it)
      endif
 
   enddo
@@ -254,7 +254,7 @@ program mg_testrndtopo
   call mpi_finalize(ierr)
 
   call toc(1,'test_rndtopo')
-  if(myrank == 0) call print_tictoc(myrank)
+  if(rank == 0) call print_tictoc(rank)
 
 end program mg_testrndtopo
 

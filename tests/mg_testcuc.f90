@@ -38,8 +38,6 @@ program mg_testcuc
   integer(kind=ip)  :: lun_nml = 4 ! Logical Unit Number
   logical :: nml_exist=.false.
 
-  call tic(1,'mg_testcuc')
-
   namelist/cucparam/ &
        nit        , &
        nxg        , &
@@ -54,6 +52,12 @@ program mg_testcuc
        theta_b    , &
        theta_s
 
+  call tic(1,'mg_testcuc')
+
+  call mpi_init(ierr)
+  call mpi_comm_rank(mpi_comm_world, rank, ierr)
+  call mpi_comm_size(mpi_comm_world, np, ierr)
+
   !---------------------!
   !- Namelist (or not) -!
   !---------------------!
@@ -62,13 +66,13 @@ program mg_testcuc
 
   !- Read namelist file if it is present, else use default values
   if (nml_exist) then
-     if (myrank == 0) write(*,*)'- Reading cuc_namelist file'
+     if (rank == 0) write(*,*)'- Reading cuc_namelist file'
      open(unit=lun_nml, File='cuc_namelist', ACTION='READ')
      rewind(unit=lun_nml)
      read(unit=lun_nml, nml=cucparam)
   endif
 
-  if (myrank == 0) then
+  if (rank == 0) then
      write(*,*)'test CUC parameters:'
      write(*,*)'  - nit     : ', nit 
      write(*,*)'  - nxg     : ', nxg
@@ -88,9 +92,6 @@ program mg_testcuc
   !---------------!
   !- Ocean model -!
   !---------------!
-  call mpi_init(ierr)
-  call mpi_comm_rank(mpi_comm_world, rank, ierr)
-  call mpi_comm_size(mpi_comm_world, np, ierr)
 
   if (np /= (npxg*npyg)) then
      write(*,*) "Error: in number of processes !"
@@ -113,7 +114,7 @@ program mg_testcuc
   !---------------!
   if (rank == 0) write(*,*)'Initialise cuc bench'
 
-  if (myrank==0) then
+  if (rank==0) then
      write(*,*)''
      write(*,*)'Lx, Ly, Htot:',Lx, Ly, Htot
      write(*,*)'hc, theta_b, theta_s:',hc, theta_b, theta_s
@@ -162,9 +163,9 @@ program mg_testcuc
      w(:,:,nz)     =  0._8
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='v',netcdf_file_name='v.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=rank,iter=it)
      endif
 
      !----------------------!
@@ -174,9 +175,9 @@ program mg_testcuc
      call  nhmg_solve(nx,ny,nz,u,v,w)
 
      if (netcdf_output) then
-        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=myrank,iter=it)
-        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=myrank,iter=it)
-        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=myrank,iter=it)
+        call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=rank,iter=it)
+        call write_netcdf(v,vname='vc',netcdf_file_name='vc.nc',rank=rank,iter=it)
+        call write_netcdf(w,vname='wc',netcdf_file_name='wc.nc',rank=rank,iter=it)
      endif
 
   enddo
@@ -193,6 +194,6 @@ program mg_testcuc
   call mpi_finalize(ierr)
 
   call toc(1,'mg_testcuc')
-  if(myrank == 0) call print_tictoc(myrank)
+  if(rank == 0) call print_tictoc(rank)
 
 end program mg_testcuc
