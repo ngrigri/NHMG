@@ -15,6 +15,9 @@ program mg_testfillhalo
   real(kind=rp), dimension(:,:,:), pointer :: a3D
   real(kind=rp), dimension(:,:,:), pointer :: a3Dp
 
+  real(kind=rp), dimension(:)  , pointer :: myres
+  real(kind=rp), dimension(:,:), pointer :: res
+
   integer(kind=ip):: nxg  = 64       ! global x dimension
   integer(kind=ip):: nyg  = 64       ! global y dimension
   integer(kind=ip):: nzg  = 64       ! z dimension
@@ -22,6 +25,7 @@ program mg_testfillhalo
   integer(kind=ip):: npyg  = 1       ! number of processes in y
 
   integer(kind=ip)  :: lun_nml = 4
+  integer(kind=ip)  :: ii, sz
   logical :: nml_exist=.false.
 
   namelist/fhparam/ &
@@ -79,7 +83,24 @@ program mg_testfillhalo
   !---------------------!
   !- Setup fill halo   -!
   !---------------------!
+  if (rank == 0) then
+     open(unit=20,file="results.txt",form="formatted")
+     write(20,*)''
+     write(20,*)'Process topology:'
+     write(20,*)'-----------------'
+     allocate(res(npyg,npxg))
+     res = reshape([(ii,ii=0,np-1)],[npyg,npxg])
+     do ii=npyg,1,-1
+        write(20,'(16(x,I3))')int(res(ii,:))
+     enddo
+     deallocate(res)
+  endif
+
   if (rank == 0) write(*,*)' Allocate fill halo test arrays'
+
+  ! S E N W SW SE NE NW '
+  allocate( myres(8))
+  allocate( res(8,0:np-1))
 
   allocate( a2D (       0:ny+1,0:ny+1))
   allocate( a3D (1:nz  ,0:ny+1,0:nx+1))
@@ -87,51 +108,220 @@ program mg_testfillhalo
 
   if (rank == 0) write(*,*)' Initialize fill halo test arrays'
 
-  a2D (:,:)   = zero
-  a3D (:,:,:) = zero
-  a3Dp(:,:,:) = zero
+  a2D (:,:)   = -one
+  a3D (:,:,:) = -one
+  a3Dp(:,:,:) = -one
   a2D (  1:ny,1:nx) = rank
   a3D (:,1:ny,1:nx) = rank
   a3Dp(:,1:ny,1:nx) = rank
 
-  call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2D.nc' ,rank=rank)
-  call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3D.nc' ,rank=rank)
-  call write_netcdf(a3Dp,vname='a3Dp',netcdf_file_name='a3Dp.nc',rank=rank)
+  if (netcdf_output) then
+     call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2D.nc' ,rank=rank)
+     call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3D.nc' ,rank=rank)
+     call write_netcdf(a3Dp,vname='a3Dp',netcdf_file_name='a3Dp.nc',rank=rank)
+  endif
 
+  !-----------------!
+  !- Fill halo a2D -!
+  !-----------------!
   call fill_halo(1,a2D)
+
+  myres(1) = sum(a2D(1:ny,   0))/ny ! S
+  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
+  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
+  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(5) =     a2D(   0,   0)     ! SW
+  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(7) =     a2D(ny+1,nx+1)     ! NE
+  myres(8) =     a2D(   0,nx+1)     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a2D results:'
+     write(20,*)'------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  !-----------------!
+  !- Fill halo a3D -!
+  !-----------------!
   call fill_halo(1,a3D)
+
+  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
+  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
+  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
+  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
+  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
+  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a3D(nz,:,:) results:'
+     write(20,*)'--------------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  !------------------!
+  !- Fill halo a3Dp -!
+  !------------------!
   call fill_halo(1,a3Dp)
-  if (rank == 0) write(*,*)' Writting arrays after fill_halo'
-  call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dfh.nc' ,rank=rank)
-  call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dfh.nc' ,rank=rank)
-  call write_netcdf(a3Dp,vname='a3Dp',netcdf_file_name='a3Dpfh.nc',rank=rank)
+
+  myres(1) = sum(a3Dp(:,1:ny,   0))/(ny*(nz+1)) ! S
+  myres(2) = sum(a3Dp(:,ny+1,1:nx))/(nx*(nz+1)) ! E
+  myres(3) = sum(a3Dp(:,1:ny,nx+1))/(ny*(nz+1)) ! N
+  myres(4) = sum(a3Dp(:,   0,1:nx))/(nx*(nz+1)) ! W
+  myres(5) = sum(a3Dp(:,   0,   0))/ (nz+1)     ! SW
+  myres(6) = sum(a3Dp(:,ny+1,   0))/ (nz+1)     ! SE
+  myres(7) = sum(a3Dp(:,ny+1,nx+1))/ (nz+1)     ! NE
+  myres(8) = sum(a3Dp(:,   0,nx+1))/ (nz+1)     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a3D(nz+1,:,:) results:'
+     write(20,*)'----------------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  if (netcdf_output) then
+     if (rank == 0) write(*,*)' Writting arrays after fill_halo'
+     call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dfh.nc' ,rank=rank)
+     call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dfh.nc' ,rank=rank)
+     call write_netcdf(a3Dp,vname='a3Dp',netcdf_file_name='a3Dpfh.nc',rank=rank)
+  endif
 
   if (rank == 0) write(*,*)' Initialize fill halo test arrays (u)'
 
-  a2D (:,:)   = zero
-  a3D (:,:,:) = zero
+  a2D (:,:)   = -one
+  a3D (:,:,:) = -one
   a2D (  1:ny,1:nx) = rank
   a3D (:,1:ny,1:nx) = rank
 
+
+  !-------------------!
+  !- Fill halo a2D u -!
+  !-------------------!
   call fill_halo(1,a2D,lbc_null='u')
+
+  myres(1) = sum(a2D(1:ny,   0))/ny ! S
+  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
+  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
+  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(5) =     a2D(   0,   0)     ! SW
+  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(7) =     a2D(ny+1,nx+1)     ! NE
+  myres(8) =     a2D(   0,nx+1)     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a2D u results:'
+     write(20,*)'--------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  !-------------------!
+  !- Fill halo a3D u -!
+  !-------------------!
   call fill_halo(1,a3D,lbc_null='u')
-  if (rank == 0) write(*,*)' Writting arrays (u) after fill_halo'
-  call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dufh.nc' ,rank=rank)
-  call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dufh.nc' ,rank=rank)
+
+  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
+  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
+  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
+  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
+  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
+  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a3D(nz,:,:) u results:'
+     write(20,*)'----------------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  if (netcdf_output) then
+     if (rank == 0) write(*,*)' Writting arrays (u) after fill_halo'
+     call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dufh.nc' ,rank=rank)
+     call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dufh.nc' ,rank=rank)
+  endif
 
   if (rank == 0) write(*,*)' Initialize fill halo test arrays (v)'
 
-  a2D (:,:)   = zero
-  a3D (:,:,:) = zero
+  a2D (:,:)   = -one
+  a3D (:,:,:) = -one
   a2D (  1:ny,1:nx) = rank
   a3D (:,1:ny,1:nx) = rank
 
+  !-------------------!
+  !- Fill halo a2D v -!
+  !-------------------!
   call fill_halo(1,a2D,lbc_null='v')
+
+  myres(1) = sum(a2D(1:ny,   0))/ny ! S
+  myres(2) = sum(a2D(ny+1,1:nx))/nx ! E
+  myres(3) = sum(a2D(1:ny,nx+1))/ny ! N
+  myres(4) = sum(a2D(   0,1:nx))/nx ! W
+  myres(5) =     a2D(   0,   0)     ! SW
+  myres(6) =     a2D(ny+1,   0)     ! SE
+  myres(7) =     a2D(ny+1,nx+1)     ! NE
+  myres(8) =     a2D(   0,nx+1)     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a2D v results:'
+     write(20,*)'--------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  !-------------------!
+  !- Fill halo a3D v -!
+  !-------------------!
   call fill_halo(1,a3D,lbc_null='v')
 
-  if (rank == 0) write(*,*)' Writting arrays (v) after fill_halo'
-  call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dvfh.nc' ,rank=rank)
-  call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dvfh.nc' ,rank=rank)
+  myres(1) = sum(a3D(:,1:ny,   0))/(ny*nz) ! S
+  myres(2) = sum(a3D(:,ny+1,1:nx))/(nx*nz) ! E
+  myres(3) = sum(a3D(:,1:ny,nx+1))/(ny*nz) ! N
+  myres(4) = sum(a3D(:,   0,1:nx))/(nx*nz) ! W
+  myres(5) = sum(a3D(:,   0,   0))/ nz     ! SW
+  myres(6) = sum(a3D(:,ny+1,   0))/ nz     ! SE
+  myres(7) = sum(a3D(:,ny+1,nx+1))/ nz     ! NE
+  myres(8) = sum(a3D(:,   0,nx+1))/ nz     ! NW
+  call MPI_GATHER(myres,8,MPI_DOUBLE_PRECISION,res,8, MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (rank == 0 ) then
+     write(20,*)''
+     write(20,*)'a3D(nz,:,:) v results:'
+     write(20,*)'----------------------'
+     write(20,*)'     S      E      N      W      SW     SE     NE     NW'
+     do ii=0,np-1
+        write(20,'(I2,a,8(x,F6.2))') ii,':',res(:,ii)
+     enddo
+  endif
+
+  if (netcdf_output) then
+     if (rank == 0) write(*,*)' Writting arrays (v) after fill_halo'
+     call write_netcdf(a2D ,vname='a2D' ,netcdf_file_name='a2Dvfh.nc' ,rank=rank)
+     call write_netcdf(a3D ,vname='a3D' ,netcdf_file_name='a3Dvfh.nc' ,rank=rank)
+  endif
 
   !---------------------!
   !- Deallocate memory -!
