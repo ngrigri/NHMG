@@ -59,7 +59,6 @@ contains
     uf => grid(1)%dummy3Dnz
     uf(:,:,:) = zero
 
-    ! lower level
     k = 1
     do i = 1,nx+1  
        do j = 1,ny 
@@ -80,7 +79,6 @@ contains
        enddo
     enddo
 
-    !interior levels
     do i = 1,nx+1  
        do j = 1,ny 
           do k = 2,nz-1 
@@ -95,7 +93,6 @@ contains
        enddo
     enddo
 
-    k = nz !upper level
     do i = 1,nx+1  
        do j = 1,ny 
 
@@ -107,8 +104,6 @@ contains
                + zxdy(k,j,i-1) * two * dzw(k+1,j,i-1) * w(k+1,j,i-1) )
        enddo
     enddo
-
-    call fill_halo(1,uf,lbc_null='u')
 
     do i = 1,nx
        do j = 1,ny 
@@ -125,7 +120,6 @@ contains
     vf => grid(1)%dummy3Dnz
     vf(:,:,:) = zero
 
-    !lower level
     k = 1
     do i = 1,nx
        do j = 1,ny+1
@@ -145,7 +139,6 @@ contains
        enddo
     enddo
 
-    !interior levels
     do i = 1,nx
        do j = 1,ny+1
           do k = 2,nz-1
@@ -160,7 +153,7 @@ contains
        enddo
     enddo
 
-    k = nz !upper level
+    k = nz
     do i = 1,nx
        do j = 1,ny+1
 
@@ -172,8 +165,6 @@ contains
                + zydx(k,j-1,i) * two * dzw(k+1,j-1,i) * w(k+1,j-1,i) ) 
        enddo
     enddo
-
-    call fill_halo(1,vf,lbc_null='v')
 
     do i = 1,nx
        do j = 1,ny 
@@ -190,7 +181,6 @@ contains
     wf => grid(1)%dummy3Dnzp
     wf(:,:,:) = zero
 
-    !bottom
     k = 1
     do i = 1,nx
        do j = 1,ny
@@ -198,7 +188,6 @@ contains
        enddo
     enddo
 
-    !interior levels
     do i = 1,nx
        do j = 1,ny
           do k = 2,nz
@@ -218,7 +207,6 @@ contains
        enddo
     enddo
 
-    !surface
     k = nz+1 
     do i = 1,nx
        do j = 1,ny
@@ -483,8 +471,6 @@ contains
     p => grid(1)%p
 
     do i = 1,nx+1
-!    do i = 2,nx
-!       do j = 0,ny+1
         do j = 1,ny
           do k = 1,nz
              u(k,j,i) = u(k,j,i) - one / dxu(j,i) * (p(k,j,i)-p(k,j,i-1))
@@ -492,19 +478,15 @@ contains
        enddo
     enddo
 
-!    do i = 0,nx+1
     do i = 1,nx
        do j = 1,ny+1 
-!       do j = 2,ny 
           do k = 1,nz
-          v(k,j,i) = v(k,j,i) - one / dyv(j,i) * (p(k,j,i)-p(k,j-1,i  ))
+             v(k,j,i) = v(k,j,i) - one / dyv(j,i) * (p(k,j,i)-p(k,j-1,i))
           enddo
        enddo
     enddo
 
-!    do i = 0,nx+1
     do i = 1,nx
-!       do j = 0,ny+1
        do j = 1,ny
 
           k = 1 !bottom
@@ -518,8 +500,6 @@ contains
 
        enddo
     enddo
-
-    call fill_halo(1,w)
 
   end subroutine correct_uvw
 

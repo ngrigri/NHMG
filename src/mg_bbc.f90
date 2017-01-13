@@ -34,11 +34,10 @@ contains
     zydx  => grid(1)%zydx
     alpha => grid(1)%alpha
 
-    !- bottom vertical momentum -!
-    do i = 1,nx  
-       do j = 1,ny
+    k = 1 ! bottom
 
-          k = 1 ! bottom
+    do i = 0,nx+1
+       do j = 0,ny+1
 
           w(k,j,i) = ( &
                - zxdy(k,j,i) / dy(j,i) * hlf * ( u(k,j,i) + u(k,j  ,i+1)) &

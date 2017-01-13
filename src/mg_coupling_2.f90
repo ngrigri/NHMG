@@ -14,9 +14,9 @@ contains
   !-------------------------------------------------------------------------     
   subroutine bc2bt_coupling(ru,rv,rw,dt,rufrc,rvfrc)
 
-    real(kind=rp), dimension(:,:,:), pointer, intent(inout)  :: ru,rv,rw
-    real(kind=rp),                            intent(in)     :: dt
-    real(kind=rp), dimension(:,:)  , pointer, intent(out)    :: rufrc,rvfrc
+    real(kind=rp), dimension(:,:,:), pointer, intent(in)  :: ru,rv,rw
+    real(kind=rp),                            intent(in)  :: dt
+    real(kind=rp), dimension(:,:)  , pointer, intent(out) :: rufrc,rvfrc
 
     integer(kind=ip):: k, j, i
     integer(kind=ip):: nx, ny, nz
@@ -30,9 +30,15 @@ contains
     real(kind=rp), dimension(:,:)  , pointer :: beta
     real(kind=rp), dimension(:,:,:), pointer :: p
 
+    real(kind=rp), dimension(:,:,:), pointer :: rutmp,rvtmp,rwtmp
+
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
+
+    allocate(rutmp(1:nz,0:ny+1,0:nx+1))
+    allocate(rvtmp(1:nz,0:ny+1,0:nx+1))
+    allocate(rwtmp(1:nz+1,0:ny+1,0:nx+1))
 
     dx    => grid(1)%dx
     dy    => grid(1)%dy
@@ -44,35 +50,42 @@ contains
     Arz   => grid(1)%Arz
     zxdy  => grid(1)%zxdy
     zydx  => grid(1)%zydx
-
-    p => grid(1)%p
+    p     => grid(1)%p
  
     ! add 
     do i = 1,nx+1
-       do j = 1,ny
+       !do j = 1,ny
+       do j = 0,ny+1
           do k = 1,nz
-             ru(k,j,i) = ru(k,j,i) - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) / dt
+             rutmp(k,j,i) = ru(k,j,i) - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) / dt
           enddo
        enddo
     enddo
-    do i = 1,nx
+    !do i = 1,nx
+    do i = 0,nx+1
        do j = 1,ny+1
           do k = 1,nz
-             rv(k,j,i) = rv(k,j,i) - Ary(k,j,i) * (p(k,j  ,i)-p(k,j-1,i)) / dt
+             rvtmp(k,j,i) = rv(k,j,i) - Ary(k,j,i) * (p(k,j  ,i)-p(k,j-1,i)) / dt
           enddo
        enddo
     enddo
-    do i = 1,nx
-       do j = 1,ny
+    !do i = 1,nx
+    do i = 0,nx+1
+       !do j = 1,ny
+       do j = 0,ny+1
          k = 1
          !do nothing
          do k = 2,nz
-             rw(k,j,i) = rw(k,j,i) - Arz(j,i) * (p(k  ,j,i)-p(k-1,j,i)) / dt
+             rwtmp(k,j,i) = rw(k,j,i) - Arz(j,i) * (p(k  ,j,i)-p(k-1,j,i)) / dt
          enddo
          k = nz+1
-         rw(k,j,i) = rw(k,j,i) - Arz(j,i) * (        -p(k-1,j,i)) / dt
+         rwtmp(k,j,i) = rw(k,j,i) - Arz(j,i) * (        -p(k-1,j,i)) / dt
        enddo
     enddo
+
+    !call fill_halo(1,rutmp,'u')
+    !call fill_halo(1,rvtmp,'v')
+    !call fill_halo(1,rwtmp)
 
     ! fluxes and integrate
     do i = 1,nx+1
@@ -83,42 +96,40 @@ contains
                (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
                (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
           rufrc(j,i) = rufrc(j,i) &
-               + gamma * ru(k,j,i) &
+               + gamma * rutmp(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )/dy(j,i  ) * rw(k  ,j,i  ) &
-               + zxdy(k,j,i-1)/dy(j,i-1) * rw(k  ,j,i-1) ) &
-
-               - beta(j,i-1)/dz(k,j,i-1) * rv(k,j  ,i-1) &
-               - beta(j,i-1)/dz(k,j,i-1) * rv(k,j+1,i-1) &
-               - beta(j,i  )/dz(k,j,i  ) * rv(k,j  ,i  ) &
-               - beta(j,i  )/dz(k,j,i  ) * rv(k,j+1,i  )
+               + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k  ,j,i  ) &
+               + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k  ,j,i-1) ) &
+               - beta(j,i-1)/dz(k,j,i-1) * rvtmp(k,j  ,i-1) &
+               - beta(j,i-1)/dz(k,j,i-1) * rvtmp(k,j+1,i-1) &
+               - beta(j,i  )/dz(k,j,i  ) * rvtmp(k,j  ,i  ) &
+               - beta(j,i  )/dz(k,j,i  ) * rvtmp(k,j+1,i  )
 
           do k = 2,nz-1
              rufrc(j,i) = rufrc(j,i) &    
-                  + ru(k,j,i) &
+                  + rutmp(k,j,i) &
                   - qrt * ( &
-                  + zxdy(k,j,i  )/dy(j,i  ) * rw(k  ,j,i  ) &
-                  + zxdy(k,j,i  )/dy(j,i  ) * rw(k+1,j,i  ) &
-                  + zxdy(k,j,i-1)/dy(j,i-1) * rw(k  ,j,i-1) & 
-                  + zxdy(k,j,i-1)/dy(j,i-1) * rw(k+1,j,i-1) )     
+                  + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k  ,j,i  ) &
+                  + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k+1,j,i  ) &
+                  + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k  ,j,i-1) & 
+                  + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k+1,j,i-1) )     
           enddo
 
           k = nz
           rufrc(j,i) = rufrc(j,i) &
-               + ru(k,j,i) &
+               + rutmp(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )/dy(j,i  )       * rw(k  ,j,i  ) & 
-               + zxdy(k,j,i  )/dy(j,i  ) * two * rw(k+1,j,i  ) & 
-               + zxdy(k,j,i-1)/dy(j,i-1) *       rw(k  ,j,i-1) & 
-               + zxdy(k,j,i-1)/dy(j,i-1) * two * rw(k+1,j,i-1) )
+               + zxdy(k,j,i  )/dy(j,i  )       * rwtmp(k  ,j,i  ) & 
+               + zxdy(k,j,i  )/dy(j,i  ) * two * rwtmp(k+1,j,i  ) & 
+               + zxdy(k,j,i-1)/dy(j,i-1) *       rwtmp(k  ,j,i-1) & 
+               + zxdy(k,j,i-1)/dy(j,i-1) * two * rwtmp(k+1,j,i-1) )
           
        enddo
     enddo
 
-    call fill_halo(1,rufrc,lbc_null='u') !?????needed
+!    call fill_halo(1,rufrc,lbc_null='u') !?????needed
 
-    !    do i = 0,nx+1
-    do i = 1,nx !! 1 dec 2016
+    do i = 1,nx
        do j = 1,ny+1 
 
           k = 1
@@ -126,39 +137,42 @@ contains
                (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j,i  ) + &
                (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
           rvfrc(j,i) = rvfrc(j,i) &
-               + gamma * rv(k,j,i) &
+               + gamma * rvtmp(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)/dx(j  ,i) * rw(k+1,j  ,i  ) &
-               + zydx(k,j-1,i)/dx(j-1,i) * rw(k+1,j-1,i  ) ) &
-
-               - beta(j-1,i)/dz(k,j-1,i) * ru(k  ,j-1,i  ) &
-               - beta(j-1,i)/dz(k,j-1,i) * ru(k  ,j-1,i+1) &
-               - beta(j  ,i)/dz(k,j  ,i) * ru(k  ,j  ,i  ) &
-               - beta(j  ,i)/dz(k,j  ,i) * ru(k  ,j  ,i+1)  
+               + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k+1,j  ,i  ) &
+               + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k+1,j-1,i  ) ) &
+               - beta(j-1,i)/dz(k,j-1,i) * rutmp(k  ,j-1,i  ) &
+               - beta(j-1,i)/dz(k,j-1,i) * rutmp(k  ,j-1,i+1) &
+               - beta(j  ,i)/dz(k,j  ,i) * rutmp(k  ,j  ,i  ) &
+               - beta(j  ,i)/dz(k,j  ,i) * rutmp(k  ,j  ,i+1)  
 
           do k = 2,nz-1
              rvfrc(j,i) = rvfrc(j,i) &
-                  + rv(k,j,i) &
+                  + rvtmp(k,j,i) &
                   - qrt * ( &
-                  + zydx(k,j  ,i)/dx(j  ,i) * rw(k  ,j  ,i) & 
-                  + zydx(k,j  ,i)/dx(j  ,i) * rw(k+1,j  ,i) &
-                  + zydx(k,j-1,i)/dx(j-1,i) * rw(k  ,j-1,i) & 
-                  + zydx(k,j-1,i)/dx(j-1,i) * rw(k+1,j-1,i) )
+                  + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k  ,j  ,i) & 
+                  + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k+1,j  ,i) &
+                  + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k  ,j-1,i) & 
+                  + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k+1,j-1,i) )
           enddo
 
           k = nz
           rvfrc(j,i) = rvfrc(j,i) &  
-               + rv(k,j,i) &
+               + rvtmp(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)/dx(j  ,i) *       rw(k  ,j  ,i) & 
-               + zydx(k,j  ,i)/dx(j  ,i) * two * rw(k+1,j  ,i) &
-               + zydx(k,j-1,i)/dx(j-1,i) *       rw(k  ,j-1,i) & 
-               + zydx(k,j-1,i)/dx(j-1,i) * two * rw(k+1,j-1,i) )
+               + zydx(k,j  ,i)/dx(j  ,i) *       rwtmp(k  ,j  ,i) & 
+               + zydx(k,j  ,i)/dx(j  ,i) * two * rwtmp(k+1,j  ,i) &
+               + zydx(k,j-1,i)/dx(j-1,i) *       rwtmp(k  ,j-1,i) & 
+               + zydx(k,j-1,i)/dx(j-1,i) * two * rwtmp(k+1,j-1,i) )
           
        enddo
     enddo
 
-    call fill_halo(1,rvfrc,lbc_null='v') !?????needed
+!   call fill_halo(1,rvfrc,lbc_null='v') !?????needed
+
+    deallocate(rutmp)
+    deallocate(rvtmp)
+    deallocate(rwtmp)
 
   end subroutine bc2bt_coupling
 
@@ -183,7 +197,7 @@ contains
 
     real(kind=rp), dimension(:,:)  , pointer :: su_integr,sv_integr
     real(kind=rp), dimension(:,:)  , pointer :: uf_integr,vf_integr
-    real(kind=rp), dimension(:,:,:), pointer :: wc ! different than cw !!
+    real(kind=rp), dimension(:,:,:), pointer :: wc
 
     integer(kind=ip), save :: iter_coupling_in=0
     iter_coupling_in = iter_coupling_in + 1
@@ -205,20 +219,24 @@ contains
     !------------------------------------------
     ! compute integrated transport anomalies
 
-    allocate(su_integr(0:ny+1,0:nx+1))
-    allocate(sv_integr(0:ny+1,0:nx+1))
-    allocate(uf_integr(0:ny+1,0:nx+1))
-    allocate(vf_integr(0:ny+1,0:nx+1))
-    su_integr(:,:) = zero
-    sv_integr(:,:) = zero
-    uf_integr(:,:) = zero
-    vf_integr(:,:) = zero
+    !allocate(su_integr(0:ny+1,0:nx+1))
+    !allocate(sv_integr(0:ny+1,0:nx+1))
+    !allocate(uf_integr(0:ny+1,0:nx+1))
+    !allocate(vf_integr(0:ny+1,0:nx+1))
+    !su_integr(:,:) = zero
+    !sv_integr(:,:) = zero
+    !uf_integr(:,:) = zero
+    !vf_integr(:,:) = zero
+    allocate(su_integr(0:ny+1,1:nx+1))
+    allocate(sv_integr(1:ny+1,0:nx+1))
+    allocate(uf_integr(0:ny+1,1:nx+1))
+    allocate(vf_integr(1:ny+1,0:nx+1))
 
     do i = 1,nx+1  
-       do j = 1,ny 
-       !do j = 0,ny +1
+       !do j = 1,ny 
+       do j = 0,ny+1 !ND 11/01
 
-          k = 1 ! lower level
+          k = 1
           su_integr(j,i) =  Arx(k,j,i)
           uf_integr(j,i) =  Arx(k,j,i) * u(k,j,i) &
                - qrt * ( &
@@ -227,7 +245,7 @@ contains
                + zxdy(k,j,i-1) * two * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
                + zxdy(k,j,i-1) *       dzw(k+1,j,i-1)*w(k+1,j,i-1) )
 
-          do k = 2,nz-1 ! interior levels
+          do k = 2,nz-1
              su_integr(j,i) = su_integr(j,i) + Arx(k,j,i)
              uf_integr(j,i) = uf_integr(j,i) + Arx(k,j,i) * u(k,j,i) &
                   - qrt * ( &
@@ -237,7 +255,7 @@ contains
                   + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) )
           enddo
 
-          k = nz ! upper level
+          k = nz
           su_integr(j,i) = su_integr(j,i) + Arx(k,j,i)
           uf_integr(j,i) = uf_integr(j,i) + Arx(k,j,i) * u(k,j,i) &
                - qrt * ( &
@@ -249,11 +267,11 @@ contains
        enddo
     enddo
 
-    do i = 1,nx
-    !do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
        do j = 1,ny+1
 
-          k = 1 ! lower level
+          k = 1
           sv_integr(j,i) = Ary(k,j,i)
           vf_integr(j,i) = Ary(k,j,i) * v(k,j,i) &
                - qrt * ( &
@@ -262,7 +280,7 @@ contains
                + zydx(k,j-1,i) * two * dzw(k  ,j-1,i) * w(k  ,j-1,i) & 
                + zydx(k,j-1,i) *       dzw(k+1,j-1,i) * w(k+1,j-1,i) )
 
-          do k = 2,nz-1 ! interior levels
+          do k = 2,nz-1
              sv_integr(j,i) = sv_integr(j,i) + Ary(k,j,i)
              vf_integr(j,i) = vf_integr(j,i) + Ary(k,j,i) * v(k,j,i) &
                   - qrt * ( &
@@ -272,7 +290,7 @@ contains
                   + zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i) )
           enddo
 
-          k = nz ! upper level
+          k = nz
           sv_integr(j,i) = sv_integr(j,i) + Ary(k,j,i)
           vf_integr(j,i) = vf_integr(j,i) + Ary(k,j,i) * v(k,j,i) &
                - qrt * ( &
@@ -293,21 +311,21 @@ contains
     endif
 
     do i = 1,nx+1  
-       do j = 1,ny
-       !do j = 0,ny+1
+       !do j = 1,ny
+       do j = 0,ny+1 !ND 11/01
           uf_integr(j,i) = uf_integr(j,i) - uf_bar(j,i)
        enddo
     enddo
 
-    do i = 1,nx
-    !do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1  !ND 11/01
        do j = 1,ny+1
           vf_integr(j,i) = vf_integr(j,i) - vf_bar(j,i)
        enddo
     enddo
 
-    call fill_halo(1,uf_integr,lbc_null='u')
-    call fill_halo(1,vf_integr,lbc_null='v')
+!    call fill_halo(1,uf_integr,lbc_null='u') !ND 11/01
+!    call fill_halo(1,vf_integr,lbc_null='v') !ND 11/01
 
     if (check_output) then
        if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then
@@ -318,35 +336,31 @@ contains
     endif
 
     !-------------------------------
-    ! correct u,v,w at each depth
-
-    ! weak part ------------------------------
+    ! evaluate correction for w
 
     allocate(wc(1:nz+1,0:ny+1,0:nx+1))
     wc(:,:,:) = zero
 
+!ND 11/01 : should rather be computed over 0,nx+1 0:ny+1, without the final fill_halo
     do i = 1,nx
        do j = 1,ny
 
-          k = 1 ! bottom
-
+          k = 1 
           wc(k,j,i) = ( &
                + hlf *( &
                (zxdy(k,j,i)/dy(j,i)) * &
-               ( uf_integr(j,i  )/su_integr(j,i  ) & 
+               (uf_integr(j,i  )/su_integr(j,i  ) & 
                +uf_integr(j,i+1)/su_integr(j,i+1) ) ) &
                + hlf *( &
                (zydx(k,j,i)/dx(j,i)) * &
-               ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
+               (vf_integr(j  ,i)/sv_integr(j  ,i) & 
                +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
                )
 
 
-          !- Inverse of Total Water column Depth
           Hci= one / sum(dz(:,j,i))
 
-          do k = 2,nz ! interior levels
-
+          do k = 2,nz 
              wc(k,j,i) = ( &
                   - sum(dz(1:k-1,j,i)) * Hci * &
                   ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
@@ -359,11 +373,9 @@ contains
                   ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
                   +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
                   )
-
           enddo
 
-          k = nz+1 ! surface
-
+          k = nz+1
           wc(k,j,i) = ( &
                - ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
                + hlf *( &
@@ -380,21 +392,22 @@ contains
     enddo
 
     call fill_halo(1,wc)
+!ND 11/01
 
     if (check_output) then
        if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then
-          !if ((iter_coupling_in .EQ. 199) .OR. (iter_coupling_in .EQ. 200)) then
           call write_netcdf(wc,vname='wc',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
        endif
     endif
 
-    ! weak part ------------------------------
+    !-------------------------------
+    ! correct u,v,w at each depth
 
     do i = 1,nx+1  
-       do j = 1,ny 
-          !       do j = 0,ny+1
+       !do j = 1,ny 
+       do j = 0,ny+1 !ND 11/01
 
-          k = 1 ! lower level
+          k = 1
           u(k,j,i) = u(k,j,i) - ( &
                + uf_integr(j,i)/su_integr(j,i) &
                + qrt / Arx(k,j,i) *( &
@@ -404,7 +417,7 @@ contains
                + zxdy(k,j,i-1)      *dzw(k+1,j,i-1)*wc(k+1,j,i-1) ) &
                )                  
 
-          do k = 2,nz-1 ! interior levels
+          do k = 2,nz-1
              u(k,j,i) = u(k,j,i) - ( &
                   + uf_integr(j,i)/su_integr(j,i) &
                   + qrt / Arx(k,j,i) *( &
@@ -415,7 +428,7 @@ contains
                   )
           enddo
 
-          k = nz !upper level
+          k = nz
           u(k,j,i) = u(k,j,i) - ( &
                + uf_integr(j,i)/su_integr(j,i) &
                + qrt / Arx(k,j,i) *( &
@@ -428,13 +441,13 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,u,lbc_null='u')
+!    call fill_halo(1,u,lbc_null='u') !ND 11/01
 
-    do i = 1,nx
-       !    do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
        do j = 1,ny+1
 
-          k = 1 ! lower level
+          k = 1
           v(k,j,i) = v(k,j,i) - ( &
                + vf_integr(j,i)/sv_integr(j,i) &
                + qrt / Ary(k,j,i) *( &
@@ -444,7 +457,7 @@ contains
                + zydx(k,j-1,i)*       dzw(k+1,j-1,i)*wc(k+1,j-1,i) ) &
                )
 
-          do k = 2,nz-1 ! interior levels
+          do k = 2,nz-1
              v(k,j,i) = v(k,j,i) - ( &
                   + vf_integr(j,i)/sv_integr(j,i) &
                   + qrt / Ary(k,j,i) *( &
@@ -455,7 +468,7 @@ contains
                   )
           enddo
 
-          k = nz !upper level
+          k = nz
           v(k,j,i) = v(k,j,i) - ( &
                + vf_integr(j,i)/sv_integr(j,i) &
                + qrt / Ary(k,j,i) *( &
@@ -468,11 +481,13 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,v,lbc_null='v')
+!    call fill_halo(1,v,lbc_null='v') !ND 11/01
 
-    do i = 1,nx
-       do j = 1,ny
-          do k = 1,nz+1 ! all levels
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
+       !do j = 1,ny
+       do j = 0,ny+1 !ND 11/01
+          do k = 1,nz+1
 
              w(k,j,i) = w(k,j,i) - wc(k,j,i) 
 
@@ -480,7 +495,7 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,w)
+!    call fill_halo(1,w)
 
     deallocate(su_integr)
     deallocate(sv_integr)
@@ -488,15 +503,15 @@ contains
     deallocate(vf_integr)
     deallocate(wc)
 
+    !----------------------------------------------
+    ! compute horizontal transport at each depth
     if ((present(uf)).and.(present(vf))) then
-       !----------------------------------------------
-       ! compute horizontal transport at each depth
 
        do i = 1,nx+1  
-          do j = 1,ny 
-             !          do j = 0,ny+1
+          !do j = 1,ny 
+          do j = 0,ny+1 !ND 11/01
 
-             k = 1 ! lower level
+             k = 1
              uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
                   - qrt * ( &
                   + zxdy(k,j,i  ) * two * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
@@ -504,7 +519,7 @@ contains
                   + zxdy(k,j,i-1) * two * dzw(k  ,j,i-1)*w(k  ,j,i-1) &
                   + zxdy(k,j,i-1) *       dzw(k+1,j,i-1)*w(k+1,j,i-1) ) 
 
-             do k = 2,nz-1 ! interior levels            
+             do k = 2,nz-1
                 uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
                      - qrt * ( &
                      + zxdy(k,j,i  ) * dzw(k  ,j,i  )*w(k  ,j,i  ) & 
@@ -513,7 +528,7 @@ contains
                      + zxdy(k,j,i-1) * dzw(k+1,j,i-1)*w(k+1,j,i-1) )
              enddo
 
-             k = nz ! upper level
+             k = nz
              uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
                   - qrt * ( &
                   + zxdy(k,j,i  ) *       dzw(k  ,j,i  )*w(k  ,j,i  ) & 
@@ -524,13 +539,13 @@ contains
           enddo
        enddo
 
-       call fill_halo(1,uf,lbc_null='u')
+!       call fill_halo(1,uf,lbc_null='u') !ND 11/01
 
-       do i = 1,nx
-          !    do i = 0,nx+1
+       !do i = 1,nx
+       do i = 0,nx+1 !ND 11/01
           do j = 1,ny+1
 
-             k = 1 ! lower level
+             k = 1
              vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
                   - qrt * ( &
                   + zydx(k,j  ,i) * two * dzw(k  ,j  ,i)*w(k  ,j  ,i) & 
@@ -538,7 +553,7 @@ contains
                   + zydx(k,j-1,i) * two * dzw(k  ,j-1,i)*w(k  ,j-1,i) & 
                   + zydx(k,j-1,i) *       dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
 
-             do k = 2,nz-1 ! interior levels
+             do k = 2,nz-1
                 vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
                      - qrt * ( &
                      + zydx(k,j  ,i) * dzw(k  ,j  ,i)*w(k  ,j  ,i) &
@@ -547,7 +562,7 @@ contains
                      + zydx(k,j-1,i) * dzw(k+1,j-1,i)*w(k+1,j-1,i) ) 
              enddo
 
-             k = nz ! upper level
+             k = nz
              vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
                   - qrt * ( &
                   + zydx(k,j  ,i) *       dzw(k  ,j  ,i)*w(k  ,j  ,i) & 
@@ -558,41 +573,40 @@ contains
           enddo
        enddo
 
-       call fill_halo(1,vf,lbc_null='v')
+!       call fill_halo(1,vf,lbc_null='v') !ND 11/01
 
-       !! check
-       allocate(uf_integr(0:ny+1,0:nx+1))
-       allocate(vf_integr(0:ny+1,0:nx+1))
-       uf_integr(:,:) = zero
-       vf_integr(:,:) = zero
-       do i = 1,nx+1  
-          do j = 1,ny 
-             !       do j = 0,ny+1
-             do k = 1,nz
-                uf_integr(j,i) = uf_integr(j,i) + uf(k,j,i)
-             enddo
-          enddo
-       enddo
-       do i = 1,nx
-          !    do i = 0,nx+1
-          do j = 1,ny+1
-             do k = 1,nz
-                vf_integr(j,i) = vf_integr(j,i) + vf(k,j,i)
-             enddo
-          enddo
-       enddo
-
-       if (check_output) then
-          if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then
-             !if ((iter_coupling_in .EQ. 199) .OR. (iter_coupling_in .EQ. 200)) then
-             call write_netcdf(uf_integr,vname='ufout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
-             call write_netcdf(vf_integr,vname='vfout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
-             call write_netcdf(uf_integr-uf_bar,vname='diff_ufout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
-             call write_netcdf(vf_integr-vf_bar,vname='diff_vfout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
-          endif
-       endif
-       deallocate(uf_integr)
-       deallocate(vf_integr)
+       !!! check
+       !allocate(uf_integr(0:ny+1,0:nx+1))
+       !allocate(vf_integr(0:ny+1,0:nx+1))
+       !uf_integr(:,:) = zero
+       !vf_integr(:,:) = zero
+       !do i = 1,nx+1  
+       !   do j = 1,ny 
+       !      !       do j = 0,ny+1
+       !      do k = 1,nz
+       !         uf_integr(j,i) = uf_integr(j,i) + uf(k,j,i)
+       !      enddo
+       !   enddo
+       !enddo
+       !do i = 1,nx
+       !   !    do i = 0,nx+1
+       !   do j = 1,ny+1
+       !      do k = 1,nz
+       !         vf_integr(j,i) = vf_integr(j,i) + vf(k,j,i)
+       !      enddo
+       !   enddo
+       !enddo
+       !if (check_output) then
+       !   if ((iter_coupling_in .EQ. 1) .OR. (iter_coupling_in .EQ. 2)) then
+       !      !if ((iter_coupling_in .EQ. 199) .OR. (iter_coupling_in .EQ. 200)) then
+       !      call write_netcdf(uf_integr,vname='ufout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
+       !      call write_netcdf(vf_integr,vname='vfout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
+       !      call write_netcdf(uf_integr-uf_bar,vname='diff_ufout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
+       !      call write_netcdf(vf_integr-vf_bar,vname='diff_vfout',netcdf_file_name='coin.nc',rank=myrank,iter=iter_coupling_in)
+       !   endif
+       !endif
+       !deallocate(uf_integr)
+       !deallocate(vf_integr)
        !! check
 
     endif

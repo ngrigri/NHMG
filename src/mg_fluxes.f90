@@ -49,8 +49,8 @@ contains
 
     k = 1
     do i = 1,nx+1  
-       do j = 1,ny 
-       !do j = 0,ny+1 
+       !do j = 1,ny 
+       do j = 0,ny+1 !ND 11/01
 
           gamma = one - qrt * ( &
                (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
@@ -68,8 +68,8 @@ contains
     enddo
 
     do i = 1,nx+1  
-       do j = 1,ny 
-       !do j = 0,ny+1 
+       !do j = 1,ny 
+       do j = 0,ny+1 !ND 11/01
           do k = 2,nz-1 
 
              uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
@@ -84,8 +84,8 @@ contains
 
     k = nz
     do i = 1,nx+1  
-       do j = 1,ny 
-       !do j = 0,ny+1 
+       !do j = 1,ny 
+       do j = 0,ny+1 !ND 11/01
 
           uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
                - qrt * ( &
@@ -96,13 +96,13 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,uf,lbc_null='u')
+!    call fill_halo(1,uf,lbc_null='u')
 
     !- vf -!
 
     k = 1
-    do i = 1,nx
-    !do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
        do j = 1,ny+1
 
           gamma = one - qrt * ( &
@@ -120,8 +120,8 @@ contains
        enddo
     enddo
 
-    do i = 1,nx
-    !do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
        do j = 1,ny+1
           do k = 2,nz-1
 
@@ -136,8 +136,8 @@ contains
     enddo
 
     k = nz
-    do i = 1,nx
-    !do i = 0,nx+1
+    !do i = 1,nx
+    do i = 0,nx+1 !ND 11/01
        do j = 1,ny+1
 
           vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
@@ -149,7 +149,7 @@ contains
        enddo
     enddo
 
-    call fill_halo(1,vf,lbc_null='v')
+!    call fill_halo(1,vf,lbc_null='v')
 
   end subroutine set_fluxes
  
