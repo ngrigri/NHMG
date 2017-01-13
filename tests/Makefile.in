@@ -15,7 +15,6 @@
 @SET_MAKE@
 
 
-
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -83,7 +82,7 @@ host_triplet = @host@
 check_PROGRAMS = $(am__EXEEXT_1)
 TESTS = $(am__EXEEXT_1)
 bin_PROGRAMS = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testcuc$(EXEEXT)
+	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/./confdb/test-driver
@@ -97,10 +96,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(nmldir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testcuc$(EXEEXT)
+	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 am_testcuc_OBJECTS = mg_zr_hz.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
 	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
@@ -110,6 +108,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_testfillhalo_OBJECTS = mg_testfillhalo.$(OBJEXT)
+testfillhalo_OBJECTS = $(am_testfillhalo_OBJECTS)
+testfillhalo_LDADD = $(LDADD)
 am_testrndtopo_OBJECTS = mg_zr_hz.$(OBJEXT) \
 	mg_mpi_exchange_ijk.$(OBJEXT) mg_setup_tests.$(OBJEXT) \
 	mg_testrndtopo.$(OBJEXT)
@@ -176,10 +177,10 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
-DIST_SOURCES = $(testcuc_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
+SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
+	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
+DIST_SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
+	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -193,7 +194,6 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(nml_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -556,12 +556,13 @@ LIBNHMGDIR = ${SRCDIR}
 AM_FCFLAGS = ${AM_CPPFLAGS} $(FCFLAGS_f90) -I$(top_srcdir)/src
 AM_FFLAGS = ${AM_FCFLAGS}
 AM_LDFLAGS = $(TESTLIBS) ${top_builddir}/src/libnhmg.la -lnhmg
-F90_TESTS = testseamount testrndtopo testcuc
+F90_TESTS = testseamount testrndtopo testfillhalo testcuc
 SUBDIRS = .
-bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist cuc_namelist
-nmldir = $(prefix)/tests
-nml_DATA = $(bin_SCRIPTS)
-EXTRA_DIST = $(nml_DATA)
+bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
+
+#nmldir    = $(prefix)/tests
+#nml_DATA  = $(bin_SCRIPTS)
+EXTRA_DIST = $(bin_SCRIPTS)
 testseamount_SOURCES = \
 	mg_zr_hz.f90            \
 	mg_mpi_exchange_ijk.f90 \
@@ -573,6 +574,9 @@ testrndtopo_SOURCES = \
 	mg_mpi_exchange_ijk.f90 \
     mg_setup_tests.f90      \
 	mg_testrndtopo.f90
+
+testfillhalo_SOURCES = \
+	mg_testfillhalo.f90
 
 testcuc_SOURCES = \
 	mg_zr_hz.f90            \
@@ -677,6 +681,10 @@ testcuc$(EXEEXT): $(testcuc_OBJECTS) $(testcuc_DEPENDENCIES) $(EXTRA_testcuc_DEP
 	@rm -f testcuc$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testcuc_OBJECTS) $(testcuc_LDADD) $(LIBS)
 
+testfillhalo$(EXEEXT): $(testfillhalo_OBJECTS) $(testfillhalo_DEPENDENCIES) $(EXTRA_testfillhalo_DEPENDENCIES) 
+	@rm -f testfillhalo$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(testfillhalo_OBJECTS) $(testfillhalo_LDADD) $(LIBS)
+
 testrndtopo$(EXEEXT): $(testrndtopo_OBJECTS) $(testrndtopo_DEPENDENCIES) $(EXTRA_testrndtopo_DEPENDENCIES) 
 	@rm -f testrndtopo$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testrndtopo_OBJECTS) $(testrndtopo_LDADD) $(LIBS)
@@ -740,27 +748,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-nmlDATA: $(nml_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(nml_DATA)'; test -n "$(nmldir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(nmldir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(nmldir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(nmldir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(nmldir)" || exit $$?; \
-	done
-
-uninstall-nmlDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nml_DATA)'; test -n "$(nmldir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(nmldir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -1016,6 +1003,13 @@ testrndtopo.log: testrndtopo$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testfillhalo.log: testfillhalo$(EXEEXT)
+	@p='testfillhalo$(EXEEXT)'; \
+	b='testfillhalo'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testcuc.log: testcuc$(EXEEXT)
 	@p='testcuc$(EXEEXT)'; \
 	b='testcuc'; \
@@ -1097,10 +1091,10 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-recursive
-all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(nmldir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1158,7 +1152,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-nmlDATA
+install-data-am:
 
 install-dvi: install-dvi-recursive
 
@@ -1203,8 +1197,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
-	uninstall-nmlDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
 
 .MAKE: $(am__recursive_targets) check-am install-am install-strip
 
@@ -1217,14 +1210,13 @@ uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
 	install-binPROGRAMS install-binSCRIPTS install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-nmlDATA install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am recheck tags tags-am uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-binSCRIPTS \
-	uninstall-nmlDATA
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	recheck tags tags-am uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-binSCRIPTS
 
 
 clean-local:

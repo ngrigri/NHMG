@@ -51,9 +51,9 @@ contains
     integer(kind=ip), intent(in) :: nx, ny, nz
     integer(kind=ip), intent(in) :: npxg, npyg
 
-    if (myrank==0) write(*,*)' nhmg_init:'
-
     call mg_mpi_init()
+
+    if (myrank==0) write(*,*)' nhmg_init:'
 
     call read_nhnamelist(vbrank=myrank)
 

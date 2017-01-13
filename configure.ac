@@ -35,7 +35,7 @@ AC_PREREQ([2.59])
 #
 ## Initialize autoconf with name of project, version, bug report 
 ## and support email address.
-AC_INIT([NHMG],[0.1.4],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
+AC_INIT([NHMG],[0.1.5],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
 #
 #
 ## Set the directory that contains support scripts such as install-sh
@@ -166,6 +166,16 @@ AC_ARG_ENABLE(
     [  --enable-hdf5 - HDF5 for Netcdf 4.],
     enable_hdf5=yes,
     enable_hdf5=no
+             )
+
+#
+## IDRIS ada specific LDFLAGS options !?!
+##
+AC_ARG_ENABLE(
+    ada,
+    [  --enable-ada - Netcdf libraries are explicitly added in LDFLAGS options.],
+    enable_ada=yes,
+    enable_ada=no
              )
 
 AC_ARG_VAR(MPI_LIB,Location of MPI library (compile-time))
@@ -555,8 +565,14 @@ if test "$enable_netcdf" = "yes" ; then
         if test -f "${NETCDF_LIB}/libnetcdf.a"; then
           if test -f "${NETCDF_LIB}/libnetcdff.a"; then
             TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+            fi
           else
   	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
+            if test "$enable_ada" = "yes" ; then
+              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdf"
+            fi
           fi
         else
           AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
