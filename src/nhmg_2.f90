@@ -160,9 +160,9 @@ contains
 
     if (check_output) then
        !if ((iter_fluxes .EQ. 1)) then
-          call write_netcdf(u,vname='u',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-          call write_netcdf(v,vname='v',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-          call write_netcdf(w,vname='w',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(u,vname='uin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(v,vname='vin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+          call write_netcdf(w,vname='win',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
        !endif
     endif
 
@@ -614,7 +614,8 @@ contains
 !!! dirty reshape arrays indexing
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
     real(kind=rp), dimension(:,:,:), allocatable, target :: rub,rvb,rwb
-    real(kind=rp), dimension(:,:), allocatable, target :: rufrcb,rvfrcb
+    real(kind=rp), dimension(:,:,:), allocatable, target :: ruc,rvc
+    real(kind=rp), dimension(:,:),   allocatable, target :: rufrcb,rvfrcb
     integer(kind=ip) :: i,j,k
 !!! 
 
@@ -626,10 +627,8 @@ contains
     call tic(1,'nhmg_solve')
 
 !!! dirty reshape arrays indexing ijk -> kji !!!
-    !allocate(ub(1:nz  ,0:ny+1,0:nx+1)) 
-    !allocate(vb(1:nz  ,0:ny+1,0:nx+1))
-    allocate(ub(1:nz  ,0:ny+1,1:nx+1)) !ND 12/01
-    allocate(vb(1:nz  ,1:ny+1,0:nx+1)) !ND 12/01
+    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
+    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
     do i = 1,nx+1
       do j = 0,ny+1
@@ -638,12 +637,6 @@ contains
         enddo
       enddo
     enddo
-    !i = 0
-    !do j = 0,ny+1
-    !   do k = 1,nz
-    !      ub(k,j,i) = zero
-    !   enddo
-    !enddo
     do i = 0,nx+1
       do j = 1,ny+1
         do k = 1,nz
@@ -651,12 +644,6 @@ contains
         enddo
       enddo
     enddo
-    !j = 0
-    !do i = 0,nx+1
-    !   do k = 1,nz
-    !      vb(k,j,i) = zero
-    !   enddo
-    !enddo
     do i = 0,nx+1
        do j = 0,ny+1
           do k = 1,nz+1
@@ -672,12 +659,7 @@ contains
     !u => ua
     !v => va
     !w => wa
-
-    !- step 1 - 
-    !call fill_halo(1,u,lbc_null='u') !ND 12/01
-    !call fill_halo(1,v,lbc_null='v') !ND 12/01
-    !call fill_halo(1,w) !XXX care    !ND 12/01
-    
+   
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
           call write_netcdf(u,vname='uin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
@@ -686,7 +668,7 @@ contains
        !endif
     endif
 
-    !- step 2 - 
+    !- step 1 - 
     call set_rhs(u,v,w)
 
     if (check_output) then
@@ -695,7 +677,7 @@ contains
        !endif
     endif
 
-    !- step 3 -
+    !- step 2 -
     call solve_p()
 
     if (check_output) then
@@ -705,7 +687,7 @@ contains
        !endif
     endif
 
-    !- step 4 -
+    !- step 3 -
     call correct_uvw(u,v,w)
 
     if (check_output) then
@@ -716,7 +698,7 @@ contains
        !endif
     endif
 
-    !!- check the non-divergence of the projected u,v,w
+    !- check - non-divergence of the projected u,v,w
     !call set_rhs(u,v,w)
     !
     !if (check_output) then
@@ -725,14 +707,14 @@ contains
     !   !endif
     !endif
 
-    !- step 5 - bc2bt coupling
+    !- step 4 - bc2bt coupling
     if ((present(rua)).and.(present(rva)).and.(present(rwa))) then
 
        !!! dirty reshape arrays indexing ijk -> kji !!!
-       !allocate(rub(1:nz  ,0:ny+1,0:nx+1))
-       !allocate(rvb(1:nz  ,0:ny+1,0:nx+1))
-       allocate(rub(1:nz  ,0:ny+1,1:nx+1)) !ND 12/01
-       allocate(rvb(1:nz  ,1:ny+1,0:nx+1)) !ND 12/01
+       !allocate(rub(1:nz  ,0:ny+1,1:nx+1))
+       !allocate(rvb(1:nz  ,1:ny+1,0:nx+1))
+       allocate(rub(1:nz  ,0:ny+1,0:nx+1)) !ND 17/01
+       allocate(rvb(1:nz  ,0:ny+1,0:nx+1)) !ND 17/01
        allocate(rwb(1:nz+1,0:ny+1,0:nx+1))
        do i = 1,nx+1
           do j = 0,ny+1
@@ -741,12 +723,6 @@ contains
              enddo
           enddo
        enddo
-       !i = 0
-       !do j = 0,ny+1
-       !   do k = 1,nz
-       !      rub(k,j,i) = zero
-       !   enddo
-       !enddo
        do i = 0,nx+1
           do j = 1,ny+1
              do k = 1,nz
@@ -754,12 +730,6 @@ contains
              enddo
           enddo
        enddo
-       !j = 0
-       !do i = 0,nx+1
-       !   do k = 1,nz
-       !      rvb(k,j,i) = zero
-       !   enddo
-       !enddo
        do i = 0,nx+1
           do j = 0,ny+1
              do k = 1,nz+1
@@ -770,18 +740,37 @@ contains
        ru => rub
        rv => rvb
        rw => rwb
-       !allocate(rufrcb(0:ny+1,0:nx+1))
-       !allocate(rvfrcb(0:ny+1,0:nx+1))
+       call fill_halo(1,ru) !ND 17/01
+       call fill_halo(1,rv) !ND 17/01
+       call fill_halo(1,rw) !ND 17/01
+       !
+       allocate(ruc(1:nz  ,0:ny+1,1:nx+1)) !ND 17/01
+       allocate(rvc(1:nz  ,1:ny+1,0:nx+1)) !ND 17/01
+       do i = 1,nx+1
+          do j = 0,ny+1
+             do k = 1,nz
+                ruc(k,j,i) = rub(k,j,i)
+             enddo
+          enddo
+       enddo
+       do i = 0,nx+1
+          do j = 1,ny+1
+             do k = 1,nz
+                rvc(k,j,i) = rvb(k,j,i)
+             enddo
+          enddo
+       enddo
+       if (associated(ru)) ru => null()
+       if (associated(rv)) rv => null()
+       ru => ruc !ND 17/01
+       rv => rvc !ND 17/01
+       !
        allocate(rufrcb(0:ny+1,1:nx+1))
        allocate(rvfrcb(1:ny+1,0:nx+1))
        rufrc => rufrcb
        rvfrc => rvfrcb
        !!! 
-
-       !call fill_halo(1,ru,lbc_null='u') !ND 12/01
-       !call fill_halo(1,rv,lbc_null='v') !ND 12/01
-       !call fill_halo(1,rw)              !ND 12/01
-    
+   
        if (check_output) then
           !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
              call write_netcdf(ru,vname='ruin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
@@ -833,6 +822,8 @@ contains
     if ((present(rua)).and.(present(rva))) then
     deallocate(rub)
     deallocate(rvb)
+    deallocate(ruc)
+    deallocate(rvc)
     deallocate(rwb)
     do i = 1,nx+1
        do j = 0,ny+1      
