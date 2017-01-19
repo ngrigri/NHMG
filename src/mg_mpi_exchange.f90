@@ -1567,6 +1567,49 @@ contains
   end subroutine set_phybound2zero_3D
 
   !----------------------------------------
+  subroutine set_rurvbc2zero_3D(a3D,gt)
+
+    real(kind=rp), dimension(:,:,:), pointer, intent(inout)::a3D
+    character(len=1) :: gt
+
+    integer(kind=ip) :: nx, ny
+    integer(kind=ip) :: south, east, north, west
+
+    nx = grid(1)%nx
+    ny = grid(1)%ny
+
+    south     = grid(1)%neighb(1)
+    east      = grid(1)%neighb(2)
+    north     = grid(1)%neighb(3)
+    west      = grid(1)%neighb(4)
+
+    if (trim(gt) == 'u') then
+
+       if (east == MPI_PROC_NULL) then
+          a3D(:,:,nx+1) = zero
+       endif
+
+       if (west == MPI_PROC_NULL) then
+          a3D(:,:,1) = zero
+       endif
+
+    elseif (trim(gt) == 'v') then
+
+       if (south == MPI_PROC_NULL) then
+          a3D(:,1,:) = zero
+       endif
+
+       if (north == MPI_PROC_NULL) then
+          a3D(:,ny+1,:) = zero
+       endif
+
+    else
+       stop
+    endif
+
+  end subroutine set_rurvbc2zero_3D
+
+  !----------------------------------------
   subroutine global_max(maxloc)
     ! return the global max: maxglo
     ! using the local max on each subdomain

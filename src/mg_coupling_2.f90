@@ -96,29 +96,31 @@ contains
                (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
           rufrc(j,i) = gamma * rutmp(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k  ,j,i  ) &
-               + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k  ,j,i-1) ) &
-               - beta(j,i-1)/dz(k,j,i-1) * rvtmp(k,j  ,i-1) &
-               - beta(j,i-1)/dz(k,j,i-1) * rvtmp(k,j+1,i-1) &
-               - beta(j,i  )/dz(k,j,i  ) * rvtmp(k,j  ,i  ) &
-               - beta(j,i  )/dz(k,j,i  ) * rvtmp(k,j+1,i  )
+               + zxdy(k,j,i  ) /dy(j,i  )   * rwtmp(k+1,j,i  ) &
+               + zxdy(k,j,i-1) /dy(j,i-1)   * rwtmp(k+1,j,i-1) ) &
+               - beta(j,i-1)   /dz(k,j,i-1) * rvtmp(k,j  ,i-1) &
+               - beta(j,i-1)   /dz(k,j,i-1) * rvtmp(k,j+1,i-1) &
+               - beta(j,i  )   /dz(k,j,i  ) * rvtmp(k,j  ,i  ) &
+               - beta(j,i  )   /dz(k,j,i  ) * rvtmp(k,j+1,i  )
 
           do k = 2,nz-1
-             rufrc(j,i) = rufrc(j,i) + rutmp(k,j,i) &
+             rufrc(j,i) = rufrc(j,i) &
+                  + rutmp(k,j,i) &
                   - qrt * ( &
-                  + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k  ,j,i  ) &
-                  + zxdy(k,j,i  )/dy(j,i  ) * rwtmp(k+1,j,i  ) &
-                  + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k  ,j,i-1) & 
-                  + zxdy(k,j,i-1)/dy(j,i-1) * rwtmp(k+1,j,i-1) )     
+                  + zxdy(k,j,i  ) /dy(j,i  ) * rwtmp(k  ,j,i  ) &
+                  + zxdy(k,j,i  ) /dy(j,i  ) * rwtmp(k+1,j,i  ) &
+                  + zxdy(k,j,i-1) /dy(j,i-1) * rwtmp(k  ,j,i-1) & 
+                  + zxdy(k,j,i-1) /dy(j,i-1) * rwtmp(k+1,j,i-1) )
           enddo
 
           k = nz
-          rufrc(j,i) = rufrc(j,i) + rutmp(k,j,i) &
+          rufrc(j,i) = rufrc(j,i) &
+               + rutmp(k,j,i) &
                - qrt * ( &
-               + zxdy(k,j,i  )/dy(j,i  )       * rwtmp(k  ,j,i  ) & 
-               + zxdy(k,j,i  )/dy(j,i  ) * two * rwtmp(k+1,j,i  ) & 
-               + zxdy(k,j,i-1)/dy(j,i-1) *       rwtmp(k  ,j,i-1) & 
-               + zxdy(k,j,i-1)/dy(j,i-1) * two * rwtmp(k+1,j,i-1) )
+               + zxdy(k,j,i  )     /dy(j,i  ) * rwtmp(k  ,j,i  ) & 
+               + zxdy(k,j,i  ) *two/dy(j,i  ) * rwtmp(k+1,j,i  ) & 
+               + zxdy(k,j,i-1)     /dy(j,i-1) * rwtmp(k  ,j,i-1) &
+               + zxdy(k,j,i-1) *two/dy(j,i-1) * rwtmp(k+1,j,i-1) )
           
        enddo
     enddo
@@ -133,30 +135,32 @@ contains
                (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
           rvfrc(j,i) = gamma * rvtmp(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k+1,j  ,i  ) &
-               + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k+1,j-1,i  ) ) &
-               - beta(j-1,i)/dz(k,j-1,i) * rutmp(k  ,j-1,i  ) &
-               - beta(j-1,i)/dz(k,j-1,i) * rutmp(k  ,j-1,i+1) &
-               - beta(j  ,i)/dz(k,j  ,i) * rutmp(k  ,j  ,i  ) &
-               - beta(j  ,i)/dz(k,j  ,i) * rutmp(k  ,j  ,i+1)  
+               + zydx(k,j  ,i) /dx(j  ,i)   * rwtmp(k+1,j  ,i  ) &
+               + zydx(k,j-1,i) /dx(j-1,i)   * rwtmp(k+1,j-1,i  ) ) &
+               - beta(j-1,i)   /dz(k,j-1,i) * rutmp(k  ,j-1,i  ) &
+               - beta(j-1,i)   /dz(k,j-1,i) * rutmp(k  ,j-1,i+1) &
+               - beta(j  ,i)   /dz(k,j  ,i) * rutmp(k  ,j  ,i  ) &
+               - beta(j  ,i)   /dz(k,j  ,i) * rutmp(k  ,j  ,i+1)  
 
           do k = 2,nz-1
-             rvfrc(j,i) = rvfrc(j,i) + rvtmp(k,j,i) &
+             rvfrc(j,i) = rvfrc(j,i) &
+                  + rvtmp(k,j,i) &
                   - qrt * ( &
-                  + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k  ,j  ,i) & 
-                  + zydx(k,j  ,i)/dx(j  ,i) * rwtmp(k+1,j  ,i) &
-                  + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k  ,j-1,i) & 
-                  + zydx(k,j-1,i)/dx(j-1,i) * rwtmp(k+1,j-1,i) )
+                  + zydx(k,j  ,i) /dx(j  ,i) * rwtmp(k  ,j  ,i) & 
+                  + zydx(k,j  ,i) /dx(j  ,i) * rwtmp(k+1,j  ,i) &
+                  + zydx(k,j-1,i) /dx(j-1,i) * rwtmp(k  ,j-1,i) & 
+                  + zydx(k,j-1,i) /dx(j-1,i) * rwtmp(k+1,j-1,i) )
           enddo
 
           k = nz
-          rvfrc(j,i) = rvfrc(j,i) + rvtmp(k,j,i) &
+          rvfrc(j,i) = rvfrc(j,i) &
+               + rvtmp(k,j,i) &
                - qrt * ( &
-               + zydx(k,j  ,i)/dx(j  ,i) *       rwtmp(k  ,j  ,i) & 
-               + zydx(k,j  ,i)/dx(j  ,i) * two * rwtmp(k+1,j  ,i) &
-               + zydx(k,j-1,i)/dx(j-1,i) *       rwtmp(k  ,j-1,i) & 
-               + zydx(k,j-1,i)/dx(j-1,i) * two * rwtmp(k+1,j-1,i) )
-          
+               + zydx(k,j  ,i)     /dx(j  ,i) * rwtmp(k  ,j  ,i) & 
+               + zydx(k,j  ,i) *two/dx(j  ,i) * rwtmp(k+1,j  ,i) &
+               + zydx(k,j-1,i)     /dx(j-1,i) * rwtmp(k  ,j-1,i) & 
+               + zydx(k,j-1,i) *two/dx(j-1,i) * rwtmp(k+1,j-1,i) )
+
        enddo
     enddo
 

@@ -51,8 +51,7 @@ contains
        do j = 0,ny+1
 
           k = 1
-          gamma = one &
-               - qrt * ( &
+          gamma = one - qrt * ( &
                (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
                (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
           uf(k,j,i) = gamma * Arx(k,j,i) * u(k,j,i) &
@@ -89,8 +88,7 @@ contains
        do j = 1,ny+1
 
           k = 1
-          gamma = one &
-               - qrt * ( &
+          gamma = one - qrt * ( &
                (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j,i  ) + &
                (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
           vf(k,j,i) = gamma * Ary(k,j,i) * v(k,j,i) &
