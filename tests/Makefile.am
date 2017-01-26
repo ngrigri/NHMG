@@ -25,7 +25,8 @@ bin_PROGRAMS   = \
     testseamount \
 	testrndtopo  \
 	testfillhalo \
-	testcuc
+	testcuc      \
+    nhmg_ncjoin
 
 bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
 
@@ -48,10 +49,9 @@ testrndtopo_SOURCES=        \
 	mg_testrndtopo.f90
 
 ##
-testfillhalo_SOURCES=        \
+testfillhalo_SOURCES=       \
 	mg_testfillhalo.f90
 
-##testseamount_LDADD = $(LIBNHMGDIR)/libnhmg.a
 ##
 testcuc_SOURCES =           \
 	mg_zr_hz.f90            \
@@ -59,7 +59,9 @@ testcuc_SOURCES =           \
 	mg_setup_tests.f90      \
 	mg_testcuc.f90 
 
-##testcuc_LDADD = $(LIBNHMGDIR)/libnhmg.a
+##
+nhmg_ncjoin_SOURCES =       \
+	nhmg_ncjoin.f90           
 
 clean-local:
 	-rm -f *.mod *.o

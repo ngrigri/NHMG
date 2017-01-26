@@ -35,6 +35,7 @@ testcuc
 testrndtopo
 testseamount
 testfillhalo
+nhmg_ncjoin
 # Ignore files starting with fort.*
 fort.*
 # Ignore profiling files
