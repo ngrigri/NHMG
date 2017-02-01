@@ -29,10 +29,13 @@ libtool
 autom4te.cache/
 # Ignore config.status
 config.status
-# Ignore executable file starting by tests
+# Ignore executable file starting by test...
 testseamount
 testcuc
 testrndtopo
+testseamount
+testfillhalo
+nhmg_ncjoin
 # Ignore files starting with fort.*
 fort.*
 # Ignore profiling files

@@ -26,7 +26,7 @@ program mg_testfillhalo
   integer(kind=ip):: npyg  = 1       ! number of processes in y
 
   integer(kind=ip)  :: lun_nml = 4
-  integer(kind=ip)  :: ii, sz
+  integer(kind=ip)  :: ii
   logical :: nml_exist=.false.
 
   namelist/fhparam/ &

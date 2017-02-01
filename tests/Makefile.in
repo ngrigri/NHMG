@@ -82,7 +82,7 @@ host_triplet = @host@
 check_PROGRAMS = $(am__EXEEXT_1)
 TESTS = $(am__EXEEXT_1)
 bin_PROGRAMS = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
+	testfillhalo$(EXEEXT) testcuc$(EXEEXT) nhmg_ncjoin$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/./confdb/test-driver
@@ -100,14 +100,17 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
 	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
-am_testcuc_OBJECTS = mg_zr_hz.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
-	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
-testcuc_OBJECTS = $(am_testcuc_OBJECTS)
-testcuc_LDADD = $(LDADD)
+am_nhmg_ncjoin_OBJECTS = nhmg_ncjoin.$(OBJEXT)
+nhmg_ncjoin_OBJECTS = $(am_nhmg_ncjoin_OBJECTS)
+nhmg_ncjoin_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_testcuc_OBJECTS = mg_zr_hz.$(OBJEXT) mg_mpi_exchange_ijk.$(OBJEXT) \
+	mg_setup_tests.$(OBJEXT) mg_testcuc.$(OBJEXT)
+testcuc_OBJECTS = $(am_testcuc_OBJECTS)
+testcuc_LDADD = $(LDADD)
 am_testfillhalo_OBJECTS = mg_testfillhalo.$(OBJEXT)
 testfillhalo_OBJECTS = $(am_testfillhalo_OBJECTS)
 testfillhalo_LDADD = $(LDADD)
@@ -177,10 +180,12 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
-	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
-DIST_SOURCES = $(testcuc_SOURCES) $(testfillhalo_SOURCES) \
-	$(testrndtopo_SOURCES) $(testseamount_SOURCES)
+SOURCES = $(nhmg_ncjoin_SOURCES) $(testcuc_SOURCES) \
+	$(testfillhalo_SOURCES) $(testrndtopo_SOURCES) \
+	$(testseamount_SOURCES)
+DIST_SOURCES = $(nhmg_ncjoin_SOURCES) $(testcuc_SOURCES) \
+	$(testfillhalo_SOURCES) $(testrndtopo_SOURCES) \
+	$(testseamount_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -584,6 +589,9 @@ testcuc_SOURCES = \
 	mg_setup_tests.f90      \
 	mg_testcuc.f90 
 
+nhmg_ncjoin_SOURCES = \
+	nhmg_ncjoin.f90           
+
 all: all-recursive
 
 .SUFFIXES:
@@ -676,6 +684,10 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+
+nhmg_ncjoin$(EXEEXT): $(nhmg_ncjoin_OBJECTS) $(nhmg_ncjoin_DEPENDENCIES) $(EXTRA_nhmg_ncjoin_DEPENDENCIES) 
+	@rm -f nhmg_ncjoin$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(nhmg_ncjoin_OBJECTS) $(nhmg_ncjoin_LDADD) $(LIBS)
 
 testcuc$(EXEEXT): $(testcuc_OBJECTS) $(testcuc_DEPENDENCIES) $(EXTRA_testcuc_DEPENDENCIES) 
 	@rm -f testcuc$(EXEEXT)

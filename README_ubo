@@ -52,15 +52,16 @@ LIBRARY problem:
 ---------------
 setenv LD_LIBRARY_PATH /home/grima/CROCO-NH/lib:$LD_LIBRARY_PATH
 
-Profiling:
+Profiling: Doesn't work  with nhmg library ????
 ---------
 ./configure --prefix=/home/grima/NH_MultiGrid --enable-mpich --enable-netcdf --enable-profiling
 make clean
 make install
-mpirun -np 4 mainmodel
-gprof ./mainmodel gmon.out > mainmodel_prof.txt
-python /home/grima/PYTHON/GPROF2DOT/gprof2dot.py -n0.5 -s mainmodel_prof.txt > mainmodel_prof.dot
-dot -Tpng mainmodel_prof.dot -o mainmodel_prof.png
+mpirun -np 4 testseamount
+ln -fs ~/NHMG/libtool
+./libtool --mode=execute gprof ./testseamount gmon.out > testseamount_prof.txt
+python /home/grima/PYTHON/GPROF2DOT/gprof2dot.py -n0.5 -s testseamount_prof.txt > testseamount_prof.dot
+dot -Tpng testseamount_prof.dot -o testseamount_prof.png
 
 /opt/linux/intel/12.1/composer_xe_2011_sp1.7.256/bin/intel64/loopprofileviewer.sh loop_prof_*.xml
 
