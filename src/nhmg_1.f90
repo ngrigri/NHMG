@@ -20,30 +20,81 @@ module nhmg
 contains
 
   !--------------------------------------------------------------
-  subroutine nhmg_write(nx,ny,nz,ua,va,wa)
+  subroutine nhmg_write_in(nx,ny,nz,Hzba,Hza,Hzha,uba,vba,wba,ua,va,wa)
+
+    integer(kind=ip), intent(in) :: nx, ny, nz
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: Hzba
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: Hza
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: Hzha
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: uba
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: vba
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wba
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: ua
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: va
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wa
+
+    real(kind=rp), dimension(:,:,:), pointer :: Hzb,Hz,Hzh,ub,vb,wb,u,v,w
+
+    integer(kind=ip), save :: iter_write_in=0
+    iter_write_in = iter_write_in + 1
+
+    Hzb => Hzba
+    Hz => Hza
+    Hzh => Hzha
+    ub => uba
+    vb => vba
+    wb => wba
+    u => ua
+    v => va
+    w => wa
+
+!    if ((iter_write .EQ. 1)) then
+       call write_netcdf(Hzb,vname='Hzb',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(Hz,vname='Hz',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(Hzh,vname='Hzh',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(ub,vname='ub',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(vb,vname='vb',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(wb,vname='wb',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(u,vname='u',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(v,vname='v',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+       call write_netcdf(w,vname='w',netcdf_file_name='wrt_in.nc',rank=myrank,iter=iter_write_in)
+!    endif
+
+  end subroutine nhmg_write_in
+
+  !--------------------------------------------------------------
+  subroutine nhmg_write_out(nx,ny,nz,ua,va,wa,rua,rva)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: ua
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: va
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2),        target, intent(in) :: rua
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2),        target, intent(in) :: rva
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+    real(kind=rp), dimension(:,:),   pointer :: ru,rv
 
-    integer(kind=ip), save :: iter_write=0
-    iter_write = iter_write + 1
+    integer(kind=ip), save :: iter_write_out=0
+    iter_write_out = iter_write_out + 1
 
     u => ua
     v => va
     w => wa
+    ru => rua
+    rv => rva
 
 !    if ((iter_write .EQ. 1)) then
-       call write_netcdf(u,vname='u',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
-       call write_netcdf(v,vname='v',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
-       call write_netcdf(w,vname='w',netcdf_file_name='wrt.nc',rank=myrank,iter=iter_write)
+       call write_netcdf(u,vname='u',netcdf_file_name='wrt_out.nc',rank=myrank,iter=iter_write_out)
+       call write_netcdf(v,vname='v',netcdf_file_name='wrt_out.nc',rank=myrank,iter=iter_write_out)
+       call write_netcdf(w,vname='w',netcdf_file_name='wrt_out.nc',rank=myrank,iter=iter_write_out)
+       call write_netcdf(ru,vname='ru',netcdf_file_name='wrt_out.nc',rank=myrank,iter=iter_write_out)
+       call write_netcdf(rv,vname='rv',netcdf_file_name='wrt_out.nc',rank=myrank,iter=iter_write_out)
 !    endif
 
-  end subroutine nhmg_write
+  end subroutine nhmg_write_out
 
   !--------------------------------------------------------------
   subroutine nhmg_init(nx,ny,nz,npxg,npyg)
@@ -132,22 +183,22 @@ contains
 !    uf => ufa
 !    vf => vfa
 
-    if (check_output) then
-       !if ((iter_fluxes .EQ. 1)) then
-          call write_netcdf(u,vname='uin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-          call write_netcdf(v,vname='vin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-          call write_netcdf(w,vname='win',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_fluxes .EQ. 1)) then
+!!$          call write_netcdf(u,vname='uin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+!!$          call write_netcdf(v,vname='vin',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+!!$          call write_netcdf(w,vname='win',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+!!$       !endif
+!!$    endif
 
     call set_fluxes(u,v,w,uf,vf)
 
-    if (check_output) then
-       !if ((iter_fluxes .EQ. 1)) then
-          call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-          call write_netcdf(vf,vname='vf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_fluxes .EQ. 1)) then
+!!$          call write_netcdf(uf,vname='uf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+!!$          call write_netcdf(vf,vname='vf',netcdf_file_name='fl.nc',rank=myrank,iter=iter_fluxes)
+!!$       !endif
+!!$    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
    do i = 1,nx+1
@@ -221,10 +272,10 @@ contains
 
        call set_horiz_grids(dx,dy)
 
-       if (check_output) then
-          call write_netcdf(grid(1)%dx,vname='dx',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
-          call write_netcdf(grid(1)%dy,vname='dy',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
-       endif
+!!$       if (check_output) then
+!!$          call write_netcdf(grid(1)%dx,vname='dx',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
+!!$          call write_netcdf(grid(1)%dy,vname='dy',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
+!!$       endif
 
        if (associated(dx)) dx => null()
        if (associated(dy)) dy => null()
@@ -249,12 +300,12 @@ contains
 
     call set_vert_grids(zr,Hz)
 
-    if (check_output) then
-       !if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
-          call write_netcdf(grid(1)%zr,vname='zr',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
-          call write_netcdf(grid(1)%dz,vname='dz',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
+!!$          call write_netcdf(grid(1)%zr,vname='zr',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
+!!$          call write_netcdf(grid(1)%dz,vname='dz',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
+!!$       !endif
+!!$    endif
 
     if (associated(zr)) zr => null()
     if (associated(Hz)) Hz => null()
@@ -264,11 +315,11 @@ contains
     !------------!
     call set_matrices()
 
-    if (check_output) then
-       !if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
-          call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_matrices .EQ. 1) .OR. (iter_matrices .EQ. 2)) then
+!!$          call write_netcdf(grid(1)%cA,vname='cA',netcdf_file_name='mat.nc',rank=myrank,iter=iter_matrices)
+!!$       !endif
+!!$    endif
 
   end subroutine nhmg_matrices
 
@@ -428,15 +479,15 @@ contains
 !    v => va
 !    w => wa
 
-    if (check_output) then
-       !if ((iter_coupling .EQ. 1) .OR. (iter_coupling .EQ. 2)) then
-          call write_netcdf(uf_bar,vname='uf_bar',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(vf_bar,vname='vf_bar',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(u,vname='uin',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(v,vname='vin',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(w,vname='win',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_coupling .EQ. 1) .OR. (iter_coupling .EQ. 2)) then
+!!$          call write_netcdf(uf_bar,vname='uf_bar',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(vf_bar,vname='vf_bar',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(u,vname='uin',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(v,vname='vin',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(w,vname='win',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$       !endif
+!!$    endif
 
     if ((present(ufa)).and.(present(vfa))) then
  
@@ -456,17 +507,17 @@ contains
 
     endif
 
-    if (check_output) then
-       !if ((iter_coupling .EQ. 1) .OR. (iter_coupling .EQ. 2)) then
-          call write_netcdf(u,vname='uout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(v,vname='vout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          call write_netcdf(w,vname='wout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          if ((present(ufa)).and.(present(vfa))) then
-             call write_netcdf(uf,vname='uf',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-             call write_netcdf(vf,vname='vf',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
-          endif
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_coupling .EQ. 1) .OR. (iter_coupling .EQ. 2)) then
+!!$          call write_netcdf(u,vname='uout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(v,vname='vout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          call write_netcdf(w,vname='wout',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          if ((present(ufa)).and.(present(vfa))) then
+!!$             call write_netcdf(uf,vname='uf',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$             call write_netcdf(vf,vname='vf',netcdf_file_name='co.nc',rank=myrank,iter=iter_coupling)
+!!$          endif
+!!$       !endif
+!!$    endif
     
     !!- check non-divergence of the corrected u,v,w
     !call set_rhs(u,v,w)
@@ -646,13 +697,13 @@ contains
     !v => va
     !w => wa
    
-    if (check_output) then
-       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-          call write_netcdf(u,vname='uin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          call write_netcdf(v,vname='vin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          call write_netcdf(w,vname='win',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+!!$          call write_netcdf(u,vname='uin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          call write_netcdf(v,vname='vin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          call write_netcdf(w,vname='win',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$       !endif
+!!$    endif
 
     !- step 1 - 
     call set_rhs(u,v,w)
@@ -676,13 +727,13 @@ contains
     !- step 3 -
     call correct_uvw(u,v,w)
 
-    if (check_output) then
-       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-          call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       !endif
-    endif
+!!$    if (check_output) then
+!!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+!!$          call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$       !endif
+!!$    endif
 
     !- check - non-divergence of the projected u,v,w
     !call set_rhs(u,v,w)
@@ -707,12 +758,12 @@ contains
 
        call bc2bt_coupling(u,v,w,rufrc,rvfrc)
 
-       if (check_output) then
-          !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-             call write_netcdf(rufrc,vname='rufrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-             call write_netcdf(rvfrc,vname='rvfrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          !endif
-       endif
+!!$       if (check_output) then
+!!$          !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+!!$             call write_netcdf(rufrc,vname='rufrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$             call write_netcdf(rvfrc,vname='rvfrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$          !endif
+!!$       endif
 
     endif
 
