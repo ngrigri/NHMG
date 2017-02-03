@@ -39,7 +39,7 @@ contains
     do i = 0,nx+1
        do j = 0,ny+1
 
-          w(k,j,i) = ( &
+          w(k,j,i) = -( &
                - zxdy(k,j,i) / dy(j,i) * hlf * ( u(k,j,i) + u(k,j  ,i+1)) &
                - zydx(k,j,i) / dx(j,i) * hlf * ( v(k,j,i) + v(k,j+1,i  )) ) &
                / alpha(k,j,i)
