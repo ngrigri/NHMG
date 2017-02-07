@@ -456,9 +456,11 @@ contains
 
     do i = 0,nx+1
        do j = 0,ny+1
+
           do k = 1,nz+1
              w(k,j,i) = w(k,j,i) - wc(k,j,i)
           enddo
+
        enddo
     enddo
 
