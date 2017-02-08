@@ -464,8 +464,6 @@ contains
        enddo
     enddo
 
-!    call fill_halo(1,w)
-
     deallocate(su_integr)
     deallocate(sv_integr)
     deallocate(uf_integr)

@@ -25,7 +25,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
     real(kind=rp), dimension(:,:,:), pointer :: p
 
-    real(kind=rp), dimension(:,:,:), pointer :: rutmp,rvtmp,rwtmp
+    real(kind=rp), dimension(:,:,:), pointer :: rutmp,rvtmp
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -41,12 +41,11 @@ contains
 
     allocate(rutmp(1:nz,0:ny+1,1:nx+1))
     allocate(rvtmp(1:nz,1:ny+1,0:nx+1))
-    allocate(rwtmp(1:nz+1,0:ny+1,0:nx+1))
 
     do i = 1,nx+1
        do j = 0,ny+1
           do k = 1,nz
-             rutmp(k,j,i) = ru(k,j,i) - Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) / dt
+             rutmp(k,j,i) = ru(k,j,i) !- Arx(k,j,i) * (p(k,j,i  )-p(k,j,i-1)) / dt
           enddo
        enddo
     enddo
@@ -54,20 +53,8 @@ contains
     do i = 0,nx+1
        do j = 1,ny+1
           do k = 1,nz
-             rvtmp(k,j,i) = rv(k,j,i) - Ary(k,j,i) * (p(k,j  ,i)-p(k,j-1,i)) / dt
+             rvtmp(k,j,i) = rv(k,j,i) !- Ary(k,j,i) * (p(k,j  ,i)-p(k,j-1,i)) / dt
           enddo
-       enddo
-    enddo
-
-    do i = 0,nx+1
-       do j = 0,ny+1
-         k = 1
-         !do nothing
-         do k = 2,nz
-             rwtmp(k,j,i) = rw(k,j,i) - Arz(j,i) * (p(k  ,j,i)-p(k-1,j,i)) / dt
-         enddo
-         k = nz+1
-         rwtmp(k,j,i) = rw(k,j,i) - Arz(j,i) * (        -p(k-1,j,i)) / dt
        enddo
     enddo
 
@@ -77,26 +64,37 @@ contains
     do i = 1,nx+1
        do j = 1,ny
 
-          do k = 1,nz
+          k = 1
+          rufrc(j,i) = rutmp(k,j,i)
+
+          do k = 2,nz-1
              rufrc(j,i) = rufrc(j,i) + rutmp(k,j,i)
           enddo
-         
+
+          k = nz
+          rufrc(j,i) = rufrc(j,i) + rutmp(k,j,i)
+
        enddo
     enddo
 
     do i = 1,nx
        do j = 1,ny+1 
 
-          do k = 1,nz
+          k = 1
+          rvfrc(j,i) = rvtmp(k,j,i)
+
+          do k = 2,nz-1
              rvfrc(j,i) = rvfrc(j,i) + rvtmp(k,j,i)
           enddo
           
+          k = nz
+          rvfrc(j,i) = rvfrc(j,i) + rvtmp(k,j,i)
+
        enddo
     enddo
 
     deallocate(rutmp)
     deallocate(rvtmp)
-    deallocate(rwtmp)
 
   end subroutine bc2bt_coupling
 
@@ -151,10 +149,18 @@ contains
     do i = 1,nx+1  
        do j = 0,ny+1
 
-          do k = 1,nz
+          k = 1
+          su_integr(j,i) = Arx(k,j,i)
+          uf_integr(j,i) = Arx(k,j,i) * u(k,j,i)
+
+          do k = 2,nz-1
              su_integr(j,i) = su_integr(j,i) + Arx(k,j,i)
              uf_integr(j,i) = uf_integr(j,i) + Arx(k,j,i) * u(k,j,i)
           enddo
+
+          k = nz
+          su_integr(j,i) = su_integr(j,i) + Arx(k,j,i)
+          uf_integr(j,i) = uf_integr(j,i) + Arx(k,j,i) * u(k,j,i)
 
        enddo
     enddo
@@ -162,10 +168,18 @@ contains
     do i = 0,nx+1
        do j = 1,ny+1
 
-          do k = 1,nz
+          k = 1
+          sv_integr(j,i) = Ary(k,j,i)
+          vf_integr(j,i) = Ary(k,j,i) * v(k,j,i)
+
+          do k = 2,nz-1
              sv_integr(j,i) = sv_integr(j,i) + Ary(k,j,i)
              vf_integr(j,i) = vf_integr(j,i) + Ary(k,j,i) * v(k,j,i)
           enddo
+
+          k = nz
+          sv_integr(j,i) = sv_integr(j,i) + Ary(k,j,i)
+          vf_integr(j,i) = vf_integr(j,i) + Ary(k,j,i) * v(k,j,i)
 
        enddo
     enddo
@@ -208,47 +222,9 @@ contains
     do i = 1,nx
        do j = 1,ny
 
-          k = 1 
-          wc(k,j,i) = ( &
-               + hlf *( &
-               (zxdy(k,j,i)/dy(j,i)) * &
-               (uf_integr(j,i  )/su_integr(j,i  ) & 
-               +uf_integr(j,i+1)/su_integr(j,i+1) ) ) &
-               + hlf *( &
-               (zydx(k,j,i)/dx(j,i)) * &
-               (vf_integr(j  ,i)/sv_integr(j  ,i) & 
-               +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
-               )
-
-          Hci= one / sum(dz(:,j,i))
-
-          do k = 2,nz 
-             wc(k,j,i) = ( &
-                  - sum(dz(1:k-1,j,i)) * Hci * &
-                  ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
-                  + qrt *( &
-                  (zxdy(k-1,j,i)/dy(j,i)+zxdy(k,j,i)/dy(j,i)) * &
-                  ( uf_integr(j,i  )/su_integr(j,i  ) & 
-                  +uf_integr(j,i+1)/su_integr(j,i+1) ) ) &
-                  + qrt *( &
-                  (zydx(k-1,j,i)/dx(j,i)+zydx(k,j,i)/dx(j,i)) * &
-                  ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
-                  +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
-                  )
+          do k = 1,nz+1 
+             wc(k,j,i) = zero
           enddo
-
-          k = nz+1
-          wc(k,j,i) = ( &
-               - ( uf_integr(j,i+1)-uf_integr(j,i)+vf_integr(j+1,i)-vf_integr(j,i) ) / (dx(j,i)*dy(j,i)) &
-               + hlf *( &
-               (zxdy(k-1,j,i)/dy(j,i)) * &
-               ( uf_integr(j,i  )/su_integr(j,i  ) & 
-               +uf_integr(j,i+1)/su_integr(j,i+1) ) ) &
-               + hlf *( &
-               (zydx(k-1,j,i)/dx(j,i)) * &
-               ( vf_integr(j  ,i)/sv_integr(j  ,i) & 
-               +vf_integr(j+1,i)/sv_integr(j+1,i) ) ) &
-               )
 
        enddo
     enddo
