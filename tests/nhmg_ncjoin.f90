@@ -10,19 +10,19 @@
 !   5..n - the netcdf file names in good order in term of rank
 !
 ! Examples : 
-! nhmg_join 2 2 ijk 1111 nc0.nc nc1.nc ...  nc8.nc
+! nhmg_join 2 2  ijk 1111 nc0.nc nc1.nc nc2.nc nc3.nc
 ! or
-! nhmg_join 2 2 ij  1111 h*.nc
+! nhmg_join 2 2   ij 1111 h*.nc
 ! or
-! nhmg_join 2 2 ijk  0111 u*.nc
+! nhmg_join 2 2  ijk 0111 u*.nc
 ! or
-! nhmg_join 2 2 ijk 1101  v*.nc
+! nhmg_join 2 2  ijk 1101 v*.nc
 ! or
-! nhmg_join 2 2 ijk 1111  w*.nc
+! nhmg_join 2 2  ijk 1111 w*.nc
 ! or
-! nhmg_join 2 2 kji 2222  zr*.nc
+! nhmg_join 2 2  kji 2222 zr*.nc
 ! or
-! nhmg_join 2 2 dkji 1111  cA*.nc  matrix coefficients
+! nhmg_join 2 2 dkji 1111 cA*.nc  <----- matrix coefficients
 !
 !--------------------------------------------------------------------------
 !- Nicolas.Grima@univ-brest.fr january 2017
