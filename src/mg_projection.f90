@@ -14,224 +14,38 @@ module mg_projection
 contains
   !-------------------------------------------------------------------------     
   subroutine set_rhs(u,v,w)
-
+    
     real(kind=rp), dimension(:,:,:), pointer, intent(in) :: u,v,w
 
     integer(kind=ip):: k,j,i
     integer(kind=ip):: nx,ny,nz
 
-    real(kind=rp) :: gamma
-    real(kind=rp), dimension(:,:)  , pointer :: dx,dy
-    real(kind=rp), dimension(:,:),   pointer :: dxu,dyv
-    real(kind=rp), dimension(:,:,:), pointer :: dzw
-    real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
-    real(kind=rp), dimension(:,:),   pointer :: Arz
-    real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
-    real(kind=rp), dimension(:,:,:), pointer :: alpha
-    real(kind=rp), dimension(:,:)  , pointer :: beta
-    real(kind=rp), dimension(:,:,:), pointer :: uf,vf,wf
-    real(kind=rp), dimension(:,:,:), pointer :: rhs
+    real(kind=rp), dimension(:,:)  ,pointer :: dxu,dyv
+    real(kind=rp), dimension(:,:,:),pointer :: rhs
 
     if (myrank==0) write(*,*)'   - set rhs:'
-
+    
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
 
-    dx    => grid(1)%dx    !
-    dy    => grid(1)%dy    !
-    dxu   => grid(1)%dxu   !
-    dyv   => grid(1)%dyv   !
-    dzw   => grid(1)%dzw   !
-    Arx   => grid(1)%Arx   !
-    Ary   => grid(1)%Ary   !
-    Arz   => grid(1)%Arz   !
-    alpha => grid(1)%alpha !
-    beta  => grid(1)%beta  !
-    zxdy  => grid(1)%zxdy  !
-    zydx  => grid(1)%zydx  !
+    dxu => grid(1)%dxu
+    dyv => grid(1)%dyv
 
     rhs => grid(1)%b
     rhs(:,:,:) = zero
-
-    !- UF -!
-
-    uf => grid(1)%dummy3Dnz
-    uf(:,:,:) = zero
-
-    k = 1
-    do i = 1,nx+1  
-       do j = 1,ny 
-
-          gamma = one - qrt * ( &
-               (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
-               (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
-
-          uf(k,j,i) = gamma * Arx(k,j,i) * u(k,j,i) &
-               - qrt * ( &
-               + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * w(k+1,j,i  ) &
-               + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) )  &
-               - beta(j,i-1)   * dyv(j  ,i-1)   * v(k,j  ,i-1) &
-               - beta(j,i-1)   * dyv(j+1,i-1)   * v(k,j+1,i-1) &
-               - beta(j,i  )   * dyv(j  ,i  )   * v(k,j  ,i  ) &
-               - beta(j,i  )   * dyv(j+1,i  )   * v(k,j+1,i  )
-
-       enddo
-    enddo
-
-    do i = 1,nx+1  
-       do j = 1,ny 
-          do k = 2,nz-1 
-
-             uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
-                  - qrt * ( &
-                  + zxdy(k,j,i  ) * dzw(k  ,j,i  ) * w(k  ,j,i  ) &
-                  + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * w(k+1,j,i  ) &
-                  + zxdy(k,j,i-1) * dzw(k  ,j,i-1) * w(k  ,j,i-1) &
-                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * w(k+1,j,i-1) )
-          enddo
-       enddo
-    enddo
-
-    do i = 1,nx+1  
-       do j = 1,ny 
-
-          uf(k,j,i) = Arx(k,j,i) * u(k,j,i) &
-               - qrt * ( &
-               + zxdy(k,j,i  ) *       dzw(k  ,j,i  ) * w(k  ,j,i  ) &
-               + zxdy(k,j,i  ) * two * dzw(k+1,j,i  ) * w(k+1,j,i  ) &
-               + zxdy(k,j,i-1) *       dzw(k  ,j,i-1) * w(k  ,j,i-1) &
-               + zxdy(k,j,i-1) * two * dzw(k+1,j,i-1) * w(k+1,j,i-1) )
-       enddo
-    enddo
-
+	
+    !! What comes into nhmg_solve are area integrated u,v,w.
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
-             rhs(k,j,i) = uf(k,j,i+1) - uf(k,j,i) 
+             rhs(k,j,i) = u(k,j,i+1) - u(k,j,i) &
+                        + v(k,j+1,i) - v(k,j,i) &
+                        + w(k+1,j,i) - w(k,j,i)
           enddo
        enddo
     enddo
-
-    uf => null()
-
-    !- VF -!
-
-    vf => grid(1)%dummy3Dnz
-    vf(:,:,:) = zero
-
-    k = 1
-    do i = 1,nx
-       do j = 1,ny+1
-
-          gamma = one - qrt * (  &
-               (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j  ,i  ) + &
-               (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
-
-          vf(k,j,i) = gamma * Ary(k,j,i) * v(k,j,i) &
-               - qrt * ( &
-               + zydx(k,j  ,i) * dzw(k+1,j  ,i) * w(k+1,j  ,i) &
-               + zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i) ) &
-               - beta(j-1,i)   * dxu(j-1,i  )   * u(k,j-1,i  ) &
-               - beta(j-1,i)   * dxu(j-1,i+1)   * u(k,j-1,i+1) &
-               - beta(j  ,i)   * dxu(j  ,i  )   * u(k,j  ,i  ) &
-               - beta(j  ,i)   * dxu(j  ,i+1)   * u(k,j  ,i+1)
-       enddo
-    enddo
-
-    do i = 1,nx
-       do j = 1,ny+1
-          do k = 2,nz-1
-
-             vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
-                  - qrt * ( &
-                  + zydx(k,j  ,i) * dzw(k  ,j  ,i) * w(k  ,j  ,i) &
-                  + zydx(k,j  ,i) * dzw(k+1,j  ,i) * w(k+1,j  ,i) &
-                  + zydx(k,j-1,i) * dzw(k  ,j-1,i) * w(k  ,j-1,i) &
-                  + zydx(k,j-1,i) * dzw(k+1,j-1,i) * w(k+1,j-1,i) )
-          enddo
-       enddo
-    enddo
-
-    k = nz
-    do i = 1,nx
-       do j = 1,ny+1
-
-          vf(k,j,i) = Ary(k,j,i) * v(k,j,i) &
-               - qrt * ( &
-               + zydx(k,j  ,i)       * dzw(k  ,j  ,i) * w(k  ,j  ,i) &
-               + zydx(k,j  ,i) * two * dzw(k+1,j  ,i) * w(k+1,j  ,i) &
-               + zydx(k,j-1,i)       * dzw(k  ,j-1,i) * w(k  ,j-1,i) &
-               + zydx(k,j-1,i) * two * dzw(k+1,j-1,i) * w(k+1,j-1,i) ) 
-       enddo
-    enddo
-
-    do i = 1,nx
-       do j = 1,ny 
-          do k = 1,nz
-             rhs(k,j,i) =  rhs(k,j,i) + vf(k,j+1,i) - vf(k,j,i)
-          enddo
-       enddo
-    enddo
-
-    vf => null()
-
-    !- WF -!
-
-    wf => grid(1)%dummy3Dnzp
-    wf(:,:,:) = zero
-
-    k = 1
-    do i = 1,nx
-       do j = 1,ny
-          wf(k,j,i) = zero
-       enddo
-    enddo
-
-    do i = 1,nx
-       do j = 1,ny
-          do k = 2,nz
-
-             wf(k,j,i) = hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * w(k,j,i) &
-                  - qrt * ( &
-                  + zxdy(k  ,j,i) * dxu(j,i  ) * u(k  ,j,i  ) &
-                  + zxdy(k  ,j,i) * dxu(j,i+1) * u(k  ,j,i+1) &
-                  + zxdy(k-1,j,i) * dxu(j,i  ) * u(k-1,j,i  ) &
-                  + zxdy(k-1,j,i) * dxu(j,i+1) * u(k-1,j,i+1) ) &
-                  - qrt * ( &
-                  + zydx(k  ,j,i) * dyv(j  ,i) * v(k  ,j  ,i) &
-                  + zydx(k  ,j,i) * dyv(j+1,i) * v(k  ,j+1,i) &
-                  + zydx(k-1,j,i) * dyv(j  ,i) * v(k-1,j  ,i) &
-                  + zydx(k-1,j,i) * dyv(j+1,i) * v(k-1,j+1,i) )
-          enddo
-       enddo
-    enddo
-
-    k = nz+1 
-    do i = 1,nx
-       do j = 1,ny
-
-          wf(k,j,i) = alpha(k-1,j,i) * Arz(j,i) * w(k,j,i) &
-               - hlf * ( &
-               + zxdy(k-1,j,i) * dxu(j,i  ) * u(k-1,j,i  ) &
-               + zxdy(k-1,j,i) * dxu(j,i+1) * u(k-1,j,i+1) ) &
-               - hlf * ( &
-               + zydx(k-1,j,i) * dyv(j  ,i) * v(k-1,j  ,i) &
-               + zydx(k-1,j,i) * dyv(j+1,i) * v(k-1,j+1,i) )
-
-       enddo
-    enddo
-
-    do i = 1,nx
-       do j = 1,ny 
-          do k = 1,nz
-             rhs(k,j,i) = rhs(k,j,i) + wf(k+1,j,i) - wf(k,j,i)
-          enddo
-       enddo
-    enddo
-
-    wf => null()
-
+    
   end subroutine set_rhs
 
   !-----------------------------------------------------------------------------------
@@ -446,61 +260,271 @@ contains
   end subroutine set_matrices
 
   !-------------------------------------------------------------------------     
-  subroutine correct_uvw(u,v,w)
+  subroutine correct_uvw(u,v,w,dt,rufrc,rvfrc)
+
+    !! u,v,w are fluxes, the correction is T*grad(p)
 
     real(kind=rp), dimension(:,:,:), pointer, intent(inout) :: u,v,w
+    real(kind=rp),                  optional, intent(in) :: dt
+    real(kind=rp), dimension(:,:),  optional, pointer, intent(inout) :: rufrc,rvfrc
 
     integer(kind=ip):: k, j, i
     integer(kind=ip):: nx, ny, nz
 
+    real(kind=rp) :: gamma
+    real(kind=rp), dimension(:,:)  , pointer :: dx,dy
     real(kind=rp), dimension(:,:)  , pointer :: dxu,dyv
+    real(kind=rp), dimension(:,:)  , pointer :: Arz
     real(kind=rp), dimension(:,:,:), pointer :: dzw
+    real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
+    real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
+    real(kind=rp), dimension(:,:,:), pointer :: alpha
+    real(kind=rp), dimension(:,:)  , pointer :: beta
+    real(kind=rp), dimension(:,:,:), pointer :: du,dv
     real(kind=rp), dimension(:,:,:), pointer :: p
+
+    real(kind=rp), dimension(:,:,:), allocatable :: px,py,pz
+
+    if (myrank==0) write(*,*)'   - Add NH pressure gradient to u,v,w:'
 
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
 
-    dxu => grid(1)%dxu
-    dyv => grid(1)%dyv
-    dzw => grid(1)%dzw
+    dx    => grid(1)%dx    !
+    dy    => grid(1)%dy    !
+    dxu   => grid(1)%dxu   !
+    dyv   => grid(1)%dyv   !
+    dzw   => grid(1)%dzw   !
+    Arx   => grid(1)%Arx   !
+    Ary   => grid(1)%Ary   !
+    Arz   => grid(1)%Arz   !
+    alpha => grid(1)%alpha !
+    beta  => grid(1)%beta  !
+    zxdy  => grid(1)%zxdy  !
+    zydx  => grid(1)%zydx  !
+    p     => grid(1)%p
 
-    if (myrank==0) write(*,*)'   - correct u,v,w:'
+    allocate(px(  nz,0:ny+1,  nx+1)) 
+    allocate(py(  nz,  ny+1,0:nx+1))
+    allocate(pz(nz+1,0:ny+1,0:nx+1))
 
-    !! Correct
-    p => grid(1)%p
+!---Get pressure gradients ---
 
     do i = 1,nx+1
-        do j = 1,ny
+        do j = 0,ny+1
           do k = 1,nz
-             u(k,j,i) = u(k,j,i) - one / dxu(j,i) * (p(k,j,i)-p(k,j,i-1))
+             px(k,j,i) = -one / dxu(j,i) * (p(k,j,i)-p(k,j,i-1))
           enddo
        enddo
     enddo
 
-    do i = 1,nx
+    do i = 0,nx+1
        do j = 1,ny+1 
           do k = 1,nz
-             v(k,j,i) = v(k,j,i) - one / dyv(j,i) * (p(k,j,i)-p(k,j-1,i))
+             py(k,j,i) = -one / dyv(j,i) * (p(k,j,i)-p(k,j-1,i))
           enddo
        enddo
     enddo
 
-    do i = 1,nx
-       do j = 1,ny
+    do i = 0,nx+1
+       do j = 0,ny+1
 
-          k = 1 !bottom
+          k = 1 !bottom pressure gradient is undefined
+          pz(k,j,i) = 9999999999.
 
           do k = 2,nz !interior levels
-             w(k,j,i) = w(k,j,i) - one / dzw(k,j,i) * (p(k,j,i)-p(k-1,j,i))
+             pz(k,j,i) = -one / dzw(k,j,i) * (p(k,j,i)-p(k-1,j,i))
           enddo
 
           k = nz+1 !surface
-          w(k,j,i) = w(k,j,i) - one / dzw(k,j,i) * (-p(k-1,j,i))
+          pz(k,j,i) =  -one / dzw(k,j,i) * (-p(k-1,j,i))
 
        enddo
     enddo
+
+!---Use pressure gradients to correct fluxes
+
+!! Correct U - There is an extra multiplication with dxu here to go back to the volume integrated quant
+
+    du => grid(1)%dummy3dnz
+
+    k = 1
+    do i = 1,nx+1  
+       do j = 1,ny 
+
+          gamma = one - qrt * ( &
+               (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
+               (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
+
+          du(k,j,i) = gamma * Arx(k,j,i) * px(k,j,i) &
+               - qrt * ( &
+               + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * pz(k+1,j,i  ) &
+               + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )  &
+               - beta(j,i-1)   * dyv(j  ,i-1)   * py(k,j  ,i-1) &
+               - beta(j,i-1)   * dyv(j+1,i-1)   * py(k,j+1,i-1) &
+               - beta(j,i  )   * dyv(j  ,i  )   * py(k,j  ,i  ) &
+               - beta(j,i  )   * dyv(j+1,i  )   * py(k,j+1,i  )
+
+       enddo
+    enddo
+
+    do i = 1,nx+1  
+       do j = 1,ny 
+          do k = 2,nz-1 
+
+             du(k,j,i) = Arx(k,j,i) * px(k,j,i) &
+                  - qrt * ( &
+                  + zxdy(k,j,i  ) * dzw(k  ,j,i  ) * pz(k  ,j,i  ) &
+                  + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * pz(k+1,j,i  ) &
+                  + zxdy(k,j,i-1) * dzw(k  ,j,i-1) * pz(k  ,j,i-1) &
+                  + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )
+          enddo
+       enddo
+    enddo
+
+    k = nz
+    do i = 1,nx+1  
+       do j = 1,ny 
+
+          du(k,j,i) = Arx(k,j,i) * px(k,j,i) &
+               - qrt * ( &
+               + zxdy(k,j,i  ) *       dzw(k  ,j,i  ) * pz(k  ,j,i  ) &
+               + zxdy(k,j,i  ) * two * dzw(k+1,j,i  ) * pz(k+1,j,i  ) &
+               + zxdy(k,j,i-1) *       dzw(k  ,j,i-1) * pz(k  ,j,i-1) &
+               + zxdy(k,j,i-1) * two * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )
+       enddo
+    enddo
+
+    do i = 1,nx+1  
+       do j = 1,ny 
+          do k = 1,nz
+             u(k,j,i) = u(k,j,i) + du(k,j,i)
+          end do
+       end do
+    end do
+
+    if ((present(rufrc)).and.(present(rvfrc))) then
+    do i = 1,nx+1  
+       do j = 1,ny 
+          do k = 1,nz
+             rufrc(j,i) = rufrc(j,i) + dxu(j,i)*du(k,j,i)/dt
+          end do
+       end do
+    end do
+    end if
+
+!! Correct V - There is an extra multiplication with dxu here to go back to the volume integrated quant
+
+    dv => grid(1)%dummy3dnz
+
+    k = 1
+    do i = 1,nx
+       do j = 1,ny+1
+
+          gamma = one - qrt * (  &
+               (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j  ,i  ) + &
+               (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
+
+          dv(k,j,i) = gamma * Ary(k,j,i) * py(k,j,i) &
+               - qrt * ( &
+               + zydx(k,j  ,i) * dzw(k+1,j  ,i) * pz(k+1,j  ,i) &
+               + zydx(k,j-1,i) * dzw(k+1,j-1,i) * pz(k+1,j-1,i) ) &
+               - beta(j-1,i)   * dxu(j-1,i  )   * px(k,j-1,i  ) &
+               - beta(j-1,i)   * dxu(j-1,i+1)   * px(k,j-1,i+1) &
+               - beta(j  ,i)   * dxu(j  ,i  )   * px(k,j  ,i  ) &
+               - beta(j  ,i)   * dxu(j  ,i+1)   * px(k,j  ,i+1)
+       enddo
+    enddo
+
+    do i = 1,nx
+       do j = 1,ny+1
+          do k = 2,nz-1
+
+             dv(k,j,i) =  Ary(k,j,i) * py(k,j,i) &
+                  - qrt * ( &
+                  + zydx(k,j  ,i) * dzw(k  ,j  ,i) * pz(k  ,j  ,i) &
+                  + zydx(k,j  ,i) * dzw(k+1,j  ,i) * pz(k+1,j  ,i) &
+                  + zydx(k,j-1,i) * dzw(k  ,j-1,i) * pz(k  ,j-1,i) &
+                  + zydx(k,j-1,i) * dzw(k+1,j-1,i) * pz(k+1,j-1,i) )
+          enddo
+       enddo
+    enddo
+
+    k = nz
+    do i = 1,nx
+       do j = 1,ny+1
+
+          dv(k,j,i) = Ary(k,j,i) * py(k,j,i) &
+               - qrt * ( &
+               + zydx(k,j  ,i)       * dzw(k  ,j  ,i) * pz(k  ,j  ,i) &
+               + zydx(k,j  ,i) * two * dzw(k+1,j  ,i) * pz(k+1,j  ,i) &
+               + zydx(k,j-1,i)       * dzw(k  ,j-1,i) * pz(k  ,j-1,i) &
+               + zydx(k,j-1,i) * two * dzw(k+1,j-1,i) * pz(k+1,j-1,i) ) 
+       enddo
+    enddo
+
+    do i = 1,nx
+       do j = 1,ny+1
+          do k = 1,nz
+             v(k,j,i) = v(k,j,i) + dv(k,j,i)
+          end do
+       end do
+    end do
+
+    if ((present(rufrc)).and.(present(rvfrc))) then
+    do i = 1,nx
+       do j = 1,ny+1
+          do k = 1,nz
+             rvfrc(j,i) = rvfrc(j,i) + dyv(j,i)*dv(k,j,i)/dt
+          end do
+       end do
+    end do
+    end if
+
+!! Correct W - No multiplication with dz because W stays in flux form instead of Volume
+
+    do i = 1,nx
+       do j = 1,ny
+          do k = 2,nz
+
+             w(k,j,i) = w(k,j,i) + hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * pz(k,j,i) &
+                  - qrt * ( &
+                  + zxdy(k  ,j,i) * dxu(j,i  ) * px(k  ,j,i  ) &
+                  + zxdy(k  ,j,i) * dxu(j,i+1) * px(k  ,j,i+1) &
+                  + zxdy(k-1,j,i) * dxu(j,i  ) * px(k-1,j,i  ) &
+                  + zxdy(k-1,j,i) * dxu(j,i+1) * px(k-1,j,i+1) ) &
+                  - qrt * ( &
+                  + zydx(k  ,j,i) * dyv(j  ,i) * py(k  ,j  ,i) &
+                  + zydx(k  ,j,i) * dyv(j+1,i) * py(k  ,j+1,i) &
+                  + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
+                  + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
+          enddo
+       enddo
+    enddo
+
+    k = nz+1 
+    do i = 1,nx
+       do j = 1,ny
+
+          w(k,j,i) = w(k,j,i) + alpha(k-1,j,i) * Arz(j,i) * pz(k,j,i) &
+               - hlf * ( &
+               + zxdy(k-1,j,i) * dxu(j,i  ) * px(k-1,j,i  ) &
+               + zxdy(k-1,j,i) * dxu(j,i+1) * px(k-1,j,i+1) ) &
+               - hlf * ( &
+               + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
+               + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
+
+       enddo
+    enddo
+
+!---------------------------
+
+    deallocate(px)
+    deallocate(py)
+    deallocate(pz)
 
   end subroutine correct_uvw
 
 end module mg_projection
+

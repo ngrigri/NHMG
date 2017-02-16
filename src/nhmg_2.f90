@@ -361,6 +361,81 @@ contains
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
+  subroutine nhmg_comp_rw(nx,ny,nz,rua,rva,rwa)
+
+    integer(kind=ip), intent(in) :: nx, ny, nz
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: rua
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: rva
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(out):: rwa
+
+    real(kind=rp), dimension(:,:,:), pointer :: ru,rv,rw
+
+!!! dirty reshape arrays indexing ijk -> kji !!!
+    real(kind=rp), dimension(:,:,:), allocatable, target :: rub,rvb
+!!! dirty reshape arrays indexing ijk -> kji !!!
+
+    real(kind=rp), dimension(:,:)  , pointer :: dx,dy
+    real(kind=rp), dimension(:,:,:), pointer :: dz
+    real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
+
+    real(kind=rp),dimension(nz) :: dzdhp
+    integer(kind=ip) :: i,j,k
+
+    dx    => grid(1)%dx
+    dy    => grid(1)%dy
+    dz    => grid(1)%dz
+    zxdy  => grid(1)%zxdy
+    zydx  => grid(1)%zydx
+
+!!! dirty reshape arrays indexing ijk -> kji !!!
+    allocate(rub(1:nz,0:ny+1,0:nx+1))
+    allocate(rvb(1:nz,0:ny+1,0:nx+1))
+    do i = 1,nx+1
+      do j = 0,ny+1
+        do k = 1,nz
+          rub(k,j,i) = rua(i,j,k)
+        enddo
+      enddo
+    enddo
+    do i = 0,nx+1
+      do j = 1,ny+1
+        do k = 1,nz
+           rvb(k,j,i) = rva(i,j,k)
+        enddo
+      enddo
+    enddo
+    ru => rub
+    rv => rvb
+    call fill_halo(1,ru)
+    call fill_halo(1,rv)
+!!! 
+    rw => rwa
+
+    do j = 1,nx
+      do i= 1,ny
+        do k = 2,nz
+           dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(                        &
+                          ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))   &
+                        + ru(k,j,i+1)/(dz(k,j,i) + dz(k,j,i+1)) ) &
+                    + zydx(k,j,i)/dx(j,i)*(                        &
+                          rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))   &
+                        + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
+          enddo
+          do k = 2,nz
+            rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) )
+          enddo
+          rw(i,j,nz+1) =  - dzdhp(nz)
+        enddo 
+      enddo 
+
+!!! dirty reshape arrays indexing kji -> ijk !!!
+    deallocate(rub)
+    deallocate(rvb)
+!!! dirty reshape arrays indexing kji -> ijk !!!
+
+  end subroutine nhmg_comp_rw
+  !--------------------------------------------------------------
   subroutine nhmg_fluxes(nx,ny,nz,ua,va,wa,ufa,vfa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
@@ -475,7 +550,7 @@ contains
     deallocate(vfb)
 !!! dirty reshape arrays indexing kji -> ijk !!!
 
-    call toc(1,'nhmg_fluxes')	
+    call toc(1,'nhmg_fluxes')
  
   end subroutine nhmg_fluxes
 
@@ -832,28 +907,22 @@ contains
   end subroutine nhmg_coupling
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(nx,ny,nz,ua,va,wa,rua,rva,rwa,dt,rufrca,rvfrca)
+  subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rufrca,rvfrca)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
     real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, optional, intent(in) :: rua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, optional, intent(in) :: rva
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, optional, intent(in) :: rwa
-    real(kind=rp),                                          optional, intent(in) :: dt
-    real(kind=rp), dimension(1:nx+1,0:ny+1),        target, optional, intent(out):: rufrca
-    real(kind=rp), dimension(0:nx+1,1:ny+1),        target, optional, intent(out):: rvfrca
+    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
+    real(kind=rp),                                   optional, intent(in) :: dt
+    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
+    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
-    real(kind=rp), dimension(:,:,:), pointer :: ru,rv,rw
     real(kind=rp), dimension(:,:)  , pointer :: rufrc,rvfrc
 
 !!! dirty reshape arrays indexing
     real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
-    real(kind=rp), dimension(:,:,:), allocatable, target :: rub,rvb,rwb
-    real(kind=rp), dimension(:,:,:), allocatable, target :: ruc,rvc
     real(kind=rp), dimension(:,:),   allocatable, target :: rufrcb,rvfrcb
     integer(kind=ip) :: i,j,k
 !!! 
@@ -865,7 +934,7 @@ contains
 
     call tic(1,'nhmg_solve')
 
-!!! dirty reshape arrays indexing ijk -> kji !!!
+    !!! dirty reshape arrays indexing ijk -> kji !!!
     allocate(ub(1:nz  ,0:ny+1,1:nx+1))
     allocate(vb(1:nz  ,1:ny+1,0:nx+1))
     allocate(wb(1:nz+1,0:ny+1,0:nx+1))
@@ -893,7 +962,7 @@ contains
     u => ub
     v => vb
     w => wb
-!!!
+    !!!
 
     !u => ua
     !v => va
@@ -927,7 +996,32 @@ contains
     endif
 
     !- step 3 -
-    call correct_uvw(u,v,w)
+    if ((present(rufrca)).and.(present(rvfrca))) then
+
+       !!! dirty reshape arrays indexing ijk -> kji !!!
+       allocate(rufrcb(0:ny+1,1:nx+1))
+       allocate(rvfrcb(1:ny+1,0:nx+1))
+       do i = 1,nx+1
+          do j = 0,ny+1
+             rufrcb(j,i) = rufrca(i,j)
+          enddo
+       enddo
+       do i = 0,nx+1
+          do j = 1,ny+1
+             rvfrcb(j,i) = rvfrca(i,j)
+          enddo
+       enddo
+       rufrc => rufrcb
+       rvfrc => rvfrcb
+       !!!
+
+       call correct_uvw(u,v,w,dt,rufrc,rvfrc)
+      
+    else
+
+       call correct_uvw(u,v,w)
+
+    endif
 
 !!$    if (check_output) then
 !!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
@@ -937,113 +1031,15 @@ contains
 !!$       !endif
 !!$    endif
 
-    !- check - non-divergence of the projected u,v,w
-    !call set_rhs(u,v,w)
-    !if (check_output) then
-    !   !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-    !      call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-    !   !endif
-    !endif
-
-    !- check- the projected u,v,w do not work
-    ! ...
-
-    !- step 4 - bc2bt coupling
-    if ((present(rua)).and.(present(rva)).and.(present(rwa))) then
-
-       !!! dirty reshape arrays indexing ijk -> kji !!!
-       allocate(rub(1:nz  ,0:ny+1,1:nx+1))
-       allocate(rvb(1:nz  ,1:ny+1,0:nx+1))
-       allocate(rwb(1:nz+1,0:ny+1,0:nx+1))
-       do i = 1,nx+1
-          do j = 0,ny+1
-             do k = 1,nz
-                rub(k,j,i) = rua(i,j,k)
-             enddo
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 1,ny+1
-             do k = 1,nz
-                rvb(k,j,i) = rva(i,j,k)
-             enddo
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 0,ny+1
-             do k = 1,nz+1
-                rwb(k,j,i) = rwa(i,j,k)
-             enddo
-          enddo
-       enddo
-       ! dirty : define ruc and rvc to fill_halo
-       allocate(ruc(1:nz  ,0:ny+1,0:nx+1))
-       allocate(rvc(1:nz  ,0:ny+1,0:nx+1))
-       do i = 1,nx+1
-          do j = 0,ny+1
-             do k = 1,nz
-                ruc(k,j,i) = rub(k,j,i)
-             enddo
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 1,ny+1
-             do k = 1,nz
-                rvc(k,j,i) = rvb(k,j,i)
-             enddo
-          enddo
-       enddo
-       ru => ruc
-       rv => rvc
-       rw => rwb
-       call fill_halo(1,ru)
-       call fill_halo(1,rv)
-       call fill_halo(1,rw)
-       do i = 1,nx+1
-          do j = 0,ny+1
-             do k = 1,nz
-                rub(k,j,i) = ru(k,j,i)
-             enddo
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 1,ny+1
-             do k = 1,nz
-                rvb(k,j,i) = rv(k,j,i)
-             enddo
-          enddo
-       enddo
-       if (associated(ru)) ru => null()
-       if (associated(rv)) rv => null()
-       deallocate(ruc)
-       deallocate(rvc)
-       ru => rub
-       rv => rvb
-       !
-       allocate(rufrcb(0:ny+1,1:nx+1))
-       allocate(rvfrcb(1:ny+1,0:nx+1))
-       rufrc => rufrcb
-       rvfrc => rvfrcb
-       !!! 
-   
-!!$       if (check_output) then
-!!$          !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$             call write_netcdf(ru,vname='ruin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$             call write_netcdf(rv,vname='rvin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$             call write_netcdf(rw,vname='rwin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          !endif
-!!$       endif
-
-       call bc2bt_coupling(ru,rv,rw,dt,rufrc,rvfrc)
-
-!!$       if (check_output) then
-!!$          !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$             call write_netcdf(rufrc,vname='rufrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$             call write_netcdf(rvfrc,vname='rvfrc',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          !endif
-!!$       endif
-
+    !- check step - non-divergence of the projected u,v,w
+    call set_rhs(u,v,w)
+    if (check_output) then
+       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+          call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       !endif
     endif
+
+    !- check step - the projected u,v,w do not work
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
     do i = 1,nx+1
@@ -1073,7 +1069,7 @@ contains
     if (associated(v)) v => null()
     if (associated(w)) w => null()
 
-    if ((present(rua)).and.(present(rva))) then
+    if ((present(rufrca)).and.(present(rvfrca))) then
 !!! dirty reshape arrays indexing kji -> ijk !!!
     do i = 1,nx+1
        do j = 0,ny+1      
@@ -1096,10 +1092,7 @@ contains
     deallocate(ub)
     deallocate(vb)
     deallocate(wb)
-    if ((present(rua)).and.(present(rva))) then
-    deallocate(rub)
-    deallocate(rvb)
-    deallocate(rwb)
+    if ((present(rufrca)).and.(present(rvfrca))) then
     deallocate(rufrcb)
     deallocate(rvfrcb)
     endif
@@ -1121,3 +1114,4 @@ contains
   end subroutine nhmg_clean
 
 end module nhmg
+
