@@ -412,8 +412,8 @@ contains
 !!! 
     rw => rwa
 
-    do j = 1,nx
-      do i= 1,ny
+    do i = 1,nx
+      do j = 1,ny
         do k = 2,nz
            dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(                        &
                           ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))   &
