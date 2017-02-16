@@ -20,7 +20,7 @@ module nhmg
 contains
 
   !--------------------------------------------------------------
-  subroutine nhmg_write_pred_in(nx,ny,nz,Hzba,Hza,Hzha,uba,vba,wba,ua,va,wa)
+  subroutine nhmg_write_pred_in(nx,ny,nz,Hzba,Hza,Hzha,uba,vba,wba,ua,va,wa,rua,rva,rwa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
@@ -33,8 +33,11 @@ contains
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: ua
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: va
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: rua
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: rva
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: rwa
 
-    real(kind=rp), dimension(:,:,:), pointer :: Hzb,Hz,Hzh,ub,vb,wb,u,v,w
+    real(kind=rp), dimension(:,:,:), pointer :: Hzb,Hz,Hzh,ub,vb,wb,u,v,w,ru,rv,rw
 
     integer(kind=ip), save :: iter_write_pred_in=0
     iter_write_pred_in = iter_write_pred_in + 1
@@ -48,6 +51,9 @@ contains
     u => ua
     v => va
     w => wa
+    ru => rua
+    rv => rva
+    rw => rwa
 
     call write_netcdf(Hzb,vname='Hzb',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
     call write_netcdf(Hz,vname='Hz',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
@@ -58,6 +64,9 @@ contains
     call write_netcdf(u,vname='u',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
     call write_netcdf(v,vname='v',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
     call write_netcdf(w,vname='w',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
+    call write_netcdf(ru,vname='ru',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
+    call write_netcdf(rv,vname='rv',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
+    call write_netcdf(rw,vname='rw',netcdf_file_name='wrt_pred_in.nc',rank=myrank,iter=iter_write_pred_in)
 
   end subroutine nhmg_write_pred_in
 
@@ -413,21 +422,21 @@ contains
     rw => rwa
 
     do i = 1,nx
-      do j = 1,ny
-        do k = 2,nz
-           dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(                        &
-                          ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))   &
-                        + ru(k,j,i+1)/(dz(k,j,i) + dz(k,j,i+1)) ) &
-                    + zydx(k,j,i)/dx(j,i)*(                        &
-                          rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))   &
-                        + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
+       do j = 1,ny
+          do k = 1,nz
+             dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(               &
+                  ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))     &
+                  + ru(k,j,i+1)/(dz(k,j,i) + dz(k,j,i+1)) ) &
+                  + zydx(k,j,i)/dx(j,i)*(                   &
+                  rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))     &
+                  + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
           enddo
           do k = 2,nz
-            rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) )
+             rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) )
           enddo
           rw(i,j,nz+1) =  - dzdhp(nz)
-        enddo 
-      enddo 
+       enddo
+    enddo
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
     deallocate(rub)
