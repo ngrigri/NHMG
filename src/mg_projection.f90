@@ -345,7 +345,7 @@ contains
 
 !---Use pressure gradients to correct fluxes
 
-!! Correct U - There is an extra multiplication with dxu here to go back to the volume integrated quant
+!! Correct U -
 
     du => grid(1)%dummy3dnz
 
@@ -414,7 +414,7 @@ contains
     end do
     end if
 
-!! Correct V - There is an extra multiplication with dxu here to go back to the volume integrated quant
+!! Correct V - 
 
     dv => grid(1)%dummy3dnz
 
