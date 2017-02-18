@@ -290,7 +290,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: alpha
     real(kind=rp), dimension(:,:)  , pointer :: beta
-    real(kind=rp), dimension(:,:,:), pointer :: du,dv
+    real(kind=rp), dimension(:,:,:), pointer :: du,dv,dw
     real(kind=rp), dimension(:,:,:), pointer :: p
 
     real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
@@ -360,7 +360,7 @@ contains
 
 !! Correct U -
 
-    du => grid(1)%dummy3dnz
+    du => grid(1)%du!dummy3dnz
 
     do i = 1,nx+1  
        do j = 1,ny 
@@ -410,7 +410,7 @@ contains
 
 !! Correct V - 
 
-    dv => grid(1)%dummy3dnz
+    dv => grid(1)%dv!ummy3dnz
 
     do i = 1,nx
        do j = 1,ny+1
@@ -459,11 +459,13 @@ contains
 
 !! Correct W - No multiplication with dz because W stays in flux form instead of Volume
 
+    dw => grid(1)%dw!ummy3dnz
+
     do i = 1,nx
        do j = 1,ny
           do k = 2,nz
 
-             w(k,j,i) = w(k,j,i) + hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * pz(k,j,i) &
+             dw(k,j,i) =  hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * pz(k,j,i) &
                   - qrt * ( &
                   + zxdy(k  ,j,i) * dxu(j,i  ) * px(k  ,j,i  ) &
                   + zxdy(k  ,j,i) * dxu(j,i+1) * px(k  ,j,i+1) &
@@ -474,19 +476,22 @@ contains
                   + zydx(k  ,j,i) * dyv(j+1,i) * py(k  ,j+1,i) &
                   + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                   + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
+             w(k,j,i) = w(k,j,i) + dw(k,j,i)
           enddo
           k = nz+1 
-          w(k,j,i) = w(k,j,i) + alpha(k-1,j,i) * Arz(j,i) * pz(k,j,i) &
+          dw(k,j,i) = alpha(k-1,j,i) * Arz(j,i) * pz(k,j,i) &
                - hlf * ( &
                + zxdy(k-1,j,i) * dxu(j,i  ) * px(k-1,j,i  ) &
                + zxdy(k-1,j,i) * dxu(j,i+1) * px(k-1,j,i+1) ) &
                - hlf * ( &
                + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
+          w(k,j,i) = w(k,j,i) + dw(k,j,i)
 
        enddo
     enddo
 
+    if (myrank==0) write(*,*)'   - Add NH pressure gradient DONE'
 
 !---------------------------
 

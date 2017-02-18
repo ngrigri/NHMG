@@ -30,7 +30,7 @@ contains
 
     ! NOT ALL OPTIMAL, do we really need to set to ZERO?
     ! isn't there a smarter way?
-    grid(1)%p(:,:,:) = zero
+!    grid(1)%p(:,:,:) = zero
 
     p  => grid(1)%p
     b  => grid(1)%b
