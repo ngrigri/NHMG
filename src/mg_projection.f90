@@ -13,15 +13,15 @@ module mg_projection
 
 contains
   !-------------------------------------------------------------------------     
-  subroutine set_rhs(u,v,w)
+  subroutine set_rhs!(u,v,w)
     
-    real(kind=rp), dimension(:,:,:), pointer, intent(in) :: u,v,w
+!    real(kind=rp), dimension(:,:,:), pointer, intent(in) :: u,v,w
 
     integer(kind=ip):: k,j,i
     integer(kind=ip):: nx,ny,nz
 
     real(kind=rp), dimension(:,:)  ,pointer :: dxu,dyv
-    real(kind=rp), dimension(:,:,:),pointer :: rhs
+    real(kind=rp), dimension(:,:,:),pointer :: rhs,u,v,w
 
     if (myrank==0) write(*,*)'   - set rhs:'
     
@@ -31,12 +31,20 @@ contains
 
     dxu => grid(1)%dxu
     dyv => grid(1)%dyv
+    
+    u => grid(1)%ub
+    v => grid(1)%vb
+    w => grid(1)%wb
 
     rhs => grid(1)%b
-    rhs(:,:,:) = zero
+    ! Changed this statement => not at all optimal
+    ! EXCESSIVE data movement
+    !rhs(:,:,:) = zero
 	
     !! What comes into nhmg_solve are area integrated u,v,w.
+    rhs(:,:,0)=0.
     do i = 1,nx
+       rhs(:,0,i)=0.
        do j = 1,ny 
           do k = 1,nz
              rhs(k,j,i) = u(k,j,i+1) - u(k,j,i) &
@@ -44,7 +52,9 @@ contains
                         + w(k+1,j,i) - w(k,j,i)
           enddo
        enddo
+       rhs(:,ny+1,i)=0.
     enddo
+    rhs(:,:,nx+1)=0.
     
   end subroutine set_rhs
 

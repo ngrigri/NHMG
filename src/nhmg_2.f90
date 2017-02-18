@@ -921,9 +921,6 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
     real(kind=rp), dimension(:,:)  , pointer :: rufrc,rvfrc
 
-!!! dirty reshape arrays indexing
-    real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
-    real(kind=rp), dimension(:,:),   allocatable, target :: rufrcb,rvfrcb
     integer(kind=ip) :: i,j,k
 !!! 
 
@@ -935,33 +932,34 @@ contains
     call tic(1,'nhmg_solve')
 
     !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
-    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
-    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
+!    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
+!    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
+!    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
+    u => grid(1)%ub
+    v => grid(1)%vb
+    w => grid(1)%wb
+
     do i = 1,nx+1
       do j = 0,ny+1
         do k = 1,nz
-          ub(k,j,i) = ua(i,j,k)
+          u(k,j,i) = ua(i,j,k)
         enddo
       enddo
     enddo
     do i = 0,nx+1
       do j = 1,ny+1
         do k = 1,nz
-          vb(k,j,i) = va(i,j,k)
+          v(k,j,i) = va(i,j,k)
         enddo
       enddo
     enddo
     do i = 0,nx+1
        do j = 0,ny+1
           do k = 1,nz+1
-             wb(k,j,i) = wa(i,j,k)
+             w(k,j,i) = wa(i,j,k)
           enddo
        enddo
     enddo
-    u => ub
-    v => vb
-    w => wb
     !!!
 
     !u => ua
@@ -977,7 +975,7 @@ contains
 !!$    endif
 
     !- step 1 - 
-    call set_rhs(u,v,w)
+    call set_rhs()!u,v,w)
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
@@ -999,20 +997,20 @@ contains
     if ((present(rufrca)).and.(present(rvfrca))) then
 
        !!! dirty reshape arrays indexing ijk -> kji !!!
-       allocate(rufrcb(0:ny+1,1:nx+1))
-       allocate(rvfrcb(1:ny+1,0:nx+1))
+!       allocate(rufrcb(0:ny+1,1:nx+1))
+!       allocate(rvfrcb(1:ny+1,0:nx+1))
+       rufrc => grid(1)%rufrcb
+       rvfrc => grid(1)%rvfrcb
        do i = 1,nx+1
           do j = 0,ny+1
-             rufrcb(j,i) = rufrca(i,j)
+             rufrc(j,i) = rufrca(i,j)
           enddo
        enddo
        do i = 0,nx+1
           do j = 1,ny+1
-             rvfrcb(j,i) = rvfrca(i,j)
+             rvfrc(j,i) = rvfrca(i,j)
           enddo
        enddo
-       rufrc => rufrcb
-       rvfrc => rvfrcb
        !!!
 
        call correct_uvw(u,v,w,dt,rufrc,rvfrc)
@@ -1032,8 +1030,8 @@ contains
 !!$    endif
 
     !- check step - non-divergence of the projected u,v,w
-    call set_rhs(u,v,w)
     if (check_output) then
+       call set_rhs()!u,v,w)
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
           call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
@@ -1065,9 +1063,9 @@ contains
     enddo
 !!!
 
-    if (associated(u)) u => null()
-    if (associated(v)) v => null()
-    if (associated(w)) w => null()
+!    if (associated(u)) u => null()
+!    if (associated(v)) v => null()
+!    if (associated(w)) w => null()
 
     if ((present(rufrca)).and.(present(rvfrca))) then
 !!! dirty reshape arrays indexing kji -> ijk !!!
@@ -1083,19 +1081,19 @@ contains
     enddo
 !!!
 
-    if (associated(rufrc)) rufrc => null()
-    if (associated(rvfrc)) rvfrc => null()
+!    if (associated(rufrc)) rufrc => null()
+!    if (associated(rvfrc)) rvfrc => null()
 
     endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(ub)
-    deallocate(vb)
-    deallocate(wb)
-    if ((present(rufrca)).and.(present(rvfrca))) then
-    deallocate(rufrcb)
-    deallocate(rvfrcb)
-    endif
+!    deallocate(ub)
+!    deallocate(vb)
+!    deallocate(wb)
+!    if ((present(rufrca)).and.(present(rvfrca))) then
+!    deallocate(rufrcb)
+!    deallocate(rvfrcb)
+!    endif
 !!!
 
     call toc(1,'nhmg_solve')
