@@ -76,6 +76,9 @@ module mg_grids
      real(kind=rp),dimension(:,:,:)  ,pointer :: wb => null()
      real(kind=rp),dimension(:,:)    ,pointer :: rufrcb => null()
      real(kind=rp),dimension(:,:)    ,pointer :: rvfrcb => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: px => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: py => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: pz => null()
   end type grid_type
 
   !-
@@ -228,6 +231,9 @@ contains
     allocate(grid(lev)%wb(1:nz+1,0:ny+1,0:nx+1))
     allocate(grid(lev)%rufrcb(0:ny+1,0:nx+1))
     allocate(grid(lev)%rvfrcb(0:ny+1,0:nx+1))
+    allocate(grid(lev)%px(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%py(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%pz(1:nz+1,0:ny+1,0:nx+1))
 
     do lev=1,nlevs ! 
        nx = grid(lev)%nx

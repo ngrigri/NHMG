@@ -293,7 +293,7 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: du,dv
     real(kind=rp), dimension(:,:,:), pointer :: p
 
-    real(kind=rp), dimension(:,:,:), allocatable :: px,py,pz
+    real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
 
     if (myrank==0) write(*,*)'   - Add NH pressure gradient to u,v,w:'
 
@@ -315,9 +315,12 @@ contains
     zydx  => grid(1)%zydx  !
     p     => grid(1)%p
 
-    allocate(px(  nz,0:ny+1,  nx+1)) 
-    allocate(py(  nz,  ny+1,0:nx+1))
-    allocate(pz(nz+1,0:ny+1,0:nx+1))
+!    allocate(px(  nz,0:ny+1,  nx+1)) 
+!    allocate(py(  nz,  ny+1,0:nx+1))
+!    allocate(pz(nz+1,0:ny+1,0:nx+1))
+    px => grid(1)%px
+    py => grid(1)%py
+    pz => grid(1)%pz
 
 !---Get pressure gradients ---
 
@@ -530,9 +533,9 @@ contains
 
 !---------------------------
 
-    deallocate(px)
-    deallocate(py)
-    deallocate(pz)
+!    deallocate(px)
+!    deallocate(py)
+!    deallocate(pz)
 
   end subroutine correct_uvw
 
