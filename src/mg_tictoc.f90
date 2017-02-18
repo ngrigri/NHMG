@@ -9,7 +9,7 @@ module mg_tictoc
 
   integer(kind = lg) , dimension(levmax,submax) :: ntic
   integer(kind = lg) , dimension(levmax,submax) :: ntoc
-  real(kind = lg)    , dimension(levmax,submax) :: time
+  real(kind = lg)    , dimension(levmax,submax) :: time_tictoc
   integer(kind=st)   , dimension(levmax,submax) :: calls
   character(len=32)  , dimension(submax)        :: subname
   integer(kind=st)                              :: nblev = 0
@@ -48,7 +48,7 @@ contains
           subname(nbsub)=TRIM(string)
 !          call cpu_time(ntic(lev,nbsub))
           call system_clock(ntic(lev,nbsub))
-          time(lev,nbsub)  = 0._lg
+          time_tictoc(lev,nbsub)  = 0._lg
           calls(lev,nbsub) = 0
        endif
 
@@ -61,7 +61,7 @@ contains
 !       call cpu_time(ntic(lev,nbsub))
        call system_clock(ntic(lev,nbsub))
 
-       time(lev,nbsub)  = 0._lg
+       time_tictoc(lev,nbsub)  = 0._lg
        calls(lev,nbsub) = 0
     endif
 
@@ -90,7 +90,7 @@ contains
           if (TRIM(string) == subname(ns)) then
 !             call cpu_time(ntoc(lev,ns))
              call system_clock(ntoc(lev,ns))
-             time(lev,ns) = time(lev,ns) + real(ntoc(lev,ns) - ntic(lev,ns),kind=lg)/rate
+             time_tictoc(lev,ns) = time_tictoc(lev,ns) + real(ntoc(lev,ns) - ntic(lev,ns),kind=lg)/rate
              calls(lev,ns) = calls(lev,ns) + 1
              if (lev > nblev) nblev = lev
              flag = .false.
@@ -141,8 +141,8 @@ contains
 
     do ii=1, nbsub
        write(lun,'(x,A20)' , ADVANCE="no" ) TRIM(subname(ii))
-       write(lun,'(x,E9.3)', ADVANCE="no" ) sum(time(1:nblev,ii))
-       write(lun,FMT=cmftf , ADVANCE="no" ) time(1:nblev,ii)
+       write(lun,'(x,E9.3)', ADVANCE="no" ) sum(time_tictoc(1:nblev,ii))
+       write(lun,FMT=cmftf , ADVANCE="no" ) time_tictoc(1:nblev,ii)
        write(lun,'(x)'     , ADVANCE="yes")
        write(lun,'(t22)'   , ADVANCE="no" )
        write(lun,'(x,I9)'  , ADVANCE="no" ) sum(calls(1:nblev,ii))
@@ -174,7 +174,7 @@ contains
     end do
 
     do lev=1, nblev
-       write(lun,'(I2,x,7f10.2)', ADVANCE="yes")lev, time(lev,1:nbsub)
+       write(lun,'(I2,x,7f10.2)', ADVANCE="yes")lev, time_tictoc(lev,1:nbsub)
     enddo
     write(lun,'(I2,x,I10)', ADVANCE="yes")''
     do lev=1, nblev

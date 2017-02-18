@@ -28,6 +28,8 @@ contains
 
     if (myrank==0) write(*,*)'   - solve p:'
 
+    ! NOT ALL OPTIMAL, do we really need to set to ZERO?
+    ! isn't there a smarter way?
     grid(1)%p(:,:,:) = zero
 
     p  => grid(1)%p
@@ -107,6 +109,9 @@ contains
 
     do lev=1,maxlev-1
        call fine2coarse(lev)
+       ! this step can be drop if we pass on output argument the intend array
+       ! call fine2coarse(lev,grid(lev)%b) for Vcycle
+       ! call fine2coarse(lev,grid(lev)%r) for Fcycle
        grid(lev+1)%r=grid(lev+1)%b
     enddo
 

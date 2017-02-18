@@ -907,16 +907,16 @@ contains
   end subroutine nhmg_coupling
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rufrca,rvfrca)
+  subroutine nhmg_solve(dt)
 
-    integer(kind=ip), intent(in) :: nx, ny, nz
+    integer(kind=ip) :: nx, ny, nz
 
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
+!    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
+!    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
+!    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
     real(kind=rp),                                   optional, intent(in) :: dt
-    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
-    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
+!    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
+!    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
     real(kind=rp), dimension(:,:)  , pointer :: rufrc,rvfrc
@@ -938,28 +938,35 @@ contains
     u => grid(1)%ub
     v => grid(1)%vb
     w => grid(1)%wb
+    
+    nx = grid(1)%nx
+    ny = grid(1)%ny
+    nz = grid(1)%nz
 
-    do i = 1,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          u(k,j,i) = ua(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 1,ny+1
-        do k = 1,nz
-          v(k,j,i) = va(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-       do j = 0,ny+1
-          do k = 1,nz+1
-             w(k,j,i) = wa(i,j,k)
-          enddo
-       enddo
-    enddo
+    call fill_halo(1,u)
+    call fill_halo(1,v)
+
+!!$    do i = 1,nx+1
+!!$      do j = 0,ny+1
+!!$        do k = 1,nz
+!!$          u(k,j,i) = ua(i,j,k)
+!!$        enddo
+!!$      enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$      do j = 1,ny+1
+!!$        do k = 1,nz
+!!$          v(k,j,i) = va(i,j,k)
+!!$        enddo
+!!$      enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 0,ny+1
+!!$          do k = 1,nz+1
+!!$             w(k,j,i) = wa(i,j,k)
+!!$          enddo
+!!$       enddo
+!!$    enddo
     !!!
 
     !u => ua
@@ -994,23 +1001,23 @@ contains
     endif
 
     !- step 3 -
-    if ((present(rufrca)).and.(present(rvfrca))) then
+    if (present(dt)) then
 
        !!! dirty reshape arrays indexing ijk -> kji !!!
 !       allocate(rufrcb(0:ny+1,1:nx+1))
 !       allocate(rvfrcb(1:ny+1,0:nx+1))
        rufrc => grid(1)%rufrcb
        rvfrc => grid(1)%rvfrcb
-       do i = 1,nx+1
-          do j = 0,ny+1
-             rufrc(j,i) = rufrca(i,j)
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 1,ny+1
-             rvfrc(j,i) = rvfrca(i,j)
-          enddo
-       enddo
+!!$       do i = 1,nx+1
+!!$          do j = 0,ny+1
+!!$             rufrc(j,i) = rufrca(i,j)
+!!$          enddo
+!!$       enddo
+!!$       do i = 0,nx+1
+!!$          do j = 1,ny+1
+!!$             rvfrc(j,i) = rvfrca(i,j)
+!!$          enddo
+!!$       enddo
        !!!
 
        call correct_uvw(u,v,w,dt,rufrc,rvfrc)
@@ -1039,52 +1046,52 @@ contains
 
     !- check step - the projected u,v,w do not work
 
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    do i = 1,nx+1
-       do j = 0,ny+1
-          do k = 1,nz
-             ua(i,j,k) = u(k,j,i)
-          enddo
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 1,ny+1
-          do k = 1,nz
-             va(i,j,k) = v(k,j,i)
-          enddo
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 0,ny+1
-          do k = 1,nz+1
-             wa(i,j,k) = w(k,j,i)
-          enddo
-       enddo
-    enddo
+!!$!!! dirty reshape arrays indexing kji -> ijk !!!
+!!$    do i = 1,nx+1
+!!$       do j = 0,ny+1
+!!$          do k = 1,nz
+!!$             ua(i,j,k) = u(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 1,ny+1
+!!$          do k = 1,nz
+!!$             va(i,j,k) = v(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 0,ny+1
+!!$          do k = 1,nz+1
+!!$             wa(i,j,k) = w(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
 !!!
 
 !    if (associated(u)) u => null()
 !    if (associated(v)) v => null()
 !    if (associated(w)) w => null()
 
-    if ((present(rufrca)).and.(present(rvfrca))) then
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    do i = 1,nx+1
-       do j = 0,ny+1      
-          rufrca(i,j) = rufrc(j,i)
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 1,ny+1
-          rvfrca(i,j) = rvfrc(j,i) 
-       enddo
-    enddo
+!!$    if ((present(rufrca)).and.(present(rvfrca))) then
+!!$!!! dirty reshape arrays indexing kji -> ijk !!!
+!!$    do i = 1,nx+1
+!!$       do j = 0,ny+1      
+!!$          rufrca(i,j) = rufrc(j,i)
+!!$       enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 1,ny+1
+!!$          rvfrca(i,j) = rvfrc(j,i) 
+!!$       enddo
+!!$    enddo
 !!!
-
-!    if (associated(rufrc)) rufrc => null()
-!    if (associated(rvfrc)) rvfrc => null()
-
-    endif
+!!$
+!!$!    if (associated(rufrc)) rufrc => null()
+!!$!    if (associated(rvfrc)) rvfrc => null()
+!!$
+!!$    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
 !    deallocate(ub)
