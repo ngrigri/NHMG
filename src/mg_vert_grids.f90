@@ -41,7 +41,7 @@ contains
 
     integer(kind=ip) :: i,j,k
 
-    if (myrank==0) write(*,*)'   - set vertical grids:'
+!    if (myrank==0) write(*,*)'   - set vertical grids:'
 
     do lev = 1, nlevs
 

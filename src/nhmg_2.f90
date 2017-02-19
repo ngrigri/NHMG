@@ -577,7 +577,7 @@ contains
     integer(kind=ip), save :: iter_matrices=0
     iter_matrices = iter_matrices + 1
 
-    if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
+!    if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
 
     !--------------------!
     !- Horizontal grids -!
@@ -927,7 +927,7 @@ contains
     integer(kind=ip), save :: iter_solve=0
     iter_solve = iter_solve + 1
 
-    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
+!    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
 
     call tic(1,'nhmg_solve')
 
@@ -946,27 +946,6 @@ contains
     call fill_halo(1,u)
     call fill_halo(1,v)
 
-!!$    do i = 1,nx+1
-!!$      do j = 0,ny+1
-!!$        do k = 1,nz
-!!$          u(k,j,i) = ua(i,j,k)
-!!$        enddo
-!!$      enddo
-!!$    enddo
-!!$    do i = 0,nx+1
-!!$      do j = 1,ny+1
-!!$        do k = 1,nz
-!!$          v(k,j,i) = va(i,j,k)
-!!$        enddo
-!!$      enddo
-!!$    enddo
-!!$    do i = 0,nx+1
-!!$       do j = 0,ny+1
-!!$          do k = 1,nz+1
-!!$             w(k,j,i) = wa(i,j,k)
-!!$          enddo
-!!$       enddo
-!!$    enddo
     !!!
 
     !u => ua
@@ -1008,16 +987,6 @@ contains
 !       allocate(rvfrcb(1:ny+1,0:nx+1))
        rufrc => grid(1)%rufrcb
        rvfrc => grid(1)%rvfrcb
-!!$       do i = 1,nx+1
-!!$          do j = 0,ny+1
-!!$             rufrc(j,i) = rufrca(i,j)
-!!$          enddo
-!!$       enddo
-!!$       do i = 0,nx+1
-!!$          do j = 1,ny+1
-!!$             rvfrc(j,i) = rvfrca(i,j)
-!!$          enddo
-!!$       enddo
        !!!
 
        call correct_uvw(u,v,w,dt,rufrc,rvfrc)
@@ -1074,24 +1043,6 @@ contains
 !    if (associated(v)) v => null()
 !    if (associated(w)) w => null()
 
-!!$    if ((present(rufrca)).and.(present(rvfrca))) then
-!!$!!! dirty reshape arrays indexing kji -> ijk !!!
-!!$    do i = 1,nx+1
-!!$       do j = 0,ny+1      
-!!$          rufrca(i,j) = rufrc(j,i)
-!!$       enddo
-!!$    enddo
-!!$    do i = 0,nx+1
-!!$       do j = 1,ny+1
-!!$          rvfrca(i,j) = rvfrc(j,i) 
-!!$       enddo
-!!$    enddo
-!!!
-!!$
-!!$!    if (associated(rufrc)) rufrc => null()
-!!$!    if (associated(rvfrc)) rvfrc => null()
-!!$
-!!$    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
 !    deallocate(ub)

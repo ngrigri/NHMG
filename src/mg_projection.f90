@@ -23,7 +23,7 @@ contains
     real(kind=rp), dimension(:,:)  ,pointer :: dxu,dyv
     real(kind=rp), dimension(:,:,:),pointer :: rhs,u,v,w
 
-    if (myrank==0) write(*,*)'   - set rhs:'
+!    if (myrank==0) write(*,*)'   - set rhs:'
     
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -88,7 +88,7 @@ contains
     real(kind=rp), dimension(:,:),     pointer :: gamv
     real(kind=rp), dimension(:,:,:,:), pointer :: cA
 
-    if (myrank==0) write(*,*)'   - set matrices:'
+!    if (myrank==0) write(*,*)'   - set matrices:'
 
     do lev = 1, nlevs
 
@@ -295,7 +295,7 @@ contains
 
     real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
 
-    if (myrank==0) write(*,*)'   - Add NH pressure gradient to u,v,w:'
+!    if (myrank==0) write(*,*)'   - Add NH pressure gradient to u,v,w:'
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -491,7 +491,7 @@ contains
        enddo
     enddo
 
-    if (myrank==0) write(*,*)'   - Add NH pressure gradient DONE'
+!    if (myrank==0) write(*,*)'   - Add NH pressure gradient DONE'
 
 !---------------------------
 
