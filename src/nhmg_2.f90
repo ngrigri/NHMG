@@ -997,6 +997,7 @@ contains
 
     endif
 
+
 !!$    if (check_output) then
 !!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
 !!$          call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
