@@ -580,7 +580,7 @@ contains
     integer(kind=ip), save :: iter_matrices=0
     iter_matrices = iter_matrices + 1
 
-    if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
+!    if (myrank==0) write(*,*)' nhmg_matrices: ',iter_matrices
 
     !--------------------!
     !- Horizontal grids -!
@@ -910,61 +910,45 @@ contains
   end subroutine nhmg_coupling
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(nx,ny,nz,ua,va,wa,dt,rufrca,rvfrca)
+  subroutine nhmg_solve(dt)
 
-    integer(kind=ip), intent(in) :: nx, ny, nz
+    integer(kind=ip) :: nx, ny, nz
 
-    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
-    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
-    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
+!    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
+!    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
+!    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
     real(kind=rp),                                   optional, intent(in) :: dt
-    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
-    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
+!    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
+!    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
     real(kind=rp), dimension(:,:)  , pointer :: rufrc,rvfrc
 
-!!! dirty reshape arrays indexing
-    real(kind=rp), dimension(:,:,:), allocatable, target :: ub,vb,wb
-    real(kind=rp), dimension(:,:),   allocatable, target :: rufrcb,rvfrcb
     integer(kind=ip) :: i,j,k
 !!! 
 
     integer(kind=ip), save :: iter_solve=0
     iter_solve = iter_solve + 1
 
-    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
+!    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
 
     call tic(1,'nhmg_solve')
 
     !!! dirty reshape arrays indexing ijk -> kji !!!
-    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
-    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
-    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
-    do i = 1,nx+1
-      do j = 0,ny+1
-        do k = 1,nz
-          ub(k,j,i) = ua(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-      do j = 1,ny+1
-        do k = 1,nz
-          vb(k,j,i) = va(i,j,k)
-        enddo
-      enddo
-    enddo
-    do i = 0,nx+1
-       do j = 0,ny+1
-          do k = 1,nz+1
-             wb(k,j,i) = wa(i,j,k)
-          enddo
-       enddo
-    enddo
-    u => ub
-    v => vb
-    w => wb
+!    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
+!    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
+!    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
+    u => grid(1)%ub
+    v => grid(1)%vb
+    w => grid(1)%wb
+    
+    nx = grid(1)%nx
+    ny = grid(1)%ny
+    nz = grid(1)%nz
+
+    call fill_halo(1,u)
+    call fill_halo(1,v)
+
     !!!
 
     !u => ua
@@ -980,7 +964,7 @@ contains
 !!$    endif
 
     !- step 1 - 
-    call set_rhs(u,v,w)
+    call set_rhs()!u,v,w)
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
@@ -999,23 +983,13 @@ contains
     endif
 
     !- step 3 -
-    if ((present(rufrca)).and.(present(rvfrca))) then
+    if (present(dt)) then
 
        !!! dirty reshape arrays indexing ijk -> kji !!!
-       allocate(rufrcb(0:ny+1,1:nx+1))
-       allocate(rvfrcb(1:ny+1,0:nx+1))
-       do i = 1,nx+1
-          do j = 0,ny+1
-             rufrcb(j,i) = rufrca(i,j)
-          enddo
-       enddo
-       do i = 0,nx+1
-          do j = 1,ny+1
-             rvfrcb(j,i) = rvfrca(i,j)
-          enddo
-       enddo
-       rufrc => rufrcb
-       rvfrc => rvfrcb
+!       allocate(rufrcb(0:ny+1,1:nx+1))
+!       allocate(rvfrcb(1:ny+1,0:nx+1))
+       rufrc => grid(1)%rufrcb
+       rvfrc => grid(1)%rvfrcb
        !!!
 
        call correct_uvw(u,v,w,dt,rufrc,rvfrc)
@@ -1035,8 +1009,8 @@ contains
 !!$    endif
 
     !- check step - non-divergence of the projected u,v,w
-    call set_rhs(u,v,w)
     if (check_output) then
+       call set_rhs()!u,v,w)
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
           call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
@@ -1044,61 +1018,43 @@ contains
 
     !- check step - the projected u,v,w do not work
 
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    do i = 1,nx+1
-       do j = 0,ny+1
-          do k = 1,nz
-             ua(i,j,k) = u(k,j,i)
-          enddo
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 1,ny+1
-          do k = 1,nz
-             va(i,j,k) = v(k,j,i)
-          enddo
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 0,ny+1
-          do k = 1,nz+1
-             wa(i,j,k) = w(k,j,i)
-          enddo
-       enddo
-    enddo
+!!$!!! dirty reshape arrays indexing kji -> ijk !!!
+!!$    do i = 1,nx+1
+!!$       do j = 0,ny+1
+!!$          do k = 1,nz
+!!$             ua(i,j,k) = u(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 1,ny+1
+!!$          do k = 1,nz
+!!$             va(i,j,k) = v(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
+!!$    do i = 0,nx+1
+!!$       do j = 0,ny+1
+!!$          do k = 1,nz+1
+!!$             wa(i,j,k) = w(k,j,i)
+!!$          enddo
+!!$       enddo
+!!$    enddo
 !!!
 
-    if (associated(u)) u => null()
-    if (associated(v)) v => null()
-    if (associated(w)) w => null()
+!    if (associated(u)) u => null()
+!    if (associated(v)) v => null()
+!    if (associated(w)) w => null()
 
-    if ((present(rufrca)).and.(present(rvfrca))) then
-!!! dirty reshape arrays indexing kji -> ijk !!!
-    do i = 1,nx+1
-       do j = 0,ny+1      
-          rufrca(i,j) = rufrc(j,i)
-       enddo
-    enddo
-    do i = 0,nx+1
-       do j = 1,ny+1
-          rvfrca(i,j) = rvfrc(j,i) 
-       enddo
-    enddo
-!!!
-
-    if (associated(rufrc)) rufrc => null()
-    if (associated(rvfrc)) rvfrc => null()
-
-    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
-    deallocate(ub)
-    deallocate(vb)
-    deallocate(wb)
-    if ((present(rufrca)).and.(present(rvfrca))) then
-    deallocate(rufrcb)
-    deallocate(rvfrcb)
-    endif
+!    deallocate(ub)
+!    deallocate(vb)
+!    deallocate(wb)
+!    if ((present(rufrca)).and.(present(rvfrca))) then
+!    deallocate(rufrcb)
+!    deallocate(rvfrcb)
+!    endif
 !!!
 
     call toc(1,'nhmg_solve')

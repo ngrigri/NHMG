@@ -26,9 +26,18 @@ contains
     real(kind=rp) :: rnxg,rnyg,rnzg
     real(kind=rp) :: rnpxg,rnpyg
 
-    if (myrank==0) write(*,*)'   - solve p:'
+    integer, save :: count = 0
+    logical :: verbose
 
-    grid(1)%p(:,:,:) = zero
+    verbose = .false.
+    if (mod(count,10)==0) verbose=.true.
+    count = count+1
+    if ((myrank==0).and.verbose) write(*,*)'     ---------------'
+
+
+    ! NOT ALL OPTIMAL, do we really need to set to ZERO?
+    ! isn't there a smarter way?
+!    grid(1)%p(:,:,:) = zero
 
     p  => grid(1)%p
     b  => grid(1)%b
@@ -52,7 +61,7 @@ contains
     res0   = rnorm/bnorm
     rnorm0 = res0
 
-    if (myrank == 0) write(100,*) rnorm0, nite
+!    if (myrank == 0) write(100,*) rnorm0, nite
 
     do while ((nite < solver_maxiter).and.(res0 > solver_prec))
 
@@ -64,8 +73,8 @@ contains
        res0 = rnorm
 
        nite = nite+1
-       if (myrank == 0) write(*,10) nite, rnorm, conv
-       if (myrank == 0) write(100,*) rnorm, conv
+       if ((myrank == 0).and.verbose) write(*,10) nite, rnorm, conv
+!       if (myrank == 0) write(100,*) rnorm, conv
 
 !!$       if (netcdf_output) then
 !!$          call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='p.nc',rank=myrank,iter=nite)
@@ -77,7 +86,7 @@ contains
     call cpu_time(tend)
     call toc(1,'solve')
 
-    if (myrank == 0) then
+    if ((myrank == 0).and.verbose) then
        rnpxg=real(grid(1)%npx,kind=rp)
        rnpyg=real(grid(1)%npy,kind=rp)
        rnxg=real(grid(1)%nx,kind=rp)*rnpxg
@@ -107,6 +116,9 @@ contains
 
     do lev=1,maxlev-1
        call fine2coarse(lev)
+       ! this step can be drop if we pass on output argument the intend array
+       ! call fine2coarse(lev,grid(lev)%b) for Vcycle
+       ! call fine2coarse(lev,grid(lev)%r) for Fcycle
        grid(lev+1)%r=grid(lev+1)%b
     enddo
 
