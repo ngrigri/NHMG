@@ -910,22 +910,19 @@ contains
   end subroutine nhmg_coupling
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(dt)
+  subroutine nhmg_solve(ua,va,wa,Hza,fill_hz)
 
-    integer(kind=ip) :: nx, ny, nz
+    real(kind=rp), dimension(:,:,:), intent(in) :: ua
+    real(kind=rp), dimension(:,:,:), intent(in) :: va
+    real(kind=rp), dimension(:,:,:), intent(in) :: wa    
+    real(kind=rp), dimension(:,:,:), intent(in) :: Hza
+    logical :: fill_hz
 
-!    real(kind=rp), dimension(1:nx+1,0:ny+1,1:nz  ), target, intent(inout) :: ua
-!    real(kind=rp), dimension(0:nx+1,1:ny+1,1:nz  ), target, intent(inout) :: va
-!    real(kind=rp), dimension(0:nx+1,0:ny+1,1:nz+1), target, intent(inout) :: wa    
-    real(kind=rp),                                   optional, intent(in) :: dt
-!    real(kind=rp), dimension(1:nx+1,0:ny+1), target, optional, intent(inout):: rufrca
-!    real(kind=rp), dimension(0:nx+1,1:ny+1), target, optional, intent(inout):: rvfrca
+    real(kind=rp), dimension(:,:),   pointer :: dx,dy
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
 
-    real(kind=rp), dimension(:,:,:), pointer :: u,v,w
-    real(kind=rp), dimension(:,:)  , pointer :: rufrc,rvfrc
-
-    integer(kind=ip) :: i,j,k
-!!! 
+    integer(kind=ip) :: i,j,k,is,js
+    integer(kind=ip) :: nx,ny,nz
 
     integer(kind=ip), save :: iter_solve=0
     iter_solve = iter_solve + 1
@@ -933,42 +930,73 @@ contains
 !    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
 
     call tic(1,'nhmg_solve')
+   
+!    write(*,*) 'rank',myrank,'lbound(ua)',lbound(ua)
+!    write(*,*) 'rank',myrank,'ubound(ua)',ubound(ua)
+!    write(*,*) 'rank',myrank,'shape(ua)',shape(ua)
 
-    !!! dirty reshape arrays indexing ijk -> kji !!!
-!    allocate(ub(1:nz  ,0:ny+1,1:nx+1))
-!    allocate(vb(1:nz  ,1:ny+1,0:nx+1))
-!    allocate(wb(1:nz+1,0:ny+1,0:nx+1))
-    u => grid(1)%ub
-    v => grid(1)%vb
-    w => grid(1)%wb
-    
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
 
-    call fill_halo(1,u)
-    call fill_halo(1,v)
+    dx => grid(1)%dx
+    dy => grid(1)%dy
+    u  => grid(1)%u
+    v  => grid(1)%v
+    w  => grid(1)%w
 
-    !!!
+    ! need to update dz because define_matrices may not be called every time step
+    dz => grid(1)%dz
+    do k=1,nz
+       do j=1,ny
+          js=j+2 
+          do i=1,nx
+             is=i+2
+             dz(k,j,i) = Hza(is,js,k)
+          enddo
+       enddo
+    enddo
+    if (fill_hz) then
+       ! fill Hz only at predictor 
+       call fill_halo(1,dz)
+    endif
 
-    !u => ua
-    !v => va
-    !w => wa
-   
-!!$    if (check_output) then
-!!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$          call write_netcdf(u,vname='uin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          call write_netcdf(v,vname='vin',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          call write_netcdf(w,vname='win',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$       !endif
-!!$    endif
+    ! set fluxes
+    do k=1,nz
+       do j=1,ny
+          js=j+2
+          do i=1,nx+1
+             is=i+2
+             u(k,j,i) = ua(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
+          enddo
+          
+       enddo
+       do j=1,ny+1
+          js=j+2
+          do i=1,nx
+             is=i+2
+             v(k,j,i) = va(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j-1,i)) * (dx(j,i)+dx(j-1,i))
+          enddo
+       enddo
+       do j=1,ny
+          js=j+2
+          do i=1,nx
+             is=i+2
+             w(k+1,j,i) = wa(is,js,k) * &
+                  dx(j,i) * dy(j,i)
+          enddo
+       enddo
+    enddo
+    w(1,:,:) = zero
 
-    !- step 1 - 
-    call set_rhs()!u,v,w)
+    !- set rhs
+    call set_rhs()
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-          call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
     endif
 
@@ -977,29 +1005,13 @@ contains
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-          call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-          call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
     endif
 
     !- step 3 -
-    if (present(dt)) then
-
-       !!! dirty reshape arrays indexing ijk -> kji !!!
-!       allocate(rufrcb(0:ny+1,1:nx+1))
-!       allocate(rvfrcb(1:ny+1,0:nx+1))
-       rufrc => grid(1)%rufrcb
-       rvfrc => grid(1)%rvfrcb
-       !!!
-
-       call correct_uvw(u,v,w,dt,rufrc,rvfrc)
-      
-    else
-
-       call correct_uvw(u,v,w)
-
-    endif
-
+    call correct_uvw()
 
 !!$    if (check_output) then
 !!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then

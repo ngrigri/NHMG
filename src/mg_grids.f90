@@ -71,17 +71,16 @@ module mg_grids
      real(kind=rp),dimension(:,:,:,:,:),pointer :: gatherbufferp  => null() ! 3D nz+1
 
      ! croco exchange arrays: resized and reshaped (i,j,k)=>(k,j,i)
-     real(kind=rp),dimension(:,:,:)  ,pointer :: ub => null()
-     real(kind=rp),dimension(:,:,:)  ,pointer :: vb => null()
-     real(kind=rp),dimension(:,:,:)  ,pointer :: wb => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: u  => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: v  => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: w  => null()
      real(kind=rp),dimension(:,:,:)  ,pointer :: du => null()
      real(kind=rp),dimension(:,:,:)  ,pointer :: dv => null()
      real(kind=rp),dimension(:,:,:)  ,pointer :: dw => null()
+
      real(kind=rp),dimension(:,:)    ,pointer :: rufrcb => null()
      real(kind=rp),dimension(:,:)    ,pointer :: rvfrcb => null()
-     real(kind=rp),dimension(:,:,:)  ,pointer :: px => null()
-     real(kind=rp),dimension(:,:,:)  ,pointer :: py => null()
-     real(kind=rp),dimension(:,:,:)  ,pointer :: pz => null()
+
   end type grid_type
 
   !-
@@ -229,17 +228,15 @@ contains
     allocate(grid(lev)%dummy3Dnz( nz  ,0:ny+1,0:nx+1))
     allocate(grid(lev)%dummy3Dnzp(nz+1,0:ny+1,0:nx+1))
 
-    allocate(grid(lev)%ub(1:nz  ,0:ny+1,0:nx+1))
-    allocate(grid(lev)%vb(1:nz  ,0:ny+1,0:nx+1))
-    allocate(grid(lev)%wb(1:nz+1,0:ny+1,0:nx+1))
+    allocate(grid(lev)%u(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%v(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%w(1:nz+1,0:ny+1,0:nx+1))
     allocate(grid(lev)%du(1:nz  ,0:ny+1,0:nx+1))
     allocate(grid(lev)%dv(1:nz  ,0:ny+1,0:nx+1))
     allocate(grid(lev)%dw(1:nz+1,0:ny+1,0:nx+1))
+
     allocate(grid(lev)%rufrcb(0:ny+1,0:nx+1))
     allocate(grid(lev)%rvfrcb(0:ny+1,0:nx+1))
-    allocate(grid(lev)%px(1:nz  ,0:ny+1,0:nx+1))
-    allocate(grid(lev)%py(1:nz  ,0:ny+1,0:nx+1))
-    allocate(grid(lev)%pz(1:nz+1,0:ny+1,0:nx+1))
 
     do lev=1,nlevs ! 
        nx = grid(lev)%nx

@@ -13,38 +13,27 @@ module mg_projection
 
 contains
   !-------------------------------------------------------------------------     
-  subroutine set_rhs!(u,v,w)
+  subroutine set_rhs
     
-!    real(kind=rp), dimension(:,:,:), pointer, intent(in) :: u,v,w
-
     integer(kind=ip):: k,j,i
     integer(kind=ip):: nx,ny,nz
 
-    real(kind=rp), dimension(:,:)  ,pointer :: dxu,dyv
-    real(kind=rp), dimension(:,:,:),pointer :: rhs,u,v,w
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,rhs
 
 !    if (myrank==0) write(*,*)'   - set rhs:'
     
     nx = grid(1)%nx
     ny = grid(1)%ny
     nz = grid(1)%nz
-
-    dxu => grid(1)%dxu
-    dyv => grid(1)%dyv
-    
-    u => grid(1)%ub
-    v => grid(1)%vb
-    w => grid(1)%wb
+   
+    u => grid(1)%u
+    v => grid(1)%v
+    w => grid(1)%w
 
     rhs => grid(1)%b
-    ! Changed this statement => not at all optimal
-    ! EXCESSIVE data movement
-    !rhs(:,:,:) = zero
 	
     !! What comes into nhmg_solve are area integrated u,v,w.
-    rhs(:,:,0)=0.
     do i = 1,nx
-       rhs(:,0,i)=0.
        do j = 1,ny 
           do k = 1,nz
              rhs(k,j,i) = u(k,j,i+1) - u(k,j,i) &
@@ -52,9 +41,7 @@ contains
                         + w(k+1,j,i) - w(k,j,i)
           enddo
        enddo
-       rhs(:,ny+1,i)=0.
     enddo
-    rhs(:,:,nx+1)=0.
     
   end subroutine set_rhs
 
@@ -270,13 +257,9 @@ contains
   end subroutine set_matrices
 
   !-------------------------------------------------------------------------     
-  subroutine correct_uvw(u,v,w,dt,rufrc,rvfrc)
+  subroutine correct_uvw()
 
     !! u,v,w are fluxes, the correction is T*grad(p)
-
-    real(kind=rp), dimension(:,:,:), pointer, intent(inout) :: u,v,w
-    real(kind=rp),                  optional, intent(in) :: dt
-    real(kind=rp), dimension(:,:),  optional, pointer, intent(inout) :: rufrc,rvfrc
 
     integer(kind=ip):: k, j, i
     integer(kind=ip):: nx, ny, nz
@@ -295,7 +278,7 @@ contains
 
     real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
 
-!    if (myrank==0) write(*,*)'   - Add NH pressure gradient to u,v,w:'
+!    if (myrank==0) write(*,*)'   - compute pressure gradient and translate to fluxes'
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -315,14 +298,11 @@ contains
     zydx  => grid(1)%zydx  !
     p     => grid(1)%p
 
-!    allocate(px(  nz,0:ny+1,  nx+1)) 
-!    allocate(py(  nz,  ny+1,0:nx+1))
-!    allocate(pz(nz+1,0:ny+1,0:nx+1))
-    px => grid(1)%px
-    py => grid(1)%py
-    pz => grid(1)%pz
+    px => grid(1)%u
+    py => grid(1)%v
+    pz => grid(1)%w
 
-!---Get pressure gradients ---
+    !! Pressure gradient -
 
     do i = 1,nx+1
         do j = 0,ny+1
@@ -356,23 +336,16 @@ contains
        enddo
     enddo
 
-!---Use pressure gradients to correct fluxes    
+    !! Correct U -
 
-    call fill_halo(1,px) ! <= not sure it's needed, TO CHECK
-    call fill_halo(1,py)
-
-!! Correct U -
-
-    du => grid(1)%du!dummy3dnz
+    du => grid(1)%du
 
     do i = 1,nx+1  
        do j = 1,ny 
           k = 1
-
           gamma = one - qrt * ( &
                (zxdy(k,j,i  )/dy(j,i  ))**2/alpha(k,j,i  ) + &
                (zxdy(k,j,i-1)/dy(j,i-1))**2/alpha(k,j,i-1) )
-
           du(k,j,i) = gamma * Arx(k,j,i) * px(k,j,i) &
                - qrt * ( &
                + zxdy(k,j,i  ) * dzw(k+1,j,i  ) * pz(k+1,j,i  ) &
@@ -383,7 +356,6 @@ contains
                - beta(j,i  )   * dyv(j+1,i  )   * py(k,j+1,i  )
 
           do k = 2,nz-1 
-
              du(k,j,i) = Arx(k,j,i) * px(k,j,i) &
                   - qrt * ( &
                   + zxdy(k,j,i  ) * dzw(k  ,j,i  ) * pz(k  ,j,i  ) &
@@ -391,6 +363,7 @@ contains
                   + zxdy(k,j,i-1) * dzw(k  ,j,i-1) * pz(k  ,j,i-1) &
                   + zxdy(k,j,i-1) * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )
           enddo
+
           k = nz
           du(k,j,i) = Arx(k,j,i) * px(k,j,i) &
                - qrt * ( &
@@ -398,22 +371,12 @@ contains
                + zxdy(k,j,i  ) * two * dzw(k+1,j,i  ) * pz(k+1,j,i  ) &
                + zxdy(k,j,i-1) *       dzw(k  ,j,i-1) * pz(k  ,j,i-1) &
                + zxdy(k,j,i-1) * two * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )
-
-!!$          do k = 1,nz
-!!$             u(k,j,i) = u(k,j,i) + du(k,j,i)
-!!$          end do
-!!$
-!!$          if ((present(rufrc)).and.(present(rvfrc))) then
-!!$             do k = 1,nz
-!!$                rufrc(j,i) = rufrc(j,i) + dxu(j,i)*du(k,j,i)/dt
-!!$             end do
-!!$          endif
        enddo
     enddo
 
-!! Correct V - 
+    !! Correct V - 
 
-    dv => grid(1)%dv!ummy3dnz
+    dv => grid(1)%dv
 
     do i = 1,nx
        do j = 1,ny+1
@@ -421,7 +384,6 @@ contains
           gamma = one - qrt * (  &
                (zydx(k,j  ,i)/dx(j  ,i))**2/alpha(k,j  ,i  ) + &
                (zydx(k,j-1,i)/dx(j-1,i))**2/alpha(k,j-1,i) )
-
           dv(k,j,i) = gamma * Ary(k,j,i) * py(k,j,i) &
                - qrt * ( &
                + zydx(k,j  ,i) * dzw(k+1,j  ,i) * pz(k+1,j  ,i) &
@@ -432,7 +394,6 @@ contains
                - beta(j  ,i)   * dxu(j  ,i+1)   * px(k,j  ,i+1)
 
           do k = 2,nz-1
-
              dv(k,j,i) =  Ary(k,j,i) * py(k,j,i) &
                   - qrt * ( &
                   + zydx(k,j  ,i) * dzw(k  ,j  ,i) * pz(k  ,j  ,i) &
@@ -440,6 +401,7 @@ contains
                   + zydx(k,j-1,i) * dzw(k  ,j-1,i) * pz(k  ,j-1,i) &
                   + zydx(k,j-1,i) * dzw(k+1,j-1,i) * pz(k+1,j-1,i) )
           enddo
+
           k = nz
           dv(k,j,i) = Ary(k,j,i) * py(k,j,i) &
                - qrt * ( &
@@ -448,29 +410,17 @@ contains
                + zydx(k,j-1,i)       * dzw(k  ,j-1,i) * pz(k  ,j-1,i) &
                + zydx(k,j-1,i) * two * dzw(k+1,j-1,i) * pz(k+1,j-1,i) ) 
 
-!!$          do k = 1,nz
-!!$             v(k,j,i) = v(k,j,i) + dv(k,j,i)
-!!$          end do
-!!$          if ((present(rufrc)).and.(present(rvfrc))) then
-!!$             do k = 1,nz
-!!$                rvfrc(j,i) = rvfrc(j,i) + dyv(j,i)*dv(k,j,i)/dt
-!!$             end do
-!!$          endif
        enddo
     enddo
 
-    call fill_halo(1,du)
-    call fill_halo(1,dv)
+    !! Correct W -
 
-
-!! Correct W - No multiplication with dz because W stays in flux form instead of Volume
-
-    dw => grid(1)%dw!ummy3dnz
+    dw => grid(1)%dw
 
     do i = 1,nx
        do j = 1,ny
-          do k = 2,nz
 
+          do k = 2,nz
              dw(k,j,i) =  hlf * (alpha(k-1,j,i) + alpha(k,j,i)) * Arz(j,i) * pz(k,j,i) &
                   - qrt * ( &
                   + zxdy(k  ,j,i) * dxu(j,i  ) * px(k  ,j,i  ) &
@@ -482,8 +432,8 @@ contains
                   + zydx(k  ,j,i) * dyv(j+1,i) * py(k  ,j+1,i) &
                   + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                   + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
-!             w(k,j,i) = w(k,j,i) + dw(k,j,i)
           enddo
+
           k = nz+1 
           dw(k,j,i) = alpha(k-1,j,i) * Arz(j,i) * pz(k,j,i) &
                - hlf * ( &
@@ -492,18 +442,8 @@ contains
                - hlf * ( &
                + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
-!          w(k,j,i) = w(k,j,i) + dw(k,j,i)
-
        enddo
     enddo
-
-!    if (myrank==0) write(*,*)'   - Add NH pressure gradient DONE'
-
-!---------------------------
-
-!    deallocate(px)
-!    deallocate(py)
-!    deallocate(pz)
 
   end subroutine correct_uvw
 
