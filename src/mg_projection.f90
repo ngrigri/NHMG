@@ -356,7 +356,10 @@ contains
        enddo
     enddo
 
-!---Use pressure gradients to correct fluxes
+!---Use pressure gradients to correct fluxes    
+
+    call fill_halo(1,px) ! <= not sure it's needed, TO CHECK
+    call fill_halo(1,py)
 
 !! Correct U -
 
@@ -396,15 +399,15 @@ contains
                + zxdy(k,j,i-1) *       dzw(k  ,j,i-1) * pz(k  ,j,i-1) &
                + zxdy(k,j,i-1) * two * dzw(k+1,j,i-1) * pz(k+1,j,i-1) )
 
-          do k = 1,nz
-             u(k,j,i) = u(k,j,i) + du(k,j,i)
-          end do
-
-          if ((present(rufrc)).and.(present(rvfrc))) then
-             do k = 1,nz
-                rufrc(j,i) = rufrc(j,i) + dxu(j,i)*du(k,j,i)/dt
-             end do
-          endif
+!!$          do k = 1,nz
+!!$             u(k,j,i) = u(k,j,i) + du(k,j,i)
+!!$          end do
+!!$
+!!$          if ((present(rufrc)).and.(present(rvfrc))) then
+!!$             do k = 1,nz
+!!$                rufrc(j,i) = rufrc(j,i) + dxu(j,i)*du(k,j,i)/dt
+!!$             end do
+!!$          endif
        enddo
     enddo
 
@@ -445,16 +448,19 @@ contains
                + zydx(k,j-1,i)       * dzw(k  ,j-1,i) * pz(k  ,j-1,i) &
                + zydx(k,j-1,i) * two * dzw(k+1,j-1,i) * pz(k+1,j-1,i) ) 
 
-          do k = 1,nz
-             v(k,j,i) = v(k,j,i) + dv(k,j,i)
-          end do
-          if ((present(rufrc)).and.(present(rvfrc))) then
-             do k = 1,nz
-                rvfrc(j,i) = rvfrc(j,i) + dyv(j,i)*dv(k,j,i)/dt
-             end do
-          endif
+!!$          do k = 1,nz
+!!$             v(k,j,i) = v(k,j,i) + dv(k,j,i)
+!!$          end do
+!!$          if ((present(rufrc)).and.(present(rvfrc))) then
+!!$             do k = 1,nz
+!!$                rvfrc(j,i) = rvfrc(j,i) + dyv(j,i)*dv(k,j,i)/dt
+!!$             end do
+!!$          endif
        enddo
     enddo
+
+    call fill_halo(1,du)
+    call fill_halo(1,dv)
 
 
 !! Correct W - No multiplication with dz because W stays in flux form instead of Volume
@@ -476,7 +482,7 @@ contains
                   + zydx(k  ,j,i) * dyv(j+1,i) * py(k  ,j+1,i) &
                   + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                   + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
-             w(k,j,i) = w(k,j,i) + dw(k,j,i)
+!             w(k,j,i) = w(k,j,i) + dw(k,j,i)
           enddo
           k = nz+1 
           dw(k,j,i) = alpha(k-1,j,i) * Arz(j,i) * pz(k,j,i) &
@@ -486,7 +492,7 @@ contains
                - hlf * ( &
                + zydx(k-1,j,i) * dyv(j  ,i) * py(k-1,j  ,i) &
                + zydx(k-1,j,i) * dyv(j+1,i) * py(k-1,j+1,i) )
-          w(k,j,i) = w(k,j,i) + dw(k,j,i)
+!          w(k,j,i) = w(k,j,i) + dw(k,j,i)
 
        enddo
     enddo
