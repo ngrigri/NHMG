@@ -123,9 +123,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libnhmg_la_LIBADD =
 am_libnhmg_la_OBJECTS = mg_cst.lo mg_mpi.lo mg_tictoc.lo \
 	mg_namelist.lo mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo \
-	mg_gather.lo mg_horiz_grids.lo mg_vert_grids.lo mg_bbc.lo \
-	mg_fluxes.lo mg_projection.lo mg_relax.lo mg_intergrids.lo \
-	mg_coupling.lo mg_solvers.lo nhmg.lo
+	mg_gather.lo mg_horiz_grids.lo mg_vert_grids.lo \
+	mg_projection.lo mg_relax.lo mg_intergrids.lo mg_solvers.lo \
+	nhmg_debug.lo nhmg.lo
 libnhmg_la_OBJECTS = $(am_libnhmg_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -375,17 +375,15 @@ libnhmg_la_SOURCES = \
 	mg_gather.f90          \
 	mg_horiz_grids.f90     \
 	mg_vert_grids.f90     \
-	mg_bbc.f90  \
-	mg_fluxes.f90  \
 	mg_projection.f90 \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
-	mg_coupling.f90   \
 	mg_solvers.f90         \
+	nhmg_debug.f90         \
 	nhmg.f90
 
 
-#include_HEADERS = nhmg.mod
+#include_HEADERS = nhmg.mod nhmg_debug.mod
 nodist_include_HEADERS = \
 	mg_cst.mod             \
 	mg_mpi.mod             \
@@ -397,13 +395,11 @@ nodist_include_HEADERS = \
 	mg_gather.mod          \
 	mg_horiz_grids.mod     \
 	mg_vert_grids.mod     \
-	mg_bbc.mod  \
-	mg_fluxes.mod  \
 	mg_projection.mod \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
-	mg_coupling.mod   \
 	mg_solvers.mod         \
+	nhmg_debug.mod         \
 	nhmg.mod
 
 all: all-recursive
@@ -814,7 +810,7 @@ clean-local:
 cleanf:
 	-rm -f *.nc fort.* *.dump *.xml gmon.out *.log *__genmod*
 
-#libnhmg_la_DEPENDENCIES = nhmg.mod mg_mpi.mod mg_grids.mod
+#libnhmg_la_DEPENDENCIES = nhmg.mod nhmg_debug.mod mg_mpi.mod mg_grids.mod
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

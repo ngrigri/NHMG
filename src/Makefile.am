@@ -37,16 +37,14 @@ libnhmg_la_SOURCES =       \
 	mg_gather.f90          \
 	mg_horiz_grids.f90     \
 	mg_vert_grids.f90     \
-	mg_bbc.f90  \
-	mg_fluxes.f90  \
 	mg_projection.f90 \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
-	mg_coupling.f90   \
 	mg_solvers.f90         \
+	nhmg_debug.f90         \
 	nhmg.f90
 
-#include_HEADERS = nhmg.mod
+#include_HEADERS = nhmg.mod nhmg_debug.mod
 nodist_include_HEADERS =   \
 	mg_cst.mod             \
 	mg_mpi.mod             \
@@ -58,15 +56,13 @@ nodist_include_HEADERS =   \
 	mg_gather.mod          \
 	mg_horiz_grids.mod     \
 	mg_vert_grids.mod     \
-	mg_bbc.mod  \
-	mg_fluxes.mod  \
 	mg_projection.mod \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
-	mg_coupling.mod   \
 	mg_solvers.mod         \
+	nhmg_debug.mod         \
 	nhmg.mod
 
-#libnhmg_la_DEPENDENCIES = nhmg.mod mg_mpi.mod mg_grids.mod
+#libnhmg_la_DEPENDENCIES = nhmg.mod nhmg_debug.mod mg_mpi.mod mg_grids.mod
 
 

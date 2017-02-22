@@ -53,7 +53,7 @@ contains
     character(len=48)     :: cmft
     integer(kind = ip) :: size_string
 
-    character(len = 32)   :: final_netcdf_file_name
+    character(len = 64)   :: final_netcdf_file_name
     character(len = 32)   :: final_vname
     integer(kind = ip) :: fiter
     integer(kind = ip) :: is_err
