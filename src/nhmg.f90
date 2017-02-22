@@ -312,60 +312,26 @@ contains
 
 !!$    if (check_output) then
 !!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$          call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$          call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$       call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$       call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$       call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !!$       !endif
 !!$    endif
 
     !- check step - non-divergence of the projected u,v,w
     if (check_output) then
-       call set_rhs()!u,v,w)
+       call set_rhs()
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-          call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
     endif
 
     !- check step - the projected u,v,w do not work
 
-!!$!!! dirty reshape arrays indexing kji -> ijk !!!
-!!$    do i = 1,nx+1
-!!$       do j = 0,ny+1
-!!$          do k = 1,nz
-!!$             ua(i,j,k) = u(k,j,i)
-!!$          enddo
-!!$       enddo
-!!$    enddo
-!!$    do i = 0,nx+1
-!!$       do j = 1,ny+1
-!!$          do k = 1,nz
-!!$             va(i,j,k) = v(k,j,i)
-!!$          enddo
-!!$       enddo
-!!$    enddo
-!!$    do i = 0,nx+1
-!!$       do j = 0,ny+1
-!!$          do k = 1,nz+1
-!!$             wa(i,j,k) = w(k,j,i)
-!!$          enddo
-!!$       enddo
-!!$    enddo
-!!!
 
 !    if (associated(u)) u => null()
 !    if (associated(v)) v => null()
 !    if (associated(w)) w => null()
-
-
-!!! dirty reshape arrays indexing kji -> ijk !!!
-!    deallocate(ub)
-!    deallocate(vb)
-!    deallocate(wb)
-!    if ((present(rufrca)).and.(present(rvfrca))) then
-!    deallocate(rufrcb)
-!    deallocate(rvfrcb)
-!    endif
-!!!
 
     call toc(1,'nhmg_solve')
 
