@@ -245,9 +245,9 @@ contains
     ! need to update dz because define_matrices may not be called every time step
     dz => grid(1)%dz
     do k=1,nz
-       do j=1,ny
+       do j=0,ny+1
           js=j+2 
-          do i=1,nx
+          do i=0,nx+1
              is=i+2
              dz(k,j,i) = Hza(is,js,k)
           enddo
@@ -266,8 +266,7 @@ contains
              is=i+2
              u(k,j,i) = ua(is,js,k) * &
                   qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
-          enddo
-          
+          enddo          
        enddo
        do j=1,ny+1
           js=j+2
@@ -281,42 +280,35 @@ contains
           js=j+2
           do i=1,nx
              is=i+2
-             w(k+1,j,i) = wa(is,js,k) * &
+             w(k+1,j,i) = wa(is,js,k+1) * &
                   dx(j,i) * dy(j,i)
           enddo
        enddo
     enddo
     w(1,:,:) = zero
 
-    !- set rhs
+    !- set rhs and solve for p
     call set_rhs()
-
-    if (check_output) then
-       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-       call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       !endif
-    endif
-
-    !- step 2 -
     call solve_p()
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+       call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
     endif
 
-    !- step 3 -
+    !- correct
     call correct_uvw()
 
-!!$    if (check_output) then
-!!$       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$       call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$       call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$       call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$       !endif
-!!$    endif
+    if (check_output) then
+       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+       call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       !endif
+    endif
 
     !- check step - non-divergence of the projected u,v,w
     if (check_output) then
@@ -327,7 +319,6 @@ contains
     endif
 
     !- check step - the projected u,v,w do not work
-
 
 !    if (associated(u)) u => null()
 !    if (associated(v)) v => null()
