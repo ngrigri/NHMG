@@ -102,11 +102,9 @@ contains
                   + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
           enddo
           do k = 2,nz
-!             rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) )
              rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) ) &
                           * 0.5*( dz(k,j,i) + dz(k-1,j,i) )
           enddo
-!          rw(i,j,nz+1) =  - dzdhp(nz)
           rw(i,j,nz+1) =  - dzdhp(nz) *0.5*dz(nz,j,i)
        enddo
     enddo
