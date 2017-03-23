@@ -265,37 +265,37 @@ contains
     northeast = grid(lev)%neighb(7)
     northwest = grid(lev)%neighb(8)
 
-    if (trim(type)=='u') then
-
-       allocate(sendN(nx,nz))
-       allocate(recvN(nx,nz))
-       allocate(sendS(nx,nz))
-       allocate(recvS(nx,nz))
-
-       allocate(sendW(ny,nz))
-       allocate(recvE(ny,nz))
-
-       allocate(sendNW(nz))
-       allocate(recvNE(nz))
-       allocate(sendSW(nz))
-       allocate(recvSE(nz))
-
-    elseif (trim(type)=='v') then
-
-       allocate(sendS(nx,nz))
-       allocate(recvN(nx,nz))
-
-       allocate(sendE(ny,nz))
-       allocate(recvE(ny,nz))
-       allocate(sendW(ny,nz))
-       allocate(recvW(ny,nz))
-
-       allocate(sendSE(nz))
-       allocate(recvNE(nz))
-       allocate(sendSW(nz))
-       allocate(recvNW(nz))
-
-    elseif (trim(type)=='w') then
+!!$    if (trim(type)=='u') then
+!!$
+!!$       allocate(sendN(nx,nz))
+!!$       allocate(recvN(nx,nz))
+!!$       allocate(sendS(nx,nz))
+!!$       allocate(recvS(nx,nz))
+!!$
+!!$       allocate(sendW(ny,nz))
+!!$       allocate(recvE(ny,nz))
+!!$
+!!$       allocate(sendNW(nz))
+!!$       allocate(recvNE(nz))
+!!$       allocate(sendSW(nz))
+!!$       allocate(recvSE(nz))
+!!$
+!!$    elseif (trim(type)=='v') then
+!!$
+!!$       allocate(sendS(nx,nz))
+!!$       allocate(recvN(nx,nz))
+!!$
+!!$       allocate(sendE(ny,nz))
+!!$       allocate(recvE(ny,nz))
+!!$       allocate(sendW(ny,nz))
+!!$       allocate(recvW(ny,nz))
+!!$
+!!$       allocate(sendSE(nz))
+!!$       allocate(recvNE(nz))
+!!$       allocate(sendSW(nz))
+!!$       allocate(recvNW(nz))
+!!$
+!!$    elseif (trim(type)=='w') then
 
        allocate(sendN(nx,nz))
        allocate(recvN(nx,nz))
@@ -317,9 +317,9 @@ contains
        allocate(sendSW(nz))
        allocate(recvSW(nz))
 
-    else
-       stop
-    endif
+!!$    else
+!!$       stop
+!!$    endif
 
 
     comm(:) = 0
@@ -339,7 +339,7 @@ contains
     !- Nonblocking RECEIVE -!
     !-----------------------!
 
-    if ((trim(type)=='u').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='u').or.(trim(type)=='w')) then
 
        if (south.ne.MPI_PROC_NULL) then
           call MPI_IRecv(                              &
@@ -350,7 +350,7 @@ contains
           p(1:nx,0,:) = p(1:nx,1,:)
        endif
 
-    endif
+!!$    endif
 
     if (east.ne.MPI_PROC_NULL) then
        call MPI_IRecv(                             &
@@ -370,7 +370,7 @@ contains
        p(1:nx,ny+1,:) = p(1:nx,ny,:)
     endif
 
-    if ((trim(type)=='v').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='v').or.(trim(type)=='w')) then
 
        if (west.ne.MPI_PROC_NULL) then
           call MPI_IRecv(                             &
@@ -381,10 +381,10 @@ contains
           p(0,1:ny,:) = p(1,1:ny,:)
        endif
 
-    endif
+!!$    endif
 
 
-    if (trim(type)=='w') then
+!!$    if (trim(type)=='w') then
 
        flag_sw_s = .false.
        flag_sw_w = .false.
@@ -401,9 +401,9 @@ contains
           p(0,0,:) = p(1,1,:)
        endif
 
-    endif
+!!$    endif
 
-    if ((trim(type)=='u').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='u').or.(trim(type)=='w')) then
 
        flag_se_s = .false.
        flag_se_e = .false.
@@ -420,7 +420,7 @@ contains
           p(nx+1,0,:) = p(nx,1,:)
        endif
 
-    endif
+!!$    endif
 
     flag_ne_n = .false.
     flag_ne_e = .false.
@@ -438,7 +438,7 @@ contains
     endif
 
 
-    if ((trim(type)=='v').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='v').or.(trim(type)=='w')) then
 
        flag_nw_n = .false.
        flag_nw_w = .false.
@@ -455,7 +455,7 @@ contains
           p(0,ny+1,:) = p(1,ny,:)
        endif
 
-    endif
+!!$    endif
 
     !--------------------!
     !- Nonblocking SEND -!
@@ -469,7 +469,7 @@ contains
        comm(9)=9
     endif
 
-    if ((trim(type)=='v').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='v').or.(trim(type)=='w')) then
 
        if (east.ne.MPI_PROC_NULL) then
           sendE = p(nx,1:ny,:) 
@@ -479,9 +479,9 @@ contains
           comm(10)=10
        endif
 
-    endif
+!!$    endif
 
-    if ((trim(type)=='u').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='u').or.(trim(type)=='w')) then
 
        if (north.ne.MPI_PROC_NULL) then
           sendN = p(1:nx,ny,:)
@@ -491,7 +491,7 @@ contains
           comm(11)=11
        endif
 
-    endif
+!!$    endif
 
     if (west.ne.MPI_PROC_NULL) then
        sendW = p(1,1:ny,:)  
@@ -511,7 +511,7 @@ contains
     endif
 
 
-    if ((trim(type)=='v').or.(trim(type)=='w')) then
+!!$    if ((trim(type)=='v').or.(trim(type)=='w')) then
 
        if (southeast.ne.MPI_PROC_NULL) then
           sendSE = p(nx,1,:)  
@@ -521,9 +521,9 @@ contains
           comm(14)=14
        endif
 
-    endif
+!!$    endif
 
-    if (trim(type)=='w') then
+!!$    if (trim(type)=='w') then
 
        if (northeast.ne.MPI_PROC_NULL) then
           sendNE = p(nx,ny,:) 
@@ -533,9 +533,9 @@ contains
           comm(15)=15
        endif
 
-    endif
+!!$    endif
 
-    if ((trim(type)=='u').or.(trim(type)=='w')) then
+ !!$   if ((trim(type)=='u').or.(trim(type)=='w')) then
 
        if (northwest.ne.MPI_PROC_NULL) then
           sendNW = p(1,ny,:)
@@ -545,7 +545,7 @@ contains
           comm(16)=16
        endif
 
-    endif
+!!$    endif
 
     !- Wait for completion of receive and fill ghost points
 

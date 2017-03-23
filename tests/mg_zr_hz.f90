@@ -94,7 +94,7 @@ contains
     endif
 
     nz = size(zr,dim=3)
-    nh = 1
+    nh = 2
     ny = size(zr,dim=2) - 2*nh
     nx = size(zr,dim=1) - 2*nh
 

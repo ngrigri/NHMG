@@ -81,8 +81,9 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = $(am__EXEEXT_1)
 TESTS = $(am__EXEEXT_1)
-bin_PROGRAMS = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testfillhalo$(EXEEXT) testcuc$(EXEEXT) nhmg_ncjoin$(EXEEXT)
+bin_PROGRAMS = testseamount$(EXEEXT) testseamount_rnd$(EXEEXT) \
+	testrndtopo$(EXEEXT) testfillhalo$(EXEEXT) testcuc$(EXEEXT) \
+	nhmg_ncjoin$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/./confdb/test-driver
@@ -97,8 +98,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
-am__EXEEXT_1 = testseamount$(EXEEXT) testrndtopo$(EXEEXT) \
-	testfillhalo$(EXEEXT) testcuc$(EXEEXT)
+am__EXEEXT_1 = testseamount$(EXEEXT) testseamount_rnd$(EXEEXT) \
+	testrndtopo$(EXEEXT) testfillhalo$(EXEEXT) testcuc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 am_nhmg_ncjoin_OBJECTS = nhmg_ncjoin.$(OBJEXT)
 nhmg_ncjoin_OBJECTS = $(am_nhmg_ncjoin_OBJECTS)
@@ -124,6 +125,11 @@ am_testseamount_OBJECTS = mg_zr_hz.$(OBJEXT) \
 	mg_testseamount.$(OBJEXT)
 testseamount_OBJECTS = $(am_testseamount_OBJECTS)
 testseamount_LDADD = $(LDADD)
+am_testseamount_rnd_OBJECTS = mg_zr_hz.$(OBJEXT) \
+	mg_mpi_exchange_ijk.$(OBJEXT) mg_setup_tests.$(OBJEXT) \
+	mg_testseamount_rnd.$(OBJEXT)
+testseamount_rnd_OBJECTS = $(am_testseamount_rnd_OBJECTS)
+testseamount_rnd_LDADD = $(LDADD)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -182,10 +188,10 @@ am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
 SOURCES = $(nhmg_ncjoin_SOURCES) $(testcuc_SOURCES) \
 	$(testfillhalo_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
+	$(testseamount_SOURCES) $(testseamount_rnd_SOURCES)
 DIST_SOURCES = $(nhmg_ncjoin_SOURCES) $(testcuc_SOURCES) \
 	$(testfillhalo_SOURCES) $(testrndtopo_SOURCES) \
-	$(testseamount_SOURCES)
+	$(testseamount_SOURCES) $(testseamount_rnd_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -561,7 +567,7 @@ LIBNHMGDIR = ${SRCDIR}
 AM_FCFLAGS = ${AM_CPPFLAGS} $(FCFLAGS_f90) -I$(top_srcdir)/src
 AM_FFLAGS = ${AM_FCFLAGS}
 AM_LDFLAGS = $(TESTLIBS) ${top_builddir}/src/libnhmg.la -lnhmg
-F90_TESTS = testseamount testrndtopo testfillhalo testcuc
+F90_TESTS = testseamount testseamount_rnd testrndtopo testfillhalo testcuc
 SUBDIRS = .
 bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
 
@@ -573,6 +579,12 @@ testseamount_SOURCES = \
 	mg_mpi_exchange_ijk.f90 \
     mg_setup_tests.f90      \
 	mg_testseamount.f90
+
+testseamount_rnd_SOURCES = \
+	mg_zr_hz.f90            \
+	mg_mpi_exchange_ijk.f90 \
+    mg_setup_tests.f90      \
+	mg_testseamount_rnd.f90
 
 testrndtopo_SOURCES = \
 	mg_zr_hz.f90            \
@@ -704,6 +716,10 @@ testrndtopo$(EXEEXT): $(testrndtopo_OBJECTS) $(testrndtopo_DEPENDENCIES) $(EXTRA
 testseamount$(EXEEXT): $(testseamount_OBJECTS) $(testseamount_DEPENDENCIES) $(EXTRA_testseamount_DEPENDENCIES) 
 	@rm -f testseamount$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(testseamount_OBJECTS) $(testseamount_LDADD) $(LIBS)
+
+testseamount_rnd$(EXEEXT): $(testseamount_rnd_OBJECTS) $(testseamount_rnd_DEPENDENCIES) $(EXTRA_testseamount_rnd_DEPENDENCIES) 
+	@rm -f testseamount_rnd$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(testseamount_rnd_OBJECTS) $(testseamount_rnd_LDADD) $(LIBS)
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
@@ -1004,6 +1020,13 @@ recheck: all $(check_PROGRAMS)
 testseamount.log: testseamount$(EXEEXT)
 	@p='testseamount$(EXEEXT)'; \
 	b='testseamount'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testseamount_rnd.log: testseamount_rnd$(EXEEXT)
+	@p='testseamount_rnd$(EXEEXT)'; \
+	b='testseamount_rnd'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -23,6 +23,10 @@ program mg_testseamount
   real(kind=rp), dimension(:,:,:), allocatable, target :: u,v,w
   real(kind=rp), dimension(:,:,:), pointer :: up,vp,wp
 
+  real(kind=rp), dimension(:,:,:), pointer :: tmp_rnd, tmp_rnd2
+  integer(kind=ip) :: pi, pj
+  integer(kind=ip) :: ib, ie, jb, je, kb, ke
+
   integer(kind=ip) :: nit=1
   integer(kind=ip):: nxg  = 64       ! global x dimension
   integer(kind=ip):: nyg  = 64       ! global y dimension
@@ -156,15 +160,55 @@ program mg_testseamount
   allocate(v(1-is:nx+is,1-is:ny+is,1:nz))
   allocate(w(1-is:nx+is,1-is:ny+is,0:nz))
 
+  up => u
+  vp => v
+  wp => w
+
+  if (rank==0) then
+     write(*,*)''
+     write(*,*)'U, V and W are initalized with random numbers /= on each process'
+  endif
+  pj = rank/npxg
+  pi = mod(rank,npxg)
+
+  ib = 1 + pi * nx
+  jb = 1 + pj * ny
+
+  ie = ib + nx - 1
+  je = jb + ny - 1
+
+  allocate(tmp_rnd (1:nxg,1:nyg,1:nzg))
+  allocate(tmp_rnd2(1:nxg,1:nyg,0:nzg))
+
   do it = 1, nit
 
      if (rank==0) then
-        write(*,*)' U=0, V=0 and W=-1 except at bottom'
+        write(*,*)' Random value for U, V and W'
      endif
-     u(:,:,:)    =  0._8
-     v(:,:,:)    =  0._8
-     w(:,:,0)    =  0._8
-     w(:,:,1:nz) = -1._8
+
+     kb = 1
+     ke = nz
+
+     call random_number(tmp_rnd)
+     tmp_rnd = 2._8 * tmp_rnd - 1._8
+     u(1:nx,1:ny,1:nz) = tmp_rnd(ib:ie,jb:je,kb:ke)
+     up => u
+     call fill_halo_ijk(nx,ny,up,'u') ! depend of mg_grids for MPI neighbours !
+
+     call random_number(tmp_rnd)
+     tmp_rnd = 2._8 * tmp_rnd - 1._8
+     v(1:nx,1:ny,1:nz) = tmp_rnd(ib:ie,jb:je,kb:ke)
+     vp => v
+     call fill_halo_ijk(nx,ny,vp,'v') ! depend of mg_grids for MPI neighbours !
+
+     kb = 0
+     ke = nz
+
+     call random_number(tmp_rnd2)
+     tmp_rnd2 = 2._8 * tmp_rnd2 - 1._8
+     w(1:nx,1:ny,0:nz) = tmp_rnd2(ib:ie,jb:je,kb:ke)
+     wp => w
+     call fill_halo_ijk(nx,ny,wp,'w') ! depend of mg_grids for MPI neighbours !
 
      if (netcdf_output) then
         call write_netcdf(u,vname='u',netcdf_file_name='u.nc',rank=rank,iter=it)
@@ -186,6 +230,9 @@ program mg_testseamount
 
   enddo
 
+  deallocate(tmp_rnd)
+  deallocate(tmp_rnd2)
+
   !---------------------!
   !- Deallocate memory -!
   !---------------------!
@@ -201,4 +248,3 @@ program mg_testseamount
   if(rank == 0) call print_tictoc(rank)
 
 end program mg_testseamount
-
