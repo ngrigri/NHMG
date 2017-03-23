@@ -2,6 +2,9 @@ Git:
 ---
 Impossible to use github on Curie machine, no comminication to outside!
 
+A solution
+https://github.com/feelpp/feelpp/wiki/Git
+
 Environment:
 -----------
 module unload intel
