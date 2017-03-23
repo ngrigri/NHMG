@@ -216,19 +216,19 @@ contains
     real(kind=rp), dimension(:,:),   pointer :: dx,dy
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
 
-    integer(kind=ip) :: i,j,k,is,js
+    integer(kind=ip) :: i,j,k,is,js,ishift
     integer(kind=ip) :: nx,ny,nz
 
     integer(kind=ip), save :: iter_solve=0
     iter_solve = iter_solve + 1
 
-!    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
+    !    if (myrank==0) write(*,*)' nhmg_solve:',iter_solve
 
     call tic(1,'nhmg_solve')
-   
-!    write(*,*) 'rank',myrank,'lbound(ua)',lbound(ua)
-!    write(*,*) 'rank',myrank,'ubound(ua)',ubound(ua)
-!    write(*,*) 'rank',myrank,'shape(ua)',shape(ua)
+
+    !    write(*,*) 'rank',myrank,'lbound(ua)',lbound(ua)
+    !    write(*,*) 'rank',myrank,'ubound(ua)',ubound(ua)
+    !    write(*,*) 'rank',myrank,'shape(ua)',shape(ua)
 
     nx = grid(1)%nx
     ny = grid(1)%ny
@@ -242,42 +242,45 @@ contains
 
     ! need to update dz because define_matrices may not be called every time step
     dz => grid(1)%dz
+
+    ishift=2
+
     do k=1,nz
        do j=0,ny+1
-          js=j+2 
+          js=j+ishift
           do i=0,nx+1
-             is=i+2
+             is=i+ishift
              dz(k,j,i) = Hza(is,js,k)
           enddo
        enddo
     enddo
+
     if (fill_hz) then
-       ! fill Hz only at predictor 
        call fill_halo(1,dz)
     endif
 
     ! set fluxes
     do k=1,nz
        do j=1,ny
-          js=j+2
+          js=j+ishift
           do i=1,nx+1
-             is=i+2
+             is=i+ishift
              u(k,j,i) = ua(is,js,k) * &
                   qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
-          enddo          
+          enddo
        enddo
        do j=1,ny+1
-          js=j+2
+          js=j+ishift
           do i=1,nx
-             is=i+2
+             is=i+ishift
              v(k,j,i) = va(is,js,k) * &
                   qrt * (dz(k,j,i) + dz(k,j-1,i)) * (dx(j,i)+dx(j-1,i))
           enddo
        enddo
        do j=1,ny
-          js=j+2
+          js=j+ishift
           do i=1,nx
-             is=i+2
+             is=i+ishift
              w(k+1,j,i) = wa(is,js,k+1) * &
                   dx(j,i) * dy(j,i)
           enddo
@@ -318,9 +321,9 @@ contains
 
     !- check step - the projected u,v,w do not work
 
-!    if (associated(u)) u => null()
-!    if (associated(v)) v => null()
-!    if (associated(w)) w => null()
+    !    if (associated(u)) u => null()
+    !    if (associated(v)) v => null()
+    !    if (associated(w)) w => null()
 
     call toc(1,'nhmg_solve')
 
