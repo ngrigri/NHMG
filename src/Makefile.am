@@ -44,7 +44,6 @@ libnhmg_la_SOURCES =       \
 	nhmg_debug.f90         \
 	nhmg.f90
 
-#include_HEADERS = nhmg.mod nhmg_debug.mod
 nodist_include_HEADERS =   \
 	mg_cst.mod             \
 	mg_mpi.mod             \
@@ -62,7 +61,5 @@ nodist_include_HEADERS =   \
 	mg_solvers.mod         \
 	nhmg_debug.mod         \
 	nhmg.mod
-
-#libnhmg_la_DEPENDENCIES = nhmg.mod nhmg_debug.mod mg_mpi.mod mg_grids.mod
 
 
