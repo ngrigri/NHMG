@@ -382,8 +382,6 @@ libnhmg_la_SOURCES = \
 	nhmg_debug.f90         \
 	nhmg.f90
 
-
-#include_HEADERS = nhmg.mod nhmg_debug.mod
 nodist_include_HEADERS = \
 	mg_cst.mod             \
 	mg_mpi.mod             \
@@ -809,8 +807,6 @@ clean-local:
 
 cleanf:
 	-rm -f *.nc fort.* *.dump *.xml gmon.out *.log *__genmod*
-
-#libnhmg_la_DEPENDENCIES = nhmg.mod nhmg_debug.mod mg_mpi.mod mg_grids.mod
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
