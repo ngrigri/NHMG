@@ -178,8 +178,8 @@ contains
           enddo
        enddo
 
-       call set_phybound2zero(lev,zxdy,gt='u')
-       call set_phybound2zero(lev,zydx,gt='v')
+!       call set_phybound2zero(lev,zxdy,gt='u')
+!       call set_phybound2zero(lev,zydx,gt='v')
 
        !!- Used in set_matrices and fluxes
        do i = 0,nx+1
