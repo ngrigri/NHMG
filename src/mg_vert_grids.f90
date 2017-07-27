@@ -53,8 +53,8 @@ contains
 
        if (lev == 1) then ! zr,dz from croco
 
-          grid(lev)%zr(1:nz,0:ny+1,0:nx+1) = z_r !only 1 extra point ??????????
-          grid(lev)%dz(1:nz,0:ny+1,0:nx+1) = Hz !only 1 extra point ??????????
+          grid(lev)%zr(1:nz,0:ny+1,0:nx+1) = z_r
+          grid(lev)%dz(1:nz,0:ny+1,0:nx+1) = Hz
 
        else               ! coarsen zr,dz (needed when directly discretizing on coarser grids)
 
@@ -80,7 +80,7 @@ contains
           endif
 
           ! Call fine2coarse
-          zrc(1:nzc,1:nyc,1:nxc) = eighth * (       & !only interior points ?????????? 
+          zrc(1:nzc,1:nyc,1:nxc) = eighth * (       &
                zrf(1:nzf  :2,1:nyf  :2,1:nxf  :2) + &
                zrf(1:nzf  :2,2:nyf+1:2,1:nxf  :2) + &
                zrf(1:nzf  :2,1:nyf  :2,2:nxf+1:2) + &
@@ -91,14 +91,14 @@ contains
                zrf(2:nzf+1:2,2:nyf+1:2,2:nxf+1:2) )
 
           ! Call fine2coarse
-          dzc(1:nzc,1:nyc,1:nxc) = 2._rp * eighth * (        & !only interior points ?????????? 
-               dzf(1:nzf  :2,1:nyf  :2,1:nxf  :2) + &
-               dzf(1:nzf  :2,2:nyf+1:2,1:nxf  :2) + &
-               dzf(1:nzf  :2,1:nyf  :2,2:nxf+1:2) + &
-               dzf(1:nzf  :2,2:nyf+1:2,2:nxf+1:2) + &
-               dzf(2:nzf+1:2,1:nyf  :2,1:nxf  :2) + &
-               dzf(2:nzf+1:2,2:nyf+1:2,1:nxf  :2) + &
-               dzf(2:nzf+1:2,1:nyf  :2,2:nxf+1:2) + &
+          dzc(1:nzc,1:nyc,1:nxc) = 2._rp * eighth * ( &
+               dzf(1:nzf  :2,1:nyf  :2,1:nxf  :2) +   &
+               dzf(1:nzf  :2,2:nyf+1:2,1:nxf  :2) +   &
+               dzf(1:nzf  :2,1:nyf  :2,2:nxf+1:2) +   &
+               dzf(1:nzf  :2,2:nyf+1:2,2:nxf+1:2) +   &
+               dzf(2:nzf+1:2,1:nyf  :2,1:nxf  :2) +   &
+               dzf(2:nzf+1:2,2:nyf+1:2,1:nxf  :2) +   &
+               dzf(2:nzf+1:2,1:nyf  :2,2:nxf+1:2) +   &
                dzf(2:nzf+1:2,2:nyf+1:2,2:nxf+1:2) )
 
           if (grid(lev)%gather == 1) then
@@ -120,8 +120,8 @@ contains
 
        !! compute derived qties
 
-       dx => grid(lev)%dx
-       dy => grid(lev)%dy
+       dx    => grid(lev)%dx
+       dy    => grid(lev)%dy
        zr    => grid(lev)%zr
        dz    => grid(lev)%dz
 
@@ -178,8 +178,8 @@ contains
           enddo
        enddo
 
-!       call set_phybound2zero(lev,zxdy,gt='u')
-!       call set_phybound2zero(lev,zydx,gt='v')
+       call set_phybound2zero(lev,zxdy,gt='u')
+       call set_phybound2zero(lev,zydx,gt='v')
 
        !!- Used in set_matrices and fluxes
        do i = 0,nx+1
