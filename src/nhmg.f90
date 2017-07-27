@@ -88,17 +88,14 @@ contains
 !!! 
     rw => rwa
 
-    !XXXXXXXXXXXXXXXXXXXXXXXXX
-    !care with dz. properly updated?
-
     do i = 1,nx
        do j = 1,ny
           do k = 1,nz
              dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(               &
-                  ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))     &
+                    ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))     &
                   + ru(k,j,i+1)/(dz(k,j,i) + dz(k,j,i+1)) ) &
                   + zydx(k,j,i)/dx(j,i)*(                   &
-                  rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))     &
+                    rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))     &
                   + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
           enddo
           do k = 2,nz
@@ -115,6 +112,105 @@ contains
 !!! dirty reshape arrays indexing kji -> ijk !!!
 
   end subroutine nhmg_comp_rw
+
+  !--------------------------------------------------------------
+  subroutine nhmg_rw_time(nx,ny,nz,Huona,Hvoma,zwa,ua,va,wa,rwa)
+
+    integer(kind=ip), intent(in) :: nx, ny, nz
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: Huona,Hvoma
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: zwa,wa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: ua,va
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(inout):: rwa
+
+    real(kind=rp), dimension(:,:)  , pointer :: dx,dy
+    real(kind=rp), dimension(:,:,:), pointer :: Huon,Hvom
+    real(kind=rp), dimension(:,:,:), pointer :: zr,dz,zw
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+    real(kind=rp), dimension(:,:),   pointer :: zeta_t
+    real(kind=rp), dimension(:,:,:), pointer :: zr_t,zr_tx,zr_ty
+    real(kind=rp), dimension(:,:,:), pointer :: rw
+    real(kind=rp), dimension(nz)             :: wrk
+
+    integer(kind=ip) :: i,j,k
+
+    dx => grid(1)%dx
+    dy => grid(1)%dy
+    zr => grid(1)%zr
+    dz => grid(1)%dz
+
+    Huon => Huona
+    Hvom => Hvoma
+    zw => zwa
+    u => ua
+    v => va
+    w => wa
+    rw => rwa
+
+    allocate(zeta_t(0:ny+1,0:nx+1))
+    allocate(zr_t(1:nz,0:ny+1,0:nx+1))
+    allocate(zr_tx(1:nz,0:ny+1,0:nx+1))
+    allocate(zr_ty(1:nz,0:ny+1,0:nx+1))
+
+    do i = 1,nx
+       do j = 1,ny
+          zeta_t(j,i) = 0.
+          do k = 1,nz
+             zeta_t(j,i) = zeta_t(j,i) &
+                  -Huon(i+1,j,k)+Huon(i,j,k) &
+                  -Hvom(i,j+1,k)+Hvom(i,j,k)
+          end do
+          zeta_t(j,i) = zeta_t(j,i)/(dx(j,i)*dy(j,i))
+          do k = 1,nz
+             zr_t(k,j,i) = zeta_t(j,i) * (zr(k,j,i   )-zw(i,j,1)) &
+                                       / (zw(i,j,nz+1)-zw(i,j,1))
+          end do
+       enddo
+    enddo
+
+    call fill_halo(1,zeta_t)
+    call fill_halo(1,zr_t)
+
+    do i = 1,nx
+       do j = 1,ny
+          do k = 1,nz
+             zr_tx(k,j,i) = 0.5 * (zr_t(k,j,i+1)-zr_t(k,j,i-1)) / dx(j,i)
+             zr_ty(k,j,i) = 0.5 * (zr_t(k,j+1,i)-zr_t(k,j-1,i)) / dy(j,i)
+          end do
+       enddo
+    enddo
+
+    call fill_halo(1,zr_tx)
+    call fill_halo(1,zr_ty)
+
+    do i = 1,nx
+       do j = 1,ny
+          do k = 1,nz
+!             wrk(k) = 0.5*(+zr_tx(k,j,i)*u(i  ,j,k) &
+!                           +zr_tx(k,j,i)*u(i+1,j,k)) &
+!                     +0.5*(+zr_ty(k,j,i)*v(i,j  ,k) &
+!                           +zr_ty(k,j,i)*v(i,j+1,k))
+             wrk(k) = 0.25*(+zr_tx(k,j,i)*(dz(k,j,i-1)+dz(k,j,i))*u(i  ,j,k) &
+                            +zr_tx(k,j,i)*(dz(k,j,i)+dz(k,j,i+1))*u(i+1,j,k)) &
+                     +0.25*(+zr_ty(k,j,i)*(dz(k,j-1,i)+dz(k,j,i))*v(i,j  ,k) &
+                            +zr_ty(k,j,i)*(dz(k,j,i)+dz(k,j+1,i))*v(i,j+1,k))
+          enddo
+          do k = 2,nz
+             rw(i,j,k) = rw(i,j,k) &
+!                  - 0.25*dx(j,i)*dy(j,i)*(dz(k,j,i)+dz(k-1,j,i))*(wrk(k)+wrk(k-1)) 
+                  - 0.5*dx(j,i)*dy(j,i)*(wrk(k)+wrk(k-1))
+          enddo
+          rw(i,j,nz+1) = rw(i,j,nz+1) &
+!               - 0.5*dx(j,i)*dy(j,i)*dz(nz,j,i)*wrk(nz) 
+               - 0.5*dx(j,i)*dy(j,i)*wrk(nz) 
+       enddo
+    enddo
+
+    deallocate(zr_t)
+    deallocate(zr_tx)
+    deallocate(zr_ty)
+
+  end subroutine nhmg_rw_time
 
   !--------------------------------------------------------------
   subroutine nhmg_matrices(nx,ny,nz,zra,Hza,dxa,dya)
