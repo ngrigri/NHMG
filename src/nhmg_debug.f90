@@ -121,6 +121,36 @@ contains
   end subroutine nhmg_write_pred_inter2
 
   !--------------------------------------------------------------
+  subroutine nhmg_write_pred_2d(nx,ny,zetaa,du1a,dv1a,du2a,dv2a)
+
+    integer(kind=ip), intent(in) :: nx, ny
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: zetaa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: du1a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: dv1a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: du2a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: dv2a
+
+    real(kind=rp), dimension(:,:), pointer :: zeta,du1,dv1,du2,dv2
+
+    integer(kind=ip), save :: iter_write_pred_2d=0
+    iter_write_pred_2d = iter_write_pred_2d + 1
+
+    zeta => zetaa
+    du1 => du1a
+    dv1 => dv1a
+    du2 => du2a
+    dv2 => dv2a
+
+    call write_netcdf(zeta,vname='zeta',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(du1,vname='du1',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(dv1,vname='dv1',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(du2,vname='du2',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(dv2,vname='dv2',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+
+  end subroutine nhmg_write_pred_2d
+
+  !--------------------------------------------------------------
   subroutine nhmg_write_pred_out(nx,ny,nz,ua,va,wa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
@@ -202,15 +232,20 @@ contains
   end subroutine nhmg_write_corr_inter1
 
   !--------------------------------------------------------------
-  subroutine nhmg_write_corr_inter2(nx,ny,nz,ua,va,wa)
+  subroutine nhmg_write_corr_inter2(nx,ny,nz,ua,va,wa,hza,du_avga,dv_avga)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: ua
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: va
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: wa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz),   target, intent(in) :: hza
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2),        target, intent(in) :: du_avga
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2),        target, intent(in) :: dv_avga
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
+    real(kind=rp), dimension(:,:,:), pointer :: hz
+    real(kind=rp), dimension(:,:),   pointer :: du_avg,dv_avg
 
     integer(kind=ip), save :: iter_write_corr_inter2=0
     iter_write_corr_inter2 = iter_write_corr_inter2 + 1
@@ -218,10 +253,16 @@ contains
     u => ua
     v => va
     w => wa
+    hz => hza
+    du_avg => du_avga
+    dv_avg => dv_avga
 
     call write_netcdf(u,vname='u',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
     call write_netcdf(v,vname='v',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
     call write_netcdf(w,vname='w',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
+    call write_netcdf(hz,vname='hz',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
+    call write_netcdf(du_avg,vname='du',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
+    call write_netcdf(dv_avg,vname='dv',netcdf_file_name='wrt_corr_inter2.nc',rank=myrank,iter=iter_write_corr_inter2)
 
   end subroutine nhmg_write_corr_inter2
 
@@ -313,6 +354,36 @@ contains
     call write_netcdf(rv,vname='rv',netcdf_file_name='wrt_pred_inter.nc',rank=myrank,iter=iter_write_pred_inter)
 
   end subroutine h_write_pred_inter
+
+  !--------------------------------------------------------------
+  subroutine h_write_pred_2d(nx,ny,zetaa,du1a,dv1a,du2a,dv2a)
+
+    integer(kind=ip), intent(in) :: nx, ny
+
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: zetaa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: du1a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: dv1a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: du2a
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2), target, intent(in) :: dv2a
+
+    real(kind=rp), dimension(:,:), pointer :: zeta,du1,dv1,du2,dv2
+
+    integer(kind=ip), save :: iter_write_pred_2d=0
+    iter_write_pred_2d = iter_write_pred_2d + 1
+
+    zeta => zetaa
+    du1 => du1a
+    dv1 => dv1a
+    du2 => du2a
+    dv2 => dv2a
+
+    call write_netcdf(zeta,vname='zeta',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(du1,vname='du1',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(dv1,vname='dv1',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(du2,vname='du2',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+    call write_netcdf(dv2,vname='dv2',netcdf_file_name='wrt_pred_2d.nc',rank=myrank,iter=iter_write_pred_2d)
+
+  end subroutine h_write_pred_2d
 
   !--------------------------------------------------------------
   subroutine h_write_pred_out(nx,ny,nz,ua,va)
