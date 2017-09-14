@@ -1,9 +1,18 @@
+SSH and file transfert:
+----------------------
+ssh -X griman@curie-fr.ccc.cea.fr
+scp tarball.tar.gz griman@curie-fr.ccc.cea.fr:.
+
 Git:
 ---
 Impossible to use github on Curie machine, no comminication to outside!
 
 A solution
 https://github.com/feelpp/feelpp/wiki/Git
+
+Local emacs -> curie files:
+--------------------------
+/griman@curie-fr.ccc.cea.fr:/ccc/cont003/home/gen9178/griman/CROCO-NH/CROCO-NH/Run/
 
 Environment:
 -----------
@@ -16,21 +25,21 @@ Configuration and compilation (bash):
 
 export MPI_INC=/opt/mpi/bullxmpi/1.2.8.4/lib 
 export MPI_LIB=/opt/mpi/bullxmpi/1.2.8.4/lib
-export NETCDF_INC=/ccc/products/netcdf-4.2/default/include
-export NETCDF_LIB=/ccc/products/netcdf-4.2/default/lib
 
 (Avx option only on Curie thin nodes !)
 It's a cross compilation configuration:
-./configure --prefix=/ccc/cont003/home/gen9178/griman/NH_Multigrid --enable-openmpi --enable-netcdf --enable-optimization=aggressive --enable-avx
+./configure --prefix=/ccc/cont003/home/gen9178/griman/NHMG --enable-openmpi --enable-netcdf --enable-optimization=aggressive --enable-avx
 make clean
 make 
 make install
 
-Submission:
-----------
+Submission and stats:
+--------------------
 Examples are available in the examples/curie directory
 
 ccc_msub job_curie_mpi.slurm
+
+ccc_mpstat -u griman
 
 Namelist:
 --------

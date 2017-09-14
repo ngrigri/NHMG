@@ -32,8 +32,6 @@ Configuration and compilation (bash):
 -----------------------------
 export MPI_INC=/smplocal/intel/compilers_and_libraries_2017.1.132/linux/mpi/intel64/include
 export MPI_LIB=/smplocal/intel/compilers_and_libraries_2017.1.132/linux/mpi/intel64/lib
-export NETCDF_INC=/smplocal/pub/NetCDF/4.3.3.1/seq/include
-export NETCDF_LIB=/smplocal/pub/NetCDF/4.3.3.1/seq/lib
 
 ./configure --prefix=/linkhome/rech/dgw/rdgw004/NHMG --enable-intel_mpi  --enable-netcdf --enable-ada
 [--enable-traceanalyser] [--enable-optimization=aggressive] [--enable-optimization=debug] [--enable-profiling]
