@@ -7,19 +7,26 @@ LIBNHMGDIR = ${SRCDIR}
 
 AM_FCFLAGS  = ${AM_CPPFLAGS} $(FCFLAGS_f90) -I$(top_srcdir)/src
 AM_FFLAGS   = ${AM_FCFLAGS}
-##AM_LDFLAGS  = -L/opt/linux/mpich2/1.5-intel12.1/lib -lmpich 
-##AM_LDFLAGS += -L/opt/linux/netcdf/4.1.3-intel12/64/lib -lnetcdf -lnetcdff
 AM_LDFLAGS  = $(TESTLIBS)
 AM_LDFLAGS += ${top_builddir}/src/libnhmg.la -lnhmg
+
+##
+SUBDIRS	       = .
+
+bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
+EXTRA_DIST  = $(bin_SCRIPTS)
+
+############################################################################
+# Compile test only if --enable-netcdf is present in the configure options #
+############################################################################
+if NETCDF_CMP
+
+if NHMG_TESTS
 
 F90_TESTS = testseamount testseamount_rnd testrndtopo testfillhalo testcuc
 
 check_PROGRAMS = $(F90_TESTS)
 TESTS          = $(F90_TESTS)
-
-
-##
-SUBDIRS	       = .
 
 bin_PROGRAMS   =     \
     testseamount     \
@@ -28,12 +35,6 @@ bin_PROGRAMS   =     \
 	testfillhalo     \
 	testcuc          \
     nhmg_ncjoin
-
-bin_SCRIPTS = nhmg_namelist ts_namelist rt_namelist fh_namelist cuc_namelist
-
-#nmldir    = $(prefix)/tests
-#nml_DATA  = $(bin_SCRIPTS)
-EXTRA_DIST     = $(bin_SCRIPTS)
 
 ##
 testseamount_SOURCES=       \
@@ -68,7 +69,11 @@ testcuc_SOURCES =           \
 
 ##
 nhmg_ncjoin_SOURCES =       \
-	nhmg_ncjoin.f90           
+	nhmg_ncjoin.f90
+
+endif
+
+endif   
 
 clean-local:
 	-rm -f *.mod *.o

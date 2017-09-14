@@ -35,7 +35,7 @@ AC_PREREQ([2.59])
 #
 ## Initialize autoconf with name of project, version, bug report 
 ## and support email address.
-AC_INIT([NHMG],[0.1.8],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
+AC_INIT([NHMG],[0.2.0],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
 #
 #
 ## Set the directory that contains support scripts such as install-sh
@@ -65,6 +65,38 @@ AC_PROG_INSTALL
 ## Configue argument definition.
 ## AC_ARG_ENABLE(..,..,etc)
 #
+
+#
+## MPI libraries
+##
+AC_ARG_ENABLE(
+    mpt,
+    [  --enable-mpi_mpt - MPT library and includes (caparmor!).],
+    enable_mpi_mpt=yes,
+    enable_mpi_mpt=no
+             )
+
+AC_ARG_ENABLE(
+    intel_mpi,
+    [  --enable-intel_mpi - Intel MPI library and includes.],
+    enable_intel_mpi=yes,
+    enable_intel_mpi=no
+             )
+
+AC_ARG_ENABLE(
+    openmpi,
+    [  --enable-openmpi - OpenMPI library and includes.],
+    enable_openmpi=yes,
+    enable_openmpi=no
+             )
+
+AC_ARG_ENABLE(
+    mpich,
+    [  --enable-mpich - MPICH library and includes.],
+    enable_mpich=yes,
+    enable_mpich=no
+             )
+
 ## OPTIMIZATION LEVELS
 ##
 AC_ARG_ENABLE(
@@ -108,37 +140,6 @@ AC_ARG_ENABLE(
              )
 
 #
-## MPI libraries
-##
-AC_ARG_ENABLE(
-    mpt,
-    [  --enable-mpi_mpt - MPT library and includes (caparmor!).],
-    enable_mpi_mpt=yes,
-    enable_mpi_mpt=no
-             )
-
-AC_ARG_ENABLE(
-    intel_mpi,
-    [  --enable-intel_mpi - Intel MPI library and includes.],
-    enable_intel_mpi=yes,
-    enable_intel_mpi=no
-             )
-
-AC_ARG_ENABLE(
-    openmpi,
-    [  --enable-openmpi - OpenMPI library and includes.],
-    enable_openmpi=yes,
-    enable_openmpi=no
-             )
-
-AC_ARG_ENABLE(
-    mpich,
-    [  --enable-mpich - MPICH library and includes.],
-    enable_mpich=yes,
-    enable_mpich=no
-             )
-
-#
 ## OpenMP
 ##
 AC_ARG_ENABLE(
@@ -149,7 +150,7 @@ AC_ARG_ENABLE(
              )
 
 #
-## Netcdf if it is need for Netcdf4
+## Netcdf if it is need
 ##
 AC_ARG_ENABLE(
     netcdf,
@@ -159,13 +160,13 @@ AC_ARG_ENABLE(
              )
 
 #
-## Hdf5 if it is need for Netcdf4
+## compile tests if it is require (Netcdf has to be enable !)
 ##
 AC_ARG_ENABLE(
-    hdf5,
-    [  --enable-hdf5 - HDF5 for Netcdf 4.],
-    enable_hdf5=yes,
-    enable_hdf5=no
+    tests,
+    [  --enable-tests - Compile some tests (if netcdf is available).],
+    enable_tests=yes,
+    enable_tests=no
              )
 
 #
@@ -523,7 +524,6 @@ if test "$enable_mpich" = "yes" ; then
   TESTLIBS="$TESTLIBS  -I${MPI_INC} -L${MPI_LIB} -lmpich -lmpichf90"
 fi
 
-
 ########################################################
 ## Test if fortran compiler works on a simple program ##
 ########################################################
@@ -546,172 +546,38 @@ if test "x$nc_ans" = xno; then
   AC_MSG_ERROR([A simple Fortran 90 test doesn't work.])
 fi
 
-#
-#########################################################################
-# Checks for library functions. (From NCO configure.in)
-#########################################################################
+################################
+## NETCDF INCLUDE and LIBRARY ##
+################################
 if test "$enable_netcdf" = "yes" ; then
-# Begin Mandatory Link Test with libnetcdf.a
-# Make precious variables for ./configure --help
-  AC_ARG_VAR(NETCDF_INC,Location of NetCDF module (compile-time))
-  AC_ARG_VAR(NETCDF_LIB,Location of NetCDF library (compile-time))
-# Add user-specified netCDF locations, if any, else add /usr/local/ 
-# locations if they exist
-################
-## NETCDF_LIB ##
-################
-  if test "${NETCDF_LIB}"; then
-      if test -d "${NETCDF_LIB}"; then
-        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
-          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
-            TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
-            if test "$enable_ada" = "yes" ; then
-              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
-            fi
-          else
-  	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
-            if test "$enable_ada" = "yes" ; then
-              LDFLAGS="${LDFLAGS} -L${NETCDF_LIB} -lnetcdf"
-            fi
-          fi
-        else
-          AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
-        fi
-      else
-        AC_MSG_ERROR([${NETCDF_LIB} location does not exist!])
-      fi
+
+  netcdf=true
+
+  if test "$enable_tests" = "yes" ; then
+    nhtests=true
   else
-      case "$host" in
-        *apple-darwin*)
-          NETCDF_LIB="/sw/lib/netcdf-gfortran/lib";;
-        *)
-          NETCDF_LIB="/usr/lib"
-      esac
-      if test -d "${NETCDF_LIB}"; then
-        if test -f "${NETCDF_LIB}/libnetcdf.a"; then
-          if test -f "${NETCDF_LIB}/libnetcdff.a"; then
-            TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
-          else
-  	        TESTLIBS="${TESTLIBS} -L${NETCDF_LIB} -lnetcdf"
-          fi
-        else
-          AC_MSG_ERROR([Can't find libnetcdf.a in ${NETCDF_LIB}])
-        fi
-      else
-        AC_MSG_ERROR([${NETCDF_LIB} location does not exist!])
-      fi
+    nhtests=false
   fi
 
-################
-## NETCDF_INC ##
-################
-  if test "${NETCDF_INC}"; then
-      if test -d "${NETCDF_INC}"; then
-        if test -f "${NETCDF_INC}/netcdf.mod"; then
-  	FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
-        else
-          AC_MSG_ERROR([Can't find netcdf.mod in ${NETCDF_INC}])
-        fi
-      else
-  	AC_MSG_ERROR([{NETCDF_INC} location does not exist!])
-      fi
-  else
-      case "$host" in
-        *apple-darwin*)
-          NETCDF_INC="/sw/lib/netcdf-gfortran/include";;
-        *) 
-	  NETCDF_INC="/usr/include"
-      esac
-      if test -d "${NETCDF_INC}"; then
-        if test -f "${NETCDF_INC}/netcdf.mod"; then
-       	  FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
-        else
-          AC_MSG_ERROR([Can't find netcdf.mod in ${NETCDF_INC}])
-        fi
-      else
-  	    AC_MSG_ERROR([{NETCDF_INC} location does not exist!])
-      fi
-  fi
+  cd src
+  ln -fs mg_netcdf_out_true.f90 mg_netcdf_out.f90
+  cd ..
 
-##############
-## messages ##
-##############
-  AC_MSG_NOTICE([  -> NetCDF library: ${NETCDF_LIB}])
+  AC_ARG_VAR(NETCDF_INC,Location of netCDF module (compile-time))
+  AC_ARG_VAR(NETCDF_LIB,Location of netCDF library (compile-time))
+
+  NETCDF_INC=`nc-config --includedir`
+  NETCDF_LIB=`nc-config --libs`
+  NETCDF_LIB="`nc-config --flibs` ${NETCDF_LIB}"
+
   AC_MSG_NOTICE([  -> NetCDF module : ${NETCDF_INC}])
+  AC_MSG_NOTICE([  -> NetCDF library: ${NETCDF_LIB}])
 
-###############
-## HDF5  LIB ##
-###############
-  if test "$enable_hdf5" = "yes" ; then
-    if test "${HDF5_LIB}"; then
-      if test -d "${HDF5_LIB}"; then
-         TESTLIBS="${TESTLIBS} -L${HDF5_LIB}"
-        if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
-   	  TESTLIBS="${TESTLIBS} -lhdf5_hl"
-        else
-          AC_MSG_ERROR([Can't find libhdf5_hl.a in ${HDF5_LIB}])
-        fi
-        if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
-          TESTLIBS="${TESTLIBS} -lhdf5_fortran"
-        fi
-        if test -f "${HDF5_LIB}/libhdf5.a"; then
-          TESTLIBS="${TESTLIBS} -lhdf5"
-        else
-          AC_MSG_ERROR([Can't find libhdf5.a in ${HDF5_LIB}])
-        fi
-        if test -f "${HDF5_LIB}/libz.a"; then
-          TESTLIBS="${TESTLIBS} -lz"
-        fi
-      else
-        AC_MSG_ERROR([${HDF5_LIB} location does not exist!])
-      fi
-    else
-      HDF5_LIB="/usr/lib"
-      if test -d "${HDF5_LIB}"; then
-         TESTLIBS="${TESTLIBS} -L${HDF5_LIB}"
-         if test -f "${HDF5_LIB}/libhdf5_hl.a"; then
-           TESTLIBS="${TESTLIBS} -lhdf5_hl"
-         else
-           AC_MSG_ERROR([Can't find libhdf5_hl.a in ${HDF5_LIB}])
-         fi
-         if test -f "${HDF5_LIB}/libhdf5_fortran.a"; then
-           TESTLIBS="${TESTLIBS} -lhdf5_fortran"
-         fi
-         if test -f "${HDF5_LIB}/libhdf5.a"; then
-           TESTLIBS="${TESTLIBS} -lhdf5"
-         else
-           AC_MSG_ERROR([Can't find libhdf5.a in ${HDF5_LIB}])
-         fi
-         if test -f "${HDF5_LIB}/libz.a"; then
-          TESTLIBS="${TESTLIBS} -lz"
-         fi
-      else
-        AC_MSG_ERROR([${HDF5_LIB} location does not exist!])
-      fi
-    fi
-    AC_MSG_NOTICE([  -> HDF5 library for Netcdf 4 : ${HDF5_LIB}])
-  fi
+  TESTLIBS="${LIBS} ${NETCDF_LIB} -lnetcdff"
+  FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
 
-##################
-## HDF5 INCLUDE ##
-##################
-  if test "$enable_hdf5" = "yes" ; then
-    if test "${HDF5_INC}"; then
-      if test -d "${HDF5_INC}"; then
-         FCFLAGS="${FCFLAGS} -I${HDF5_INC}"
-      else
-        AC_MSG_ERROR([${HDF5_INC} location does not exist!])
-      fi
-    else
-      HDF5_INC="/usr/include"
-      if test -d "${HDF5_INC}"; then
-         FCFLAGS="${FCFLAGS} -I${HDF5_INC}"
-      else
-        AC_MSG_ERROR([${HDF5_INC} location does not exist!])
-      fi
-    fi
-    AC_MSG_NOTICE([  -> HDF5 include for Netcdf 4 : ${HDF5_INC}])
-  fi
+  AC_MSG_NOTICE([  -> LIBS   : ${LIBS}])
+  AC_MSG_NOTICE([  -> FCFLAGS: ${FCFLAGS}])
 
 ######################################################
 ## Test a simple fortran 90 code linked with NetCDF ##
@@ -736,9 +602,20 @@ EOF
     AC_MSG_NOTICE([ ])
     AC_MSG_ERROR([A simple Fortran 90 program linked with Netcdf library doesn't work. Please verify that the NetCDF library was compiled with the Fortran compiler $FC.])
   fi
+else
+
+  netcdf=false
+
+  nhtests=false
+
+  cd src
+  ln -fs mg_netcdf_out_false.f90 mg_netcdf_out.f90
+  cd ..
+
 fi
 
-
+AM_CONDITIONAL([NETCDF_CMP], [test x$netcdf  = xtrue])
+AM_CONDITIONAL([NHMG_TESTS], [test x$nhtests = xtrue])
 
 #########################################################################
 # Export DATA
@@ -785,6 +662,9 @@ echo "ENABLE_NETCDF........ ${enable_netcdf}"
 if test "$enable_netcdf" = "yes" ; then
   echo "  -NETCDF_LIB........ ${NETCDF_LIB}"
   echo "  -NETCDF_INC........ ${NETCDF_INC}"
+  echo "ENABLE_TESTS......... ${enable_tests}"
+else
+  echo "ENABLE_TESTS......... no  >>> WARNING: Please add --enable-netcdf to compile tests <<<"
 fi
 echo "ENABLE_PROFILING..... ${enable_prof}"
 echo "ENABLE_TRACEANALYSER. ${enable_traceanalyser}"
@@ -795,6 +675,6 @@ date
 # Inform users of the very useful configure.eg
 echo ""
 echo "*******************************************************************"
-echo "*              NHMG's configuration is completed                *" 
+echo "*              NHMG's configuration is completed                  *" 
 echo "* You are now ready to run 'make clean', 'make' and 'make install'*"
 echo "*******************************************************************"

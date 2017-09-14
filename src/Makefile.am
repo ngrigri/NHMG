@@ -24,6 +24,8 @@ cleanf:
 ##
 SUBDIRS	       = .
 
+EXTRA_DIST     =  mg_netcdf_out_true.f90  mg_netcdf_out_false.f90
+
 lib_LTLIBRARIES = libnhmg.la
 libnhmg_la_LDFLAGS = -version-number 0:0:0
 libnhmg_la_SOURCES =       \
