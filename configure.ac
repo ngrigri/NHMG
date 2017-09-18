@@ -35,7 +35,7 @@ AC_PREREQ([2.59])
 #
 ## Initialize autoconf with name of project, version, bug report 
 ## and support email address.
-AC_INIT([NHMG],[0.2.0],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
+AC_INIT([NHMG],[0.2.1],[nmolem@atmos.ucla.edu, Guillaume.Roullet@univ-brest.fr, Nicolas.Ducousso@univ-brest.fr, Nicolas.Grima@univ-brest.fr ],[NHMG],[https://github.com/ngrigri/NHMG])
 #
 #
 ## Set the directory that contains support scripts such as install-sh
@@ -566,15 +566,14 @@ if test "$enable_netcdf" = "yes" ; then
   AC_ARG_VAR(NETCDF_INC,Location of netCDF module (compile-time))
   AC_ARG_VAR(NETCDF_LIB,Location of netCDF library (compile-time))
 
-  NETCDF_INC=`nc-config --includedir`
-  NETCDF_LIB=`nc-config --libs`
-  NETCDF_LIB="`nc-config --flibs` ${NETCDF_LIB}"
+  NETCDF_INC=`nc-config --fflags`
+  NETCDF_LIB=`nc-config --flibs`
 
   AC_MSG_NOTICE([  -> NetCDF module : ${NETCDF_INC}])
   AC_MSG_NOTICE([  -> NetCDF library: ${NETCDF_LIB}])
 
-  TESTLIBS="${LIBS} ${NETCDF_LIB} -lnetcdff"
-  FCFLAGS="${FCFLAGS} -I${NETCDF_INC}"
+  TESTLIBS="${LIBS} ${NETCDF_LIB}"
+  FCFLAGS="${FCFLAGS} ${NETCDF_INC}"
 
   AC_MSG_NOTICE([  -> LIBS   : ${LIBS}])
   AC_MSG_NOTICE([  -> FCFLAGS: ${FCFLAGS}])

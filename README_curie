@@ -16,19 +16,17 @@ Local emacs -> curie files:
 
 Environment:
 -----------
-module unload intel
-
-module load intel/16.0.2.181 bullxmpi netcdf/4.2
+module load netcdf/4.4.0_hdf5
 
 Configuration and compilation (bash):
 -----------------------------
 
-export MPI_INC=/opt/mpi/bullxmpi/1.2.8.4/lib 
-export MPI_LIB=/opt/mpi/bullxmpi/1.2.8.4/lib
+export MPI_INC=${MPI_ROOT}/lib 
+export MPI_LIB=${MPI_ROOT}/lib
 
 (Avx option only on Curie thin nodes !)
 It's a cross compilation configuration:
-./configure --prefix=/ccc/cont003/home/gen9178/griman/NHMG --enable-openmpi --enable-netcdf --enable-optimization=aggressive --enable-avx
+./configure --prefix=/ccc/cont003/home/gen9178/griman/NHMG --enable-openmpi [--enable-netcdf] [--enable-tests] [--enable-optimization=aggressive] [--enable-avx]
 make clean
 make 
 make install
