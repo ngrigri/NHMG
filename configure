@@ -15186,6 +15186,57 @@ fi
 ################################
 if test "$enable_netcdf" = "yes" ; then
 
+  echo ">>>"
+  echo ">>>>> Searching NETCDF LIBRARY information"
+  echo ">>>"
+
+
+
+
+  if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$'nf-config --version'\""; } >&5
+  (eval $'nf-config --version') 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Submit nf-config --fflags and nf-config --flibs" >&5
+$as_echo "$as_me: Submit nf-config --fflags and nf-config --flibs" >&6;}
+    NETCDF_INC=`nf-config --fflags`
+    NETCDF_LIB=`nf-config --flibs`
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: nf-config not found, check if nc-config exist..." >&5
+$as_echo "$as_me: nf-config not found, check if nc-config exist..." >&6;}
+    if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$'nc-config --version'\""; } >&5
+  (eval $'nc-config --version') 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: Yes nc-config command is available." >&5
+$as_echo "$as_me: Yes nc-config command is available." >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: Submit nc-config --fflags and nc-config --flibs" >&5
+$as_echo "$as_me: Submit nc-config --fflags and nc-config --flibs" >&6;}
+      NETCDF_INC=`nc-config --fflags`
+      NETCDF_LIB=`nc-config --flibs`
+    else
+      as_fn_error $? "ERROR: nf-config or nc-config not found, please verify if a NetCDF library is available !!!" "$LINENO" 5
+    fi
+  fi
+
+  if test -n NETCDF_INC; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: NetCDF module: ${NETCDF_INC}" >&5
+$as_echo "$as_me: NetCDF module: ${NETCDF_INC}" >&6;}
+  else
+    as_fn_error $? "ERROR: NETCDF_INC is empty !!!" "$LINENO" 5
+  fi
+  if test -n NETCDF_LIB; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: NetCDF library: ${NETCDF_LIB}" >&5
+$as_echo "$as_me: NetCDF library: ${NETCDF_LIB}" >&6;}
+  else
+    as_fn_error $? "ERROR:  NETCDF_LIB is empty !!!" "$LINENO" 5
+  fi
+
+  TESTLIBS="${LIBS} ${NETCDF_LIB}"
+  FCFLAGS="${FCFLAGS} ${NETCDF_INC}"
+
   netcdf=true
 
   if test "$enable_tests" = "yes" ; then
@@ -15198,24 +15249,8 @@ if test "$enable_netcdf" = "yes" ; then
   ln -fs mg_netcdf_out_true.f90 mg_netcdf_out.f90
   cd ..
 
-
-
-
-  NETCDF_INC=`nc-config --fflags`
-  NETCDF_LIB=`nc-config --flibs`
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}:   -> NetCDF module : ${NETCDF_INC}" >&5
-$as_echo "$as_me:   -> NetCDF module : ${NETCDF_INC}" >&6;}
-  { $as_echo "$as_me:${as_lineno-$LINENO}:   -> NetCDF library: ${NETCDF_LIB}" >&5
-$as_echo "$as_me:   -> NetCDF library: ${NETCDF_LIB}" >&6;}
-
-  TESTLIBS="${LIBS} ${NETCDF_LIB}"
-  FCFLAGS="${FCFLAGS} ${NETCDF_INC}"
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}:   -> LIBS   : ${LIBS}" >&5
-$as_echo "$as_me:   -> LIBS   : ${LIBS}" >&6;}
-  { $as_echo "$as_me:${as_lineno-$LINENO}:   -> FCFLAGS: ${FCFLAGS}" >&5
-$as_echo "$as_me:   -> FCFLAGS: ${FCFLAGS}" >&6;}
+#  AC_MSG_NOTICE([  -> LIBS   : ${LIBS}])
+#  AC_MSG_NOTICE([  -> FCFLAGS: ${FCFLAGS}])
 
 ######################################################
 ## Test a simple fortran 90 code linked with NetCDF ##

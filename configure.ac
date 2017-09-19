@@ -551,6 +551,43 @@ fi
 ################################
 if test "$enable_netcdf" = "yes" ; then
 
+  echo ">>>"
+  echo ">>>>> Searching NETCDF LIBRARY information"
+  echo ">>>"
+
+  AC_ARG_VAR(NETCDF_INC, Location of netCDF module (compile-time))
+  AC_ARG_VAR(NETCDF_LIB, Location of netCDF library (compile-time))
+
+  if AC_TRY_EVAL('nf-config --version'); then
+    AC_MSG_NOTICE([Submit nf-config --fflags and nf-config --flibs])
+    NETCDF_INC=`nf-config --fflags`
+    NETCDF_LIB=`nf-config --flibs`
+  else 
+    AC_MSG_NOTICE([nf-config not found, check if nc-config exist...]) 
+    if AC_TRY_EVAL('nc-config --version'); then
+      AC_MSG_NOTICE([Yes nc-config command is available.])
+      AC_MSG_NOTICE([Submit nc-config --fflags and nc-config --flibs])
+      NETCDF_INC=`nc-config --fflags`
+      NETCDF_LIB=`nc-config --flibs`
+    else
+      AC_MSG_ERROR([ERROR: nf-config or nc-config not found, please verify if a NetCDF library is available !!!])
+    fi
+  fi
+
+  if test -n NETCDF_INC; then
+    AC_MSG_NOTICE([NetCDF module: ${NETCDF_INC}])
+  else
+    AC_MSG_ERROR([ERROR: NETCDF_INC is empty !!!])
+  fi
+  if test -n NETCDF_LIB; then
+    AC_MSG_NOTICE([NetCDF library: ${NETCDF_LIB}])
+  else
+    AC_MSG_ERROR([ERROR:  NETCDF_LIB is empty !!!])
+  fi
+
+  TESTLIBS="${LIBS} ${NETCDF_LIB}"
+  FCFLAGS="${FCFLAGS} ${NETCDF_INC}"
+
   netcdf=true
 
   if test "$enable_tests" = "yes" ; then
@@ -563,20 +600,8 @@ if test "$enable_netcdf" = "yes" ; then
   ln -fs mg_netcdf_out_true.f90 mg_netcdf_out.f90
   cd ..
 
-  AC_ARG_VAR(NETCDF_INC,Location of netCDF module (compile-time))
-  AC_ARG_VAR(NETCDF_LIB,Location of netCDF library (compile-time))
-
-  NETCDF_INC=`nc-config --fflags`
-  NETCDF_LIB=`nc-config --flibs`
-
-  AC_MSG_NOTICE([  -> NetCDF module : ${NETCDF_INC}])
-  AC_MSG_NOTICE([  -> NetCDF library: ${NETCDF_LIB}])
-
-  TESTLIBS="${LIBS} ${NETCDF_LIB}"
-  FCFLAGS="${FCFLAGS} ${NETCDF_INC}"
-
-  AC_MSG_NOTICE([  -> LIBS   : ${LIBS}])
-  AC_MSG_NOTICE([  -> FCFLAGS: ${FCFLAGS}])
+#  AC_MSG_NOTICE([  -> LIBS   : ${LIBS}])
+#  AC_MSG_NOTICE([  -> FCFLAGS: ${FCFLAGS}])
 
 ######################################################
 ## Test a simple fortran 90 code linked with NetCDF ##

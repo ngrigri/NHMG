@@ -6,17 +6,25 @@ Intel compiler + mpich + netcdf
 
 Environment:
 -----------
-module load intel/12.1 mpich2/1.5-intel12 netcdf/4.1.3-intel12
+module load intel/12.1 mpich2/1.5-intel12 netcdf/fortran-4.4.4-intel12
 module list
 Currently Loaded Modulefiles:
- 1) intel/12.1          2) mpich2/1.5-intel12     [3) netcdf/4.1.3-intel12
+ 1) intel/12.1          2) mpich2/1.5-intel12     [3) netcdf/fortran-4.4.4-intel12
 
 Configuration and compilation:
 -----------------------------
 setenv MPI_INC /opt/linux/mpich2/1.5-intel12.1/include
 setenv MPI_LIB /opt/linux/mpich2/1.5-intel12.1/lib
 
+./configure --prefix=/home/grima/CROCO-NH --enable-mpich
+or
+./configure --prefix=/home/grima/CROCO-NH --enable-mpich --enable-netcdf 
+or
+./configure --prefix=/home/grima/CROCO-NH --enable-mpich --enable-netcdf --enable-tests 
+or
 ./configure --prefix=/home/grima/CROCO-NH --enable-mpich --enable-netcdf --enable-tests --enable-optimization=debug
+or
+...
 make clean
 make 
 make install
