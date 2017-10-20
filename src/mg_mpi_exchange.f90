@@ -21,6 +21,11 @@ module mg_mpi_exchange
           set_phybound2zero_3D
   end interface set_phybound2zero
 
+  interface set_rurvbc2zero
+     module procedure   &
+          set_rurvbc2zero_3D
+  end interface set_rurvbc2zero
+
 contains
 
   !----------------------------------------------------------------------------
@@ -951,9 +956,9 @@ contains
             nstag,MPI_COMM_WORLD,req(1),ierr)
        comm(1)=1
     elseif ((lbc).and.(trim(cuv)=='v')) then
-!       p(:,1,:) = zero !- assume that nh = 1
+       p(:,1,:) = zero
     else !!Homogenous Neumann
-       !!       p(:,1-nh:0,1:nx) = p(:,nh:1:-1,1:nx)
+!!$       p(:,1-nh:0,1:nx) = p(:,nh:1:-1,1:nx)
        do ih = 1, nh
           if (ih == 1) then
              p(:,0,1:nx) = p(:,1,1:nx)
@@ -971,7 +976,7 @@ contains
             wetag,MPI_COMM_WORLD,req(2),ierr)
        comm(2)=2
     elseif ((lbc).and.(trim(cuv)=='u')) then
-!       p(:,:,nx+1) = zero !- assume that nh = 1
+       p(:,:,nx+1) = zero
     else  !!Homogenous Neumann
 !!$       p(:,1:ny,nx+1:nx+nh) = p(:,1:ny,nx:nx-nh+1:-1)
        do ih = 1, nh
@@ -991,7 +996,7 @@ contains
             sntag,MPI_COMM_WORLD,req(3),ierr)
        comm(3)=3
     elseif ((lbc).and.(trim(cuv)=='v')) then 
-!       p(:,ny+1,:) = zero !- assume that nh = 1
+       p(:,ny+1,:) = zero
     else  !!Homogenous Neumann  
 !!$       p(:,ny+1:ny+nh,1:nx) = p(:,ny:ny-nh+1:-1,1:nx)
        do ih = 1, nh
@@ -1011,7 +1016,7 @@ contains
             ewtag,MPI_COMM_WORLD,req(4),ierr)
        comm(4)=4
     elseif ((lbc).and.(trim(cuv)=='u')) then
-!       p(:,:,1) = zero !- assume that nh = 1
+       p(:,:,1) = zero
     else   !!Homogenous Neumann
 !!$       p(:,1:ny,1-nh:0) = p(:,1:ny,nh:1:-1)
        do ih = 1, nh

@@ -32,6 +32,7 @@ contains
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
     real(kind=rp), dimension(:,:,:), pointer :: dzw
     real(kind=rp), dimension(:,:,:), pointer :: Arx,Ary
+    real(kind=rp), dimension(:,:,:), pointer :: zx,zy
     real(kind=rp), dimension(:,:,:), pointer :: zydx,zxdy
     real(kind=rp), dimension(:,:,:), pointer :: alpha
     real(kind=rp), dimension(:,:)  , pointer :: beta
@@ -129,6 +130,8 @@ contains
        Arx   => grid(lev)%Arx
        Ary   => grid(lev)%Ary
        Arz   => grid(lev)%Arz
+       zx    => grid(lev)%zx
+       zy    => grid(lev)%zy
        zxdy  => grid(lev)%zxdy
        zydx  => grid(lev)%zydx
        alpha => grid(lev)%alpha
@@ -169,6 +172,18 @@ contains
        enddo
 
        !! Slopes
+       do i = 0,nx+1        ! We need zr with 2 halo points !
+          do j = 0,ny+1     !
+             do k = 1, nz
+                zx(k,j,i) = hlf * (( zr(k,j  ,i+1) - zr(k,j  ,i-1) ) / dx(j,i) )
+                zy(k,j,i) = hlf * (( zr(k,j+1,i  ) - zr(k,j-1,i  ) ) / dy(j,i) )
+             enddo
+          enddo
+       enddo
+
+       call set_phybound2zero(lev,zx,gt='u')
+       call set_phybound2zero(lev,zy,gt='v')
+
        do i = 0,nx+1        ! We need zr with 2 halo points !
           do j = 0,ny+1     !
              do k = 1, nz

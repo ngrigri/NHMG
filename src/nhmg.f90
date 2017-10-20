@@ -37,7 +37,7 @@ contains
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
-  subroutine nhmg_comp_rw(nx,ny,nz,rua,rva,rwa)
+  subroutine nhmg_rw(nx,ny,nz,rua,rva,rwa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
@@ -55,8 +55,11 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: dz
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
 
-    real(kind=rp),dimension(nz) :: dzdhp
+    real(kind=rp),dimension(nz) :: wrk
     integer(kind=ip) :: i,j,k
+
+    integer(kind=ip), save :: iter_rw=0
+    iter_rw = iter_rw + 1
 
     dx    => grid(1)%dx
     dy    => grid(1)%dy
@@ -85,52 +88,69 @@ contains
     rv => rvb
     call fill_halo(1,ru)
     call fill_halo(1,rv)
+    call set_rurvbc2zero(ru,'u')
+    call set_rurvbc2zero(rv,'v')
+
+    if (check_output) then      
+       call write_netcdf(ru,vname='ru',netcdf_file_name='rw.nc',rank=myrank,iter=iter_rw)
+       call write_netcdf(rv,vname='rv',netcdf_file_name='rw.nc',rank=myrank,iter=iter_rw)
+    endif
 !!! 
     rw => rwa
 
     do i = 1,nx
        do j = 1,ny
+          !
           do k = 1,nz
-             dzdhp(k) = zxdy(k,j,i)/dy(j,i)*(               &
-                    ru(k,j,i  )/(dz(k,j,i) + dz(k,j,i-1))     &
-                  + ru(k,j,i+1)/(dz(k,j,i) + dz(k,j,i+1)) ) &
-                  + zydx(k,j,i)/dx(j,i)*(                   &
-                    rv(k,j  ,i)/(dz(k,j,i) + dz(k,j-1,i))     &
-                  + rv(k,j+1,i)/(dz(k,j,i) + dz(k,j+1,i)) )
+             wrk(k) = zxdy(k,j,i) *2.*(               &
+                    ru(k,j,i  ) / ((dz(k,j,i)+dz(k,j,i-1))*(dy(j,i)+dy(j,i-1)))     &
+                  + ru(k,j,i+1) / ((dz(k,j,i)+dz(k,j,i+1))*(dy(j,i)+dy(j,i+1))) )   &
+                  + zydx(k,j,i) *2.*(                   &
+                    rv(k,j  ,i) / ((dz(k,j,i)+dz(k,j-1,i))*(dx(j,i)+dx(j-1,i)))     &
+                  + rv(k,j+1,i) / ((dz(k,j,i)+dz(k,j+1,i))*(dx(j,i)+dx(j+1,i))) )                        
           enddo
+          !
           do k = 2,nz
-             rw(i,j,k) =  - 0.5*( dzdhp(k) + dzdhp(k-1) ) &
-                          * 0.5*( dz(k,j,i) + dz(k-1,j,i) )
+             rw(i,j,k) =  - 0.5*(wrk(k)+wrk(k-1)) * 0.5*(dz(k,j,i)+dz(k-1,j,i))
           enddo
-          rw(i,j,nz+1) =  - dzdhp(nz) *0.5*dz(nz,j,i)
+          rw(i,j,nz+1) =  - wrk(nz) *0.5*dz(nz,j,i)    
        enddo
     enddo
+
+    if (check_output) then      
+       call write_netcdf(rw,vname='rw',netcdf_file_name='rw.nc',rank=myrank,iter=iter_rw)
+    endif
 
 !!! dirty reshape arrays indexing kji -> ijk !!!
     deallocate(rub)
     deallocate(rvb)
 !!! dirty reshape arrays indexing kji -> ijk !!!
 
-  end subroutine nhmg_comp_rw
+  end subroutine nhmg_rw
 
   !--------------------------------------------------------------
-  subroutine nhmg_rw_time(nx,ny,nz,Huona,Hvoma,zwa,ua,va,wa,rwa)
+  subroutine nhmg_rw_advection(nx,ny,nz,Huona,Hvoma,Omegaa,zwa,ua,va,wa,rwa)
 
     integer(kind=ip), intent(in) :: nx, ny, nz
 
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: Huona,Hvoma
-    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: zwa,wa
+    real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(in) :: Omegaa,zwa,wa
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz  ), target, intent(in) :: ua,va
     real(kind=rp), dimension(-1:nx+2,-1:ny+2,1:nz+1), target, intent(inout):: rwa
 
     real(kind=rp), dimension(:,:)  , pointer :: dx,dy
-    real(kind=rp), dimension(:,:,:), pointer :: Huon,Hvom
-    real(kind=rp), dimension(:,:,:), pointer :: zr,dz,zw
+    real(kind=rp), dimension(:,:,:), pointer :: zr,dz
+    real(kind=rp), dimension(:,:,:), pointer :: zx,zy
+    real(kind=rp), dimension(:,:,:), pointer :: Huon,Hvom,Omega,zw
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w
-    real(kind=rp), dimension(:,:),   pointer :: zeta_t
-    real(kind=rp), dimension(:,:,:), pointer :: zr_t,zr_tx,zr_ty
+    real(kind=rp), dimension(:,:,:), pointer :: zr_t,dt_zx,dt_zy
+    real(kind=rp), dimension(:,:,:), pointer :: divx_zx,divx_zy
+    real(kind=rp), dimension(:,:,:), pointer :: divy_zx,divy_zy
+    real(kind=rp), dimension(:,:,:), pointer :: divs_zx,divs_zy
     real(kind=rp), dimension(:,:,:), pointer :: rw
+
     real(kind=rp), dimension(nz)             :: wrk
+    real(kind=rp)                            :: zeta_t
 
     integer(kind=ip) :: i,j,k
 
@@ -138,79 +158,162 @@ contains
     dy => grid(1)%dy
     zr => grid(1)%zr
     dz => grid(1)%dz
+    zx => grid(1)%zx
+    zy => grid(1)%zy
 
     Huon => Huona
     Hvom => Hvoma
+    Omega => Omegaa
     zw => zwa
     u => ua
     v => va
     w => wa
     rw => rwa
 
-    allocate(zeta_t(0:ny+1,0:nx+1))
     allocate(zr_t(1:nz,0:ny+1,0:nx+1))
-    allocate(zr_tx(1:nz,0:ny+1,0:nx+1))
-    allocate(zr_ty(1:nz,0:ny+1,0:nx+1))
+    allocate(dt_zx(1:nz,0:ny+1,0:nx+1))
+    allocate(dt_zy(1:nz,0:ny+1,0:nx+1))
+    allocate(divx_zx(1:nz,0:ny+1,0:nx+1))
+    allocate(divx_zy(1:nz,0:ny+1,0:nx+1))
+    allocate(divy_zx(1:nz,0:ny+1,0:nx+1))
+    allocate(divy_zy(1:nz,0:ny+1,0:nx+1))
+    allocate(divs_zx(1:nz,0:ny+1,0:nx+1))
+    allocate(divs_zy(1:nz,0:ny+1,0:nx+1))
 
+    !dt term
     do i = 1,nx
        do j = 1,ny
-          zeta_t(j,i) = 0.
+          zeta_t = 0.
           do k = 1,nz
-             zeta_t(j,i) = zeta_t(j,i) &
-                  -Huon(i+1,j,k)+Huon(i,j,k) &
-                  -Hvom(i,j+1,k)+Hvom(i,j,k)
+             zeta_t = zeta_t -Huon(i+1,j,k)+Huon(i,j,k) &
+                             -Hvom(i,j+1,k)+Hvom(i,j,k)
           end do
-          zeta_t(j,i) = zeta_t(j,i)/(dx(j,i)*dy(j,i))
+          zeta_t = zeta_t / (dx(j,i)*dy(j,i))
           do k = 1,nz
-             zr_t(k,j,i) = zeta_t(j,i) * (zr(k,j,i   )-zw(i,j,1)) &
-                                       / (zw(i,j,nz+1)-zw(i,j,1))
+             zr_t(k,j,i) = zeta_t * (zr(k,j,i   )-zw(i,j,1)) &
+                                  / (zw(i,j,nz+1)-zw(i,j,1))
           end do
        enddo
     enddo
-
-    call fill_halo(1,zeta_t)
     call fill_halo(1,zr_t)
-
     do i = 1,nx
        do j = 1,ny
           do k = 1,nz
-             zr_tx(k,j,i) = 0.5 * (zr_t(k,j,i+1)-zr_t(k,j,i-1)) / dx(j,i)
-             zr_ty(k,j,i) = 0.5 * (zr_t(k,j+1,i)-zr_t(k,j-1,i)) / dy(j,i)
+             dt_zx(k,j,i) = 0.5 * (zr_t(k,j,i+1)-zr_t(k,j,i-1)) * dy(j,i)*dz(k,j,i)
+             dt_zy(k,j,i) = 0.5 * (zr_t(k,j+1,i)-zr_t(k,j-1,i)) * dx(j,i)*dz(k,j,i)
           end do
        enddo
     enddo
 
-    call fill_halo(1,zr_tx)
-    call fill_halo(1,zr_ty)
-
+    !divx term
     do i = 1,nx
        do j = 1,ny
           do k = 1,nz
-!             wrk(k) = 0.5*(+zr_tx(k,j,i)*u(i  ,j,k) &
-!                           +zr_tx(k,j,i)*u(i+1,j,k)) &
-!                     +0.5*(+zr_ty(k,j,i)*v(i,j  ,k) &
-!                           +zr_ty(k,j,i)*v(i,j+1,k))
-             wrk(k) = 0.25*(+zr_tx(k,j,i)*(dz(k,j,i-1)+dz(k,j,i))*u(i  ,j,k) &
-                            +zr_tx(k,j,i)*(dz(k,j,i)+dz(k,j,i+1))*u(i+1,j,k)) &
-                     +0.25*(+zr_ty(k,j,i)*(dz(k,j-1,i)+dz(k,j,i))*v(i,j  ,k) &
-                            +zr_ty(k,j,i)*(dz(k,j,i)+dz(k,j+1,i))*v(i,j+1,k))
+             divx_zx(k,j,i) = Huon(i+1,j,k)*0.5*(zx(k,j,i  )+zx(k,j,i+1)) &
+                  - Huon(i,j,k)*0.5*(zx(k,j,i-1)+zx(k,j,i  ))
+             divx_zy(k,j,i) = Huon(i+1,j,k)*0.5*(zy(k,j,i  )+zy(k,j,i+1)) &
+                  - Huon(i,j,k)*0.5*(zy(k,j,i-1)+zy(k,j,i  ))
+          end do
+       enddo
+    enddo
+
+    !divy term
+    do i = 1,nx
+       do j = 1,ny
+          do k = 1,nz
+             divy_zx(k,j,i) = Hvom(i,j+1,k)*0.5*(zx(k,j,i)+zx(k,j+1,i)) &
+                  - Hvom(i,j,k)*0.5*(zx(k,j-1,i)+zx(k,j,i))
+             divy_zy(k,j,i) = Hvom(i,j+1,k)*0.5*(zy(k,j,i)+zy(k,j+1,i)) &
+                  - Hvom(i,j,k)*0.5*(zy(k,j-1,i)+zy(k,j,i))
+          end do
+       enddo
+    enddo
+
+    !divs term
+    do i = 1,nx
+       do j = 1,ny
+          do k = 1,nz
+             divs_zx(k,j,i) = Omega(i,j,k+1)*0.5*(zx(k,j,i)+zx(k+1,j,i)) &
+                  - Omega(i,j,k)*0.5*(zx(k-1,j,i)+zx(k,j,i))
+             divs_zy(k,j,i) = Omega(i,j,k+1)*0.5*(zy(k,j,i)+zy(k+1,j,i)) &
+                  - Omega(i,j,k)*0.5*(zy(k-1,j,i)+zy(k,j,i))
+          end do
+       enddo
+    enddo
+
+    !
+    do i = 1,nx
+       do j = 1,ny
+          !
+          do k = 1,nz
+             wrk(k) = &
+             !dt term
+                  +0.5*(+dt_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
+                        +dt_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
+                  +0.5*(+dt_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
+                        +dt_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k)) &
+                  !or
+                  !+0.5*(+dt_zx(k,j,i) *u(i  ,j,k)  &
+                  !      +dt_zx(k,j,i) *u(i+1,j,k)) &
+                  !+0.5*(+dt_zy(k,j,i) *v(i,j  ,k)  &
+                  !      +dt_zy(k,j,i) *v(i,j+1,k)) &
+             !divx term
+                  +0.5*(+divx_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
+                        +divx_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
+                  +0.5*(+divx_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
+                        +divx_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k)) &
+                  !or
+                  !+0.5*(+divx_zx(k,j,i) *u(i  ,j,k)  &
+                  !      +divx_zx(k,j,i) *u(i+1,j,k)) &
+                  !+0.5*(+divx_zy(k,j,i) *v(i,j  ,k)  &
+                  !      +divx_zy(k,j,i) *v(i,j+1,k)) &
+             !divy term
+                  +0.5*(+divy_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
+                        +divy_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
+                  +0.5*(+divy_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
+                        +divy_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k)) &
+                  !or
+                  !+0.5*(+divy_zx(k,j,i) *u(i  ,j,k)  &
+                  !      +divy_zx(k,j,i) *u(i+1,j,k)) &
+                  !+0.5*(+divy_zy(k,j,i) *v(i,j  ,k)  &
+                  !      +divy_zy(k,j,i) *v(i,j+1,k)) &
+             !divs term
+                  +0.5*(+divs_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
+                        +divs_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
+                  +0.5*(+divs_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
+                        +divs_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k))
+                  !or
+                  !+0.5*(+divs_zx(k,j,i) *u(i  ,j,k)  &
+                  !      +divs_zx(k,j,i) *u(i+1,j,k)) &
+                  !+0.5*(+divs_zy(k,j,i) *v(i,j  ,k)  &
+                  !      +divs_zy(k,j,i) *v(i,j+1,k))                   
           enddo
+          !
           do k = 2,nz
              rw(i,j,k) = rw(i,j,k) &
-!                  - 0.25*dx(j,i)*dy(j,i)*(dz(k,j,i)+dz(k-1,j,i))*(wrk(k)+wrk(k-1)) 
-                  - 0.5*dx(j,i)*dy(j,i)*(wrk(k)+wrk(k-1))
+                   - 0.5*(wrk(k)+wrk(k-1)) * 0.5*(dz(k,j,i)+dz(k-1,j,i))
+                  !or 
+                  !- 0.5*(wrk(k)+wrk(k-1))
           enddo
           rw(i,j,nz+1) = rw(i,j,nz+1) &
-!               - 0.5*dx(j,i)*dy(j,i)*dz(nz,j,i)*wrk(nz) 
-               - 0.5*dx(j,i)*dy(j,i)*wrk(nz) 
+               - wrk(nz) *0.5*dz(nz,j,i)  
+               !or 
+               !- wrk(nz)    
+          !
        enddo
     enddo
 
     deallocate(zr_t)
-    deallocate(zr_tx)
-    deallocate(zr_ty)
+    deallocate(dt_zx)
+    deallocate(dt_zy)
+    deallocate(divx_zx)
+    deallocate(divx_zy)
+    deallocate(divy_zx)
+    deallocate(divy_zy)
+    deallocate(divs_zx)
+    deallocate(divs_zy)
 
-  end subroutine nhmg_rw_time
+  end subroutine nhmg_rw_advection
 
   !--------------------------------------------------------------
   subroutine nhmg_matrices(nx,ny,nz,zra,Hza,dxa,dya)

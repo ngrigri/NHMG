@@ -55,6 +55,8 @@ module mg_grids
      real(kind=rp),dimension(:,:)  ,pointer :: beta  => null() !
      real(kind=rp),dimension(:,:)  ,pointer :: gamu  => null() !
      real(kind=rp),dimension(:,:)  ,pointer :: gamv  => null() !
+     real(kind=rp),dimension(:,:,:),pointer :: zx    => null() 
+     real(kind=rp),dimension(:,:,:),pointer :: zy    => null() 
      real(kind=rp),dimension(:,:,:),pointer :: zxdy  => null() ! Slopes in x-direction defined at rho-points * dy
      real(kind=rp),dimension(:,:,:),pointer :: zydx  => null() ! Slopes in y-direction defined at rho-points * dx
      real(kind=rp),dimension(:,:,:),pointer :: alpha => null() ! All levels
@@ -216,6 +218,8 @@ contains
        allocate(grid(lev)%beta(     0:ny+1,0:nx+1)) !
        allocate(grid(lev)%gamu(     0:ny+1,0:nx+1)) !
        allocate(grid(lev)%gamv(     0:ny+1,0:nx+1)) !
+       allocate(grid(lev)%zx(nz  ,0:ny+1,0:nx+1)) ! at rho point
+       allocate(grid(lev)%zy(nz  ,0:ny+1,0:nx+1)) ! at rho point
        allocate(grid(lev)%zxdy(nz  ,0:ny+1,0:nx+1)) ! at rho point
        allocate(grid(lev)%zydx(nz  ,0:ny+1,0:nx+1)) ! at rho point
        allocate(grid(lev)%alpha(nz ,0:ny+1,0:nx+1)) ! at rho point
@@ -814,6 +818,8 @@ contains
           if (associated(grid(lev)%zr))             deallocate(grid(lev)%zr)
           if (associated(grid(lev)%dz))             deallocate(grid(lev)%dz)
           if (associated(grid(lev)%dzw))            deallocate(grid(lev)%dzw)
+          if (associated(grid(lev)%zx))             deallocate(grid(lev)%zx)
+          if (associated(grid(lev)%zy))             deallocate(grid(lev)%zy)
           if (associated(grid(lev)%zxdy))           deallocate(grid(lev)%zxdy)
           if (associated(grid(lev)%zydx))           deallocate(grid(lev)%zydx)
           if (associated(grid(lev)%alpha))          deallocate(grid(lev)%alpha)
