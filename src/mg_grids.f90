@@ -80,6 +80,12 @@ module mg_grids
      real(kind=rp),dimension(:,:,:)  ,pointer :: dv => null()
      real(kind=rp),dimension(:,:,:)  ,pointer :: dw => null()
 
+     ! diagnostics 
+     real(kind=rp),dimension(:,:,:)  ,pointer :: um  => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: vm  => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: wm  => null()
+     real(kind=rp),dimension(:,:,:)  ,pointer :: ke  => null()
+
      real(kind=rp),dimension(:,:)    ,pointer :: rufrcb => null()
      real(kind=rp),dimension(:,:)    ,pointer :: rvfrcb => null()
 
@@ -241,6 +247,11 @@ contains
 
     allocate(grid(lev)%rufrcb(0:ny+1,0:nx+1))
     allocate(grid(lev)%rvfrcb(0:ny+1,0:nx+1))
+
+    allocate(grid(lev)%um(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%vm(1:nz  ,0:ny+1,0:nx+1))
+    allocate(grid(lev)%wm(1:nz+1,0:ny+1,0:nx+1))
+    allocate(grid(lev)%ke(1:nz  ,0:ny+1,0:nx+1))
 
     do lev=1,nlevs ! 
        nx = grid(lev)%nx

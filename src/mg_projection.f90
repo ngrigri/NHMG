@@ -257,7 +257,7 @@ contains
   end subroutine set_matrices
 
   !-------------------------------------------------------------------------     
-  subroutine correct_uvw()
+  subroutine correction_uvw()
 
     !! u,v,w are fluxes, the correction is T*grad(p)
 
@@ -273,10 +273,9 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: zxdy,zydx
     real(kind=rp), dimension(:,:,:), pointer :: alpha
     real(kind=rp), dimension(:,:)  , pointer :: beta
-    real(kind=rp), dimension(:,:,:), pointer :: du,dv,dw
     real(kind=rp), dimension(:,:,:), pointer :: p
-
     real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
+    real(kind=rp), dimension(:,:,:), pointer :: du,dv,dw
 
 !    if (myrank==0) write(*,*)'   - compute pressure gradient and translate to fluxes'
 
@@ -284,25 +283,25 @@ contains
     ny = grid(1)%ny
     nz = grid(1)%nz
 
-    dx    => grid(1)%dx    !
-    dy    => grid(1)%dy    !
-    dxu   => grid(1)%dxu   !
-    dyv   => grid(1)%dyv   !
-    dzw   => grid(1)%dzw   !
-    Arx   => grid(1)%Arx   !
-    Ary   => grid(1)%Ary   !
-    Arz   => grid(1)%Arz   !
-    alpha => grid(1)%alpha !
-    beta  => grid(1)%beta  !
-    zxdy  => grid(1)%zxdy  !
-    zydx  => grid(1)%zydx  !
+    dx    => grid(1)%dx
+    dy    => grid(1)%dy
+    dxu   => grid(1)%dxu
+    dyv   => grid(1)%dyv
+    dzw   => grid(1)%dzw
+    Arx   => grid(1)%Arx
+    Ary   => grid(1)%Ary
+    Arz   => grid(1)%Arz
+    alpha => grid(1)%alpha
+    beta  => grid(1)%beta
+    zxdy  => grid(1)%zxdy
+    zydx  => grid(1)%zydx
     p     => grid(1)%p
+
+    !! Pressure gradient -
 
     px => grid(1)%u
     py => grid(1)%v
     pz => grid(1)%w
-
-    !! Pressure gradient -
 
     do i = 1,nx+1
         do j = 0,ny+1
@@ -336,7 +335,7 @@ contains
        enddo
     enddo
 
-    !! Correct U -
+    !! Correction for U -
 
     du => grid(1)%du
 
@@ -374,7 +373,7 @@ contains
        enddo
     enddo
 
-    !! Correct V - 
+    !! Correction for V - 
 
     dv => grid(1)%dv
 
@@ -413,7 +412,7 @@ contains
        enddo
     enddo
 
-    !! Correct W -
+    !! Correction for W -
 
     dw => grid(1)%dw
 
@@ -445,7 +444,7 @@ contains
        enddo
     enddo
 
-  end subroutine correct_uvw
+  end subroutine correction_uvw
 
 end module mg_projection
 

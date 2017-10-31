@@ -10,6 +10,7 @@ module nhmg
   use mg_vert_grids
   use mg_projection
   use mg_solvers
+  use mg_diagnostics
   use mg_netcdf_out
 
   implicit none
@@ -435,15 +436,11 @@ contains
 
     dx => grid(1)%dx
     dy => grid(1)%dy
-    u  => grid(1)%u
-    v  => grid(1)%v
-    w  => grid(1)%w
-
-    ! need to update dz because define_matrices may not be called every time step
-    dz => grid(1)%dz
 
     ishift=2
 
+    ! need to update dz because define_matrices may not be called every time step
+    dz => grid(1)%dz
     do k=1,nz
        do j=0,ny+1
           js=j+ishift
@@ -453,12 +450,14 @@ contains
           enddo
        enddo
     enddo
-
     if (fill_hz) then
        call fill_halo(1,dz)
     endif
 
     ! set fluxes
+    u  => grid(1)%u
+    v  => grid(1)%v
+    w  => grid(1)%w
     do k=1,nz
        do j=1,ny
           js=j+ishift
@@ -487,46 +486,119 @@ contains
     enddo
     w(1,:,:) = zero
 
-    !- set rhs and solve for p
+    !- set rhs, solve for p, and compute correction for u,v,w
     call set_rhs()
     call solve_p()
+    call correction_uvw()
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
        call write_netcdf(grid(1)%b,vname='b',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        call write_netcdf(grid(1)%p,vname='p',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%du,vname='du',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%dv,vname='dv',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+       call write_netcdf(grid(1)%dw,vname='dw',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
        !endif
     endif
-
-    !- correct
-    call correct_uvw()
-
-    if (check_output) then
-       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-       call write_netcdf(u,vname='uout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       call write_netcdf(v,vname='vout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       call write_netcdf(w,vname='wout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       !endif
-    endif
-
-    !- check step - non-divergence of the projected u,v,w
-    if (check_output) then
-       call set_rhs()
-       !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-       call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-       !endif
-    endif
-
-    !- check step - the projected u,v,w do not work
-
-    !    if (associated(u)) u => null()
-    !    if (associated(v)) v => null()
-    !    if (associated(w)) w => null()
 
     call toc(1,'nhmg_solve')
 
   end subroutine nhmg_solve
+
+!!$  !--------------------------------------------------------------
+!!$  subroutine nhmg_checkdivergence(ua,va,wa,Hza,fill_hz)
+!!$
+!!$    call set_rhs()
+!!$    !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
+!!$    call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    !endif
+!!$
+!!$
+!!$  end subroutine nhmg_checkdivergence
+
+  !--------------------------------------------------------------
+  subroutine nhmg_diagnostics(ua,va,wa,Hza)
+
+    real(kind=rp), dimension(:,:,:), intent(in) :: ua
+    real(kind=rp), dimension(:,:,:), intent(in) :: va
+    real(kind=rp), dimension(:,:,:), intent(in) :: wa    
+    real(kind=rp), dimension(:,:,:), intent(in) :: Hza
+
+    real(kind=rp), dimension(:,:),   pointer :: dx,dy
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
+
+    integer(kind=ip) :: i,j,k,is,js,ishift
+    integer(kind=ip) :: nx,ny,nz
+
+    integer(kind=ip), save :: iter_diag=0
+    iter_diag = iter_diag + 1
+
+    nx = grid(1)%nx
+    ny = grid(1)%ny
+    nz = grid(1)%nz
+
+    dx => grid(1)%dx
+    dy => grid(1)%dy
+
+    ishift=2
+
+    ! need to update dz because define_matrices may not be called every time step
+    dz => grid(1)%dz
+    do k=1,nz
+       do j=0,ny+1
+          js=j+ishift
+          do i=0,nx+1
+             is=i+ishift
+             dz(k,j,i) = Hza(is,js,k)
+          enddo
+       enddo
+    enddo
+
+    ! set fluxes
+    u  => grid(1)%u
+    v  => grid(1)%v
+    w  => grid(1)%w
+    do k=1,nz
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx+1
+             is=i+ishift
+             u(k,j,i) = ua(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
+          enddo
+       enddo
+       do j=1,ny+1
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             v(k,j,i) = va(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j-1,i)) * (dx(j,i)+dx(j-1,i))
+          enddo
+       enddo
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             w(k+1,j,i) = wa(is,js,k+1) * &
+                  dx(j,i) * dy(j,i)
+          enddo
+       enddo
+    enddo
+    w(1,:,:) = zero
+
+    ! diagnose momentum and kinetic energy
+    call diag_momentum()
+    call diag_kin_energy()
+
+    !if ((iter_diag .EQ. 1) .OR. (iter_diag .EQ. 2)) then
+    call write_netcdf(grid(1)%um,vname='um',netcdf_file_name='diag.nc',rank=myrank,iter=iter_diag)
+    call write_netcdf(grid(1)%vm,vname='vm',netcdf_file_name='diag.nc',rank=myrank,iter=iter_diag)
+    call write_netcdf(grid(1)%wm,vname='wm',netcdf_file_name='diag.nc',rank=myrank,iter=iter_diag)
+    call write_netcdf(grid(1)%ke,vname='ke',netcdf_file_name='diag.nc',rank=myrank,iter=iter_diag)
+    !endif
+
+  end subroutine nhmg_diagnostics
 
   !--------------------------------------------------------------
   subroutine nhmg_clean()

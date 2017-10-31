@@ -43,6 +43,7 @@ libnhmg_la_SOURCES =       \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
 	mg_solvers.f90         \
+	mg_diagnostics.f90         \
 	nhmg_debug.f90         \
 	nhmg.f90
 
@@ -61,6 +62,7 @@ nodist_include_HEADERS =   \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
 	mg_solvers.mod         \
+	mg_diagnostics.mod         \
 	nhmg_debug.mod         \
 	nhmg.mod
 
