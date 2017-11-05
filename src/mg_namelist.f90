@@ -32,6 +32,8 @@ module mg_namelist
 
   logical           :: check_output  = .false. !- .false. or .true.
 
+  logical           :: surface_neumann  = .true.
+
   character(len=16) :: bench =''               !- 'seamount'
 
   namelist/nhparam/    &
@@ -46,7 +48,8 @@ module mg_namelist
        interp_type   , &
        restrict_type , &
        netcdf_output , &
-       check_output , &
+       check_output ,  &
+       surface_neumann, &
        aggressive   
 
 contains
@@ -124,6 +127,7 @@ contains
           write(*,*)'  - aggressive    : ', aggressive
           write(*,*)'  - netcdf_output : ', netcdf_output
           write(*,*)'  - check_output : ', check_output
+          write(*,*)'  - surface_neumann : ', surface_neumann
           write(*,*)'  '
        endif
     endif

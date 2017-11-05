@@ -15,6 +15,13 @@ module nhmg
 
   implicit none
 
+! let's try to not allocate/deallocate at every call
+! => allocate once in the nhmg_init
+
+    real(kind=rp), dimension(:,:),allocatable :: ubar
+    real(kind=rp), dimension(:,:),allocatable :: vbar
+!    real(kind=rp), dimension(:,:),allocatable :: div
+
 contains
 
   !--------------------------------------------------------------
@@ -35,6 +42,10 @@ contains
 
     call print_grids()
 
+    allocate(ubar(1:ny,1:nx+1))
+    allocate(vbar(1:ny+1,1:nx))
+!    allocate(div(1:nx,1:ny))
+    
   end subroutine nhmg_init
 
   !--------------------------------------------------------------
@@ -233,12 +244,19 @@ contains
     !divs term
     do i = 1,nx
        do j = 1,ny
-          do k = 1,nz
+          k=1
+          divs_zx(k,j,i) = Omega(i,j,k+1)*0.5*(zx(k,j,i)+zx(k+1,j,i)) 
+          divs_zy(k,j,i) = Omega(i,j,k+1)*0.5*(zy(k,j,i)+zy(k+1,j,i)) 
+          do k = 2,nz-1
              divs_zx(k,j,i) = Omega(i,j,k+1)*0.5*(zx(k,j,i)+zx(k+1,j,i)) &
                   - Omega(i,j,k)*0.5*(zx(k-1,j,i)+zx(k,j,i))
              divs_zy(k,j,i) = Omega(i,j,k+1)*0.5*(zy(k,j,i)+zy(k+1,j,i)) &
                   - Omega(i,j,k)*0.5*(zy(k-1,j,i)+zy(k,j,i))
           end do
+          k=nz
+          divs_zx(k,j,i) = - Omega(i,j,k)*0.5*(zx(k-1,j,i)+zx(k,j,i))
+          divs_zy(k,j,i) = - Omega(i,j,k)*0.5*(zy(k-1,j,i)+zy(k,j,i))
+
        enddo
     enddo
 
@@ -409,12 +427,15 @@ contains
 
     real(kind=rp), dimension(:,:,:), intent(in) :: ua
     real(kind=rp), dimension(:,:,:), intent(in) :: va
-    real(kind=rp), dimension(:,:,:), intent(in) :: wa    
+    real(kind=rp), dimension(:,:,:), intent(inout) :: wa    
     real(kind=rp), dimension(:,:,:), intent(in) :: Hza
     logical :: fill_hz
 
     real(kind=rp), dimension(:,:),   pointer :: dx,dy
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
+
+    real(kind=rp) :: wa_correction
+    real(kind=rp) :: uvert,vvert,maxu,maxv
 
     integer(kind=ip) :: i,j,k,is,js,ishift
     integer(kind=ip) :: nx,ny,nz
@@ -458,6 +479,10 @@ contains
     u  => grid(1)%u
     v  => grid(1)%v
     w  => grid(1)%w
+
+    ubar(:,:) = 0.
+    vbar(:,:) = 0.
+
     do k=1,nz
        do j=1,ny
           js=j+ishift
@@ -465,6 +490,7 @@ contains
              is=i+ishift
              u(k,j,i) = ua(is,js,k) * &
                   qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
+             ubar(j,i) = ubar(j,i) + u(k,j,i)
           enddo
        enddo
        do j=1,ny+1
@@ -473,23 +499,110 @@ contains
              is=i+ishift
              v(k,j,i) = va(is,js,k) * &
                   qrt * (dz(k,j,i) + dz(k,j-1,i)) * (dx(j,i)+dx(j-1,i))
+             vbar(j,i) = vbar(j,i) + v(k,j,i)
           enddo
        enddo
+    enddo
+    if (surface_neumann) then
+       k=nz+1
        do j=1,ny
           js=j+ishift
           do i=1,nx
              is=i+ishift
-             w(k+1,j,i) = wa(is,js,k+1) * &
-                  dx(j,i) * dy(j,i)
+             wa(is,js,k) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i) 
+             wa(is,js,k) = wa(is,js,k) / (dx(j,i) * dy(j,i))
+          enddo
+       enddo
+    endif    
+    
+
+    do k=1,nz
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             w(k+1,j,i) = wa(is,js,k+1) * dx(j,i) * dy(j,i)
           enddo
        enddo
     enddo
     w(1,:,:) = zero
+    
+!    div(:,:)=0.
+!     do i = 1,nx
+!       do j = 1,ny 
+!          do k = 1,nz
+!             div(j,i) = div(j,i) + u(k,j,i+1) - u(k,j,i) &
+!                        + v(k,j+1,i) - v(k,j,i) &
+!                        + w(k+1,j,i) - w(k,j,i)
+!          enddo
+!       enddo
+!    enddo
+   
+!!$    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(ubar,vname='ubar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(vbar,vname='vbar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(dx,vname='dx',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(dy,vname='dy',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(ua,vname='ua',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    call write_netcdf(va,vname='va',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!!$    stop
 
     !- set rhs, solve for p, and compute correction for u,v,w
     call set_rhs()
     call solve_p()
     call correction_uvw()
+
+!    maxu = 0.
+!    maxv = 0.
+    
+!    ubar(:,:)=0.
+!    vbar(:,:)=0.
+!    do j=1,ny
+!       do i=1,nx
+!          uvert=0.
+!          vvert=0.
+!          do k=1,nz
+!             !du is in flux form
+!             uvert = uvert + grid(1)%du(k,j,i)
+!             vvert = vvert + grid(1)%dv(k,j,i)
+!             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
+!             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
+!          enddo
+!          maxu=max(maxu,abs(uvert))
+!          maxv=max(maxv,abs(vvert))
+!       enddo
+!    enddo
+
+!    div(:,:)=0.
+!    do j=1,ny-1
+!       do i=1,nx-1
+!          div(j,i) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i)
+!vorticity
+!          div(j,i) = - ubar(j+1,i) + ubar(j,i) + vbar(j,i) - vbar(j,i+1)
+!       enddo
+!    enddo
+
+!    grid(1)%r(:,:,:)=0.
+!     do i = 1,nx
+!       do j = 1,ny 
+!          do k = 1,nz
+!             grid(1)%r(k,j,i) = + u(k,j,i+1) - u(k,j,i) &
+!                        + v(k,j+1,i) - v(k,j,i) &
+!                        + w(k+1,j,i) - w(k,j,i) &
+!			+ grid(1)%du(k,j,i+1) - gr!id(1)%du(k,j,i) &
+!                        + grid(1)%dv(k,j+1,i) - grid(1)%dv(k,j,i) &
+!                        + grid(1)%dw(k+1,j,i) - grid(1)%dw(k,j,i)
+!          enddo
+!       enddo
+!    enddo
+!    grid(1)%r(1,:,:)=0.
+
+!    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+!    call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
+
+!    write(*,*) "max abs(du) = ",maxu
+!    write(*,*) "max abs(dv) = ",maxv
+
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
