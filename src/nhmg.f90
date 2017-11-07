@@ -256,7 +256,6 @@ contains
           k=nz
           divs_zx(k,j,i) = - Omega(i,j,k)*0.5*(zx(k-1,j,i)+zx(k,j,i))
           divs_zy(k,j,i) = - Omega(i,j,k)*0.5*(zy(k-1,j,i)+zy(k,j,i))
-
        enddo
     enddo
 
@@ -423,19 +422,20 @@ contains
   end subroutine nhmg_matrices
 
   !--------------------------------------------------------------
-  subroutine nhmg_solve(ua,va,wa,Hza,fill_hz)
+  subroutine nhmg_solve(ua,va,wa,zwa,Hza,fill_hz)
 
     real(kind=rp), dimension(:,:,:), intent(in) :: ua
     real(kind=rp), dimension(:,:,:), intent(in) :: va
     real(kind=rp), dimension(:,:,:), intent(inout) :: wa    
+    real(kind=rp), dimension(:,:,:), target, intent(in) :: zwa
     real(kind=rp), dimension(:,:,:), intent(in) :: Hza
     logical :: fill_hz
 
     real(kind=rp), dimension(:,:),   pointer :: dx,dy
-    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz,zw
 
     real(kind=rp) :: wa_correction
-    real(kind=rp) :: uvert,vvert,maxu,maxv
+    real(kind=rp) :: maxubar,maxvbar
 
     integer(kind=ip) :: i,j,k,is,js,ishift
     integer(kind=ip) :: nx,ny,nz
@@ -480,6 +480,7 @@ contains
     v  => grid(1)%v
     w  => grid(1)%w
 
+    zw => zwa
     ubar(:,:) = 0.
     vbar(:,:) = 0.
 
@@ -504,17 +505,27 @@ contains
        enddo
     enddo
     if (surface_neumann) then
-       k=nz+1
-       do j=1,ny
-          js=j+ishift
-          do i=1,nx
-             is=i+ishift
-             wa(is,js,k) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i) 
-             wa(is,js,k) = wa(is,js,k) / (dx(j,i) * dy(j,i))
+!       k=nz+1
+!       do j=1,ny
+!          js=j+ishift
+!          do i=1,nx
+!             is=i+ishift
+!             wa(is,js,k) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i) 
+!             wa(is,js,k) = wa(is,js,k) / (dx(j,i) * dy(j,i))
+!          enddo
+!       enddo
+       do k=1,nz+1
+          do j=1,ny
+             js=j+ishift
+             do i=1,nx
+                is=i+ishift
+                wa(is,js,k) = - ( ubar(j,i+1) - ubar(j,i) + vbar(j+1,i) - vbar(j,i) ) &
+                            * (zw(i,j,k   )-zw(i,j,1)) &
+                            / (zw(i,j,nz+1)-zw(i,j,1))
+             enddo
           enddo
        enddo
-    endif    
-    
+    endif 
 
     do k=1,nz
        do j=1,ny
@@ -555,23 +566,23 @@ contains
 !    maxu = 0.
 !    maxv = 0.
     
-!    ubar(:,:)=0.
-!    vbar(:,:)=0.
-!    do j=1,ny
-!       do i=1,nx
-!          uvert=0.
-!          vvert=0.
-!          do k=1,nz
-!             !du is in flux form
-!             uvert = uvert + grid(1)%du(k,j,i)
-!             vvert = vvert + grid(1)%dv(k,j,i)
-!             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
-!             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
-!          enddo
-!          maxu=max(maxu,abs(uvert))
-!          maxv=max(maxv,abs(vvert))
-!       enddo
-!    enddo
+    ubar(:,:)=0.
+    vbar(:,:)=0.
+    do j=1,ny
+       do i=1,nx
+          do k=1,nz
+             !du is in flux form
+             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
+             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
+          enddo
+       enddo
+    enddo
+
+    maxubar=maxval(abs(ubar))
+    maxvbar=maxval(abs(vbar))
+
+    write(*,*) "max abs(ubar) = ",maxubar
+    write(*,*) "max abs(vbar) = ",maxvbar
 
 !    div(:,:)=0.
 !    do j=1,ny-1
@@ -599,10 +610,6 @@ contains
 
 !    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !    call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-
-!    write(*,*) "max abs(du) = ",maxu
-!    write(*,*) "max abs(dv) = ",maxv
-
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
