@@ -35,7 +35,7 @@ contains
     w => grid(1)%w
 
     rhs => grid(1)%b
-	
+
     !! What comes into nhmg_solve are area integrated u,v,w.
 !    rhs_integral = 0.
     do i = 1,nx
@@ -221,7 +221,7 @@ contains
 
        do i = 1,nx+1
           do j = 1,ny 
-	     ! with Neumann BC, the CA(7,:,:) has flip signed on the slope term
+             ! with Neumann BC, the CA(7,:,:) has flip signed on the slope term
              ! this will be in the paper
              ! couples with i-1
              cA(7,k,j,i) = Arx(k,j,i) / dxu(j,i) &

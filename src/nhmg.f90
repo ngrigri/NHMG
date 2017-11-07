@@ -520,8 +520,8 @@ contains
              do i=1,nx
                 is=i+ishift
                 wa(is,js,k) = - ( ubar(j,i+1) - ubar(j,i) + vbar(j+1,i) - vbar(j,i) ) &
-                            * (zw(i,j,k   )-zw(i,j,1)) &
-                            / (zw(i,j,nz+1)-zw(i,j,1))
+                            * (zw(is,js,k   )-zw(is,js,1)) &
+                            / (zw(is,js,nz+1)-zw(is,js,1))
              enddo
           enddo
        enddo
@@ -566,23 +566,23 @@ contains
 !    maxu = 0.
 !    maxv = 0.
     
-    ubar(:,:)=0.
-    vbar(:,:)=0.
-    do j=1,ny
-       do i=1,nx
-          do k=1,nz
-             !du is in flux form
-             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
-             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
-          enddo
-       enddo
-    enddo
+!    ubar(:,:)=0.
+!    vbar(:,:)=0.
+!    do j=1,ny
+!       do i=1,nx
+!          do k=1,nz
+!             !du is in flux form
+!             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
+!             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
+!          enddo
+!       enddo
+!    enddo
+!
+!    maxubar=maxval(abs(ubar))
+!    maxvbar=maxval(abs(vbar))
 
-    maxubar=maxval(abs(ubar))
-    maxvbar=maxval(abs(vbar))
-
-    write(*,*) "max abs(ubar) = ",maxubar
-    write(*,*) "max abs(vbar) = ",maxvbar
+!    write(*,*) "max abs(ubar) = ",maxubar
+!    write(*,*) "max abs(vbar) = ",maxvbar
 
 !    div(:,:)=0.
 !    do j=1,ny-1
