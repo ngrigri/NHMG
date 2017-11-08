@@ -20,7 +20,7 @@ module nhmg
 
     real(kind=rp), dimension(:,:),allocatable :: ubar
     real(kind=rp), dimension(:,:),allocatable :: vbar
-!    real(kind=rp), dimension(:,:),allocatable :: div
+    real(kind=rp), dimension(:,:),allocatable :: wcorr
 
 contains
 
@@ -44,7 +44,7 @@ contains
 
     allocate(ubar(1:ny,1:nx+1))
     allocate(vbar(1:ny+1,1:nx))
-!    allocate(div(1:nx,1:ny))
+    allocate(wcorr(1:ny,1:nx))
     
   end subroutine nhmg_init
 
@@ -434,9 +434,6 @@ contains
     real(kind=rp), dimension(:,:),   pointer :: dx,dy
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz,zw
 
-    real(kind=rp) :: wa_correction
-    real(kind=rp) :: maxubar,maxvbar
-
     integer(kind=ip) :: i,j,k,is,js,ishift
     integer(kind=ip) :: nx,ny,nz
 
@@ -504,22 +501,21 @@ contains
           enddo
        enddo
     enddo
-    if (surface_neumann) then
-!       k=nz+1
-!       do j=1,ny
-!          js=j+ishift
-!          do i=1,nx
-!             is=i+ishift
-!             wa(is,js,k) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i) 
-!             wa(is,js,k) = wa(is,js,k) / (dx(j,i) * dy(j,i))
-!          enddo
-!       enddo
+    if (surface_neumann)  then
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             wcorr(j,i) = wa(is,js,nz+1) + ( ubar(j,i+1) - ubar(j,i) + vbar(j+1,i) - vbar(j,i) ) &
+                            / (dx(j,i) * dy(j,i)) 
+          enddo
+       enddo
        do k=1,nz+1
           do j=1,ny
              js=j+ishift
              do i=1,nx
                 is=i+ishift
-                wa(is,js,k) = - ( ubar(j,i+1) - ubar(j,i) + vbar(j+1,i) - vbar(j,i) ) &
+                wa(is,js,k) = wa(is,js,k) - wcorr(j,i) &
                             * (zw(is,js,k   )-zw(is,js,1)) &
                             / (zw(is,js,nz+1)-zw(is,js,1))
              enddo
@@ -541,14 +537,12 @@ contains
 !    div(:,:)=0.
 !     do i = 1,nx
 !       do j = 1,ny 
-!          do k = 1,nz
-!             div(j,i) = div(j,i) + u(k,j,i+1) - u(k,j,i) &
-!                        + v(k,j+1,i) - v(k,j,i) &
-!                        + w(k+1,j,i) - w(k,j,i)
-!          enddo
+!             div(j,i) = w(nz+1,j,i) + ubar(j,i+1) - ubar(j,i) &
+!                        + vbar(j+1,i) - vbar(j,i) 
 !       enddo
 !    enddo
-   
+!    write(*,*) 'max(abs(div))= ',maxval(abs(div))   
+
 !!$    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !!$    call write_netcdf(ubar,vname='ubar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 !!$    call write_netcdf(vbar,vname='vbar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
@@ -566,23 +560,20 @@ contains
 !    maxu = 0.
 !    maxv = 0.
     
-!    ubar(:,:)=0.
-!    vbar(:,:)=0.
-!    do j=1,ny
-!       do i=1,nx
-!          do k=1,nz
-!             !du is in flux form
-!             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
-!             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
-!          enddo
-!       enddo
-!    enddo
-!
-!    maxubar=maxval(abs(ubar))
-!    maxvbar=maxval(abs(vbar))
+    ubar(:,:)=0.
+    vbar(:,:)=0.
+    do j=1,ny
+       do i=1,nx
+          do k=1,nz
+            !du is in flux form
+             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
+             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
+          enddo
+       enddo
+    enddo
 
-!    write(*,*) "max abs(ubar) = ",maxubar
-!    write(*,*) "max abs(vbar) = ",maxvbar
+    write(*,*) "max abs(ubar) = ",maxval(abs(ubar))
+    write(*,*) "max abs(vbar) = ",maxval(abs(vbar))
 
 !    div(:,:)=0.
 !    do j=1,ny-1
@@ -626,16 +617,84 @@ contains
 
   end subroutine nhmg_solve
 
-!!$  !--------------------------------------------------------------
-!!$  subroutine nhmg_checkdivergence(ua,va,wa,Hza,fill_hz)
-!!$
-!!$    call set_rhs()
-!!$    !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then
-!!$    call write_netcdf(grid(1)%b,vname='bout',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    !endif
-!!$
-!!$
-!!$  end subroutine nhmg_checkdivergence
+  !--------------------------------------------------------------
+  subroutine nhmg_checkdivergence(ua,va,wa,Hza)
+
+    real(kind=rp), dimension(:,:,:), intent(in) :: ua
+    real(kind=rp), dimension(:,:,:), intent(in) :: va
+    real(kind=rp), dimension(:,:,:), intent(in) :: wa
+    real(kind=rp), dimension(:,:,:), intent(in) :: Hza
+
+    real(kind=rp), dimension(:,:),   pointer :: dx,dy
+    real(kind=rp), dimension(:,:,:), pointer :: u,v,w,dz
+
+    integer(kind=ip) :: i,j,k,is,js,ishift
+    integer(kind=ip) :: nx,ny,nz
+
+    integer(kind=ip), save :: iter_checkdiv=0
+    iter_checkdiv = iter_checkdiv + 1
+
+
+    nx = grid(1)%nx
+    ny = grid(1)%ny
+    nz = grid(1)%nz
+
+    dx => grid(1)%dx
+    dy => grid(1)%dy
+
+    ishift=2
+
+    ! need to update dz because define_matrices may not be called every time step
+    dz => grid(1)%dz
+    do k=1,nz
+       do j=0,ny+1
+          js=j+ishift
+          do i=0,nx+1
+             is=i+ishift
+             dz(k,j,i) = Hza(is,js,k)
+          enddo
+       enddo
+    enddo
+
+    ! set fluxes
+    u  => grid(1)%u
+    v  => grid(1)%v
+    w  => grid(1)%w
+
+    do k=1,nz
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx+1
+             is=i+ishift
+             u(k,j,i) = ua(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j,i-1)) * (dy(j,i)+dy(j,i-1))
+          enddo
+       enddo
+       do j=1,ny+1
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             v(k,j,i) = va(is,js,k) * &
+                  qrt * (dz(k,j,i) + dz(k,j-1,i)) * (dx(j,i)+dx(j-1,i))
+          enddo
+       enddo
+       do j=1,ny
+          js=j+ishift
+          do i=1,nx
+             is=i+ishift
+             w(k+1,j,i) = wa(is,js,k+1) * dx(j,i) * dy(j,i)
+          enddo
+       enddo
+    enddo
+    w(1,:,:) = zero
+
+    call set_rhs()
+
+    write(*,*) 'check div',maxval(abs(grid(1)%b))
+
+    call write_netcdf(grid(1)%b,vname='rhs',netcdf_file_name='chk.nc',rank=myrank,iter=iter_checkdiv)
+
+  end subroutine nhmg_checkdivergence
 
   !--------------------------------------------------------------
   subroutine nhmg_diagnostics(ua,va,wa,Hza)

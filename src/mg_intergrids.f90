@@ -375,7 +375,15 @@ contains
 
     ! local
     integer(kind=ip) :: i,j,k,i2,j2,k2,kp
-    real(kind=rp) :: a,b,c,d,e,f,g
+    real(kind=rp) :: a,b,c,d,e,f,g,dirichlet_flag
+
+    if (surface_neumann) then
+       dirichlet_flag = 0
+    else
+       dirichlet_flag = 1
+    endif
+
+
     !
     ! weights for bilinear in (i,j), nearest in k
     a = 9._8 / 16._8
@@ -436,16 +444,16 @@ contains
           enddo
           ! top level
           k = nz*2
-          xf(k  ,j  ,i  ) =  hlf                       * ( &
+          xf(k  ,j  ,i  ) =  (1-hlf*dirichlet_flag)  * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2-1,i2-1) +   &
                b * xc(k2,j2-1,i2) + b * xc(k2,j2  ,i2-1)   )
-          xf(k  ,j+1,i  ) =  hlf                       * ( &
+          xf(k  ,j+1,i  ) =  (1-hlf*dirichlet_flag) * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2+1,i2-1) +   &
                b * xc(k2,j2+1,i2) + b * xc(k2,j2  ,i2-1)   )
-          xf(k  ,j  ,i+1) =  hlf                       * ( &
+          xf(k  ,j  ,i+1) =  (1-hlf*dirichlet_flag)     * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2-1,i2+1) +   &
                b * xc(k2,j2-1,i2) + b * xc(k2,j2  ,i2+1)   ) 
-          xf(k  ,j+1,i+1) =  hlf                       * ( &
+          xf(k  ,j+1,i+1) =  (1-hlf*dirichlet_flag)      * ( &
                a * xc(k2,j2  ,i2) + c * xc(k2,j2+1,i2+1) +   &
                b * xc(k2,j2+1,i2) + b * xc(k2,j2  ,i2+1)   )
        enddo
