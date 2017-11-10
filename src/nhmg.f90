@@ -533,74 +533,11 @@ contains
        enddo
     enddo
     w(1,:,:) = zero
-    
-!    div(:,:)=0.
-!     do i = 1,nx
-!       do j = 1,ny 
-!             div(j,i) = w(nz+1,j,i) + ubar(j,i+1) - ubar(j,i) &
-!                        + vbar(j+1,i) - vbar(j,i) 
-!       enddo
-!    enddo
-!    write(*,*) 'max(abs(div))= ',maxval(abs(div))   
-
-!!$    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(ubar,vname='ubar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(vbar,vname='vbar',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(dx,vname='dx',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(dy,vname='dy',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(ua,vname='ua',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    call write_netcdf(va,vname='va',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!!$    stop
 
     !- set rhs, solve for p, and compute correction for u,v,w
     call set_rhs()
     call solve_p()
     call correction_uvw()
-
-!    maxu = 0.
-!    maxv = 0.
-    
-    ubar(:,:)=0.
-    vbar(:,:)=0.
-    do j=1,ny
-       do i=1,nx
-          do k=1,nz
-            !du is in flux form
-             ubar(j,i) = ubar(j,i) + grid(1)%du(k,j,i)
-             vbar(j,i) = vbar(j,i) + grid(1)%dv(k,j,i)
-          enddo
-       enddo
-    enddo
-
-    write(*,*) "max abs(ubar) = ",maxval(abs(ubar))
-    write(*,*) "max abs(vbar) = ",maxval(abs(vbar))
-
-!    div(:,:)=0.
-!    do j=1,ny-1
-!       do i=1,nx-1
-!          div(j,i) = - ubar(j,i+1) + ubar(j,i) - vbar(j+1,i) + vbar(j,i)
-!vorticity
-!          div(j,i) = - ubar(j+1,i) + ubar(j,i) + vbar(j,i) - vbar(j,i+1)
-!       enddo
-!    enddo
-
-!    grid(1)%r(:,:,:)=0.
-!     do i = 1,nx
-!       do j = 1,ny 
-!          do k = 1,nz
-!             grid(1)%r(k,j,i) = + u(k,j,i+1) - u(k,j,i) &
-!                        + v(k,j+1,i) - v(k,j,i) &
-!                        + w(k+1,j,i) - w(k,j,i) &
-!			+ grid(1)%du(k,j,i+1) - gr!id(1)%du(k,j,i) &
-!                        + grid(1)%dv(k,j+1,i) - grid(1)%dv(k,j,i) &
-!                        + grid(1)%dw(k+1,j,i) - grid(1)%dw(k,j,i)
-!          enddo
-!       enddo
-!    enddo
-!    grid(1)%r(1,:,:)=0.
-
-!    call write_netcdf(div,vname='div',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
-!    call write_netcdf(grid(1)%r,vname='r',netcdf_file_name='so.nc',rank=myrank,iter=iter_solve)
 
     if (check_output) then
        !if ((iter_solve .EQ. 1) .OR. (iter_solve .EQ. 2)) then

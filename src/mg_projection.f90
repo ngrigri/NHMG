@@ -11,8 +11,6 @@ module mg_projection
 
   implicit none
 
-!  real(kind=rp) :: rhs_integral
-
 contains
   !-------------------------------------------------------------------------     
   subroutine set_rhs
@@ -21,8 +19,6 @@ contains
     integer(kind=ip):: nx,ny,nz
 
     real(kind=rp), dimension(:,:,:), pointer :: u,v,w,rhs
-
-     real(kind=rp) :: resloc
 
 !    if (myrank==0) write(*,*)'   - set rhs:'
     
@@ -37,22 +33,15 @@ contains
     rhs => grid(1)%b
 
     !! What comes into nhmg_solve are area integrated u,v,w.
-!    rhs_integral = 0.
     do i = 1,nx
        do j = 1,ny 
           do k = 1,nz
              rhs(k,j,i) = u(k,j,i+1) - u(k,j,i) &
                         + v(k,j+1,i) - v(k,j,i) &
                         + w(k+1,j,i) - w(k,j,i)
-!             rhs_integral = rhs_integral + rhs(k,j,i)
           enddo
        enddo
     enddo
-!    resloc=rhs_integral
-!    call global_sum(1,resloc,rhs_integral)
-
-!    write(*,*) " rhs_integral = ", rhs_integral
-!    write(*,*) " rhs maxval = ", maxval(abs(rhs))
     
   end subroutine set_rhs
 
@@ -256,8 +245,7 @@ contains
                      - Ary(k,j+1,i)/dyv(j+1,i)
              enddo
 
-             k=nz ! upper level  
-
+             k=nz ! upper level
              cA(1,k,j,i) = &
                   - Arz(j,i) / dzw(k+1,j,i) * alpha(k,j,i) * dirichlet_flag &
                   - Arz(j,i) / dzw(k  ,j,i) * hlf * (alpha(k-1,j,i) + alpha(k,j,i)) &
@@ -299,7 +287,8 @@ contains
     real(kind=rp), dimension(:,:,:), pointer :: px,py,pz
     real(kind=rp), dimension(:,:,:), pointer :: du,dv,dw
 
-    integer(kind=ip) :: dirichlet_flag 
+    integer(kind=ip) :: dirichlet_flag
+ 
 !    if (myrank==0) write(*,*)'   - compute pressure gradient and translate to fluxes'
 
     if (surface_neumann) then

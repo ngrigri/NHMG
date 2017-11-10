@@ -375,14 +375,15 @@ contains
 
     ! local
     integer(kind=ip) :: i,j,k,i2,j2,k2,kp
-    real(kind=rp) :: a,b,c,d,e,f,g,dirichlet_flag
+    real(kind=rp) :: a,b,c,d,e,f,g
+
+    interger(kind=rp) :: dirichlet_flag
 
     if (surface_neumann) then
        dirichlet_flag = 0
     else
        dirichlet_flag = 1
     endif
-
 
     !
     ! weights for bilinear in (i,j), nearest in k
