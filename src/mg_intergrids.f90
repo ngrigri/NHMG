@@ -377,7 +377,7 @@ contains
     integer(kind=ip) :: i,j,k,i2,j2,k2,kp
     real(kind=rp) :: a,b,c,d,e,f,g
 
-    interger(kind=rp) :: dirichlet_flag
+    integer(kind=rp) :: dirichlet_flag
 
     if (surface_neumann) then
        dirichlet_flag = 0
