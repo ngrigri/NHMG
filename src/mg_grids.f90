@@ -647,47 +647,63 @@ contains
 
        if (pj >= incy) then ! south
           grid(lev)%neighb(1) = (pj-incy)*npx+pi
+       elseif (north_south_perio) then
+          grid(lev)%neighb(1) =  mod(pj-incy+npy,npy)*npx+pi
        else
           grid(lev)%neighb(1) = MPI_PROC_NULL
        endif
 
        if (pi < npx-incx) then ! east
           grid(lev)%neighb(2) = pj*npx+pi+incx
+       elseif (east_west_perio) then
+          grid(lev)%neighb(2) =  pj*npx + mod(pi+incx,npx)
        else
           grid(lev)%neighb(2) = MPI_PROC_NULL
        endif
 
        if (pj < npy-incy) then ! north
           grid(lev)%neighb(3) = (pj+incy)*npx+pi
+       elseif (north_south_perio) then
+          grid(lev)%neighb(3) =  mod(pj+incy,npy)*npx+pi
        else
           grid(lev)%neighb(3) = MPI_PROC_NULL
        endif
 
        if (pi >= incx) then ! west
           grid(lev)%neighb(4) = pj*npx+pi-incx
+       elseif (east_west_perio) then
+          grid(lev)%neighb(4) =  pj*npx + mod(npx+pi-incx,npx)
        else
           grid(lev)%neighb(4) = MPI_PROC_NULL
        endif
 
        if ((pj >= incy).and.(pi >= incx)) then ! south west
           grid(lev)%neighb(5) = (pj-incy)*npx+ pi-incx
+       elseif (east_west_perio.and.north_south_perio) then
+          grid(lev)%neighb(5) = mod(pj-incy+npy,npy)*npx+ mod(pi-incx+npx,npx)
        else
           grid(lev)%neighb(5) = MPI_PROC_NULL
        endif
 
        if ((pj >= incy).and.(pi < npx-incx)) then ! south east
           grid(lev)%neighb(6) = (pj-incy)*npx+ pi+incx
+       elseif (east_west_perio.and.north_south_perio) then
+          grid(lev)%neighb(6) = mod(pj-incy+npy,npy)*npx+ mod(pi+incx,npx)
        else
           grid(lev)%neighb(6) = MPI_PROC_NULL
        endif
 
        if ((pj < npy-incy).and.(pi < npx-incx)) then ! north east
           grid(lev)%neighb(7) = (pj+incy)*npx + pi+incx
+       elseif (east_west_perio.and.north_south_perio) then
+          grid(lev)%neighb(7) = mod(pj+incy,npy)*npx+ mod(pi+incx,npx)
        else
           grid(lev)%neighb(7) = MPI_PROC_NULL
        endif
        if ((pj < npy-incy).and.(pi >= incx)) then ! north west
           grid(lev)%neighb(8) = (pj+incy)*npx + pi-incx
+       elseif (east_west_perio.and.north_south_perio) then
+          grid(lev)%neighb(8) = mod(pj+incy,npy)*npx+ mod(pi-incx+npx,npx)
        else
           grid(lev)%neighb(8) = MPI_PROC_NULL
        endif

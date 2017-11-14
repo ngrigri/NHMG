@@ -34,6 +34,9 @@ module mg_namelist
 
   logical           :: surface_neumann  = .true.
 
+  logical           :: east_west_perio = .false.
+  logical           :: north_south_perio = .false.
+
   character(len=16) :: bench =''               !- 'seamount'
 
   namelist/nhparam/    &
@@ -50,6 +53,8 @@ module mg_namelist
        netcdf_output , &
        check_output ,  &
        surface_neumann, &
+       east_west_perio, &
+       north_south_perio, &
        aggressive   
 
 contains
