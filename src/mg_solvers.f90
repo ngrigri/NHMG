@@ -35,9 +35,8 @@ contains
     if ((myrank==0).and.verbose) write(*,*)'     ---------------'
 
 
-    ! NOT ALL OPTIMAL, do we really need to set to ZERO?
-    ! isn't there a smarter way?
-!    grid(1)%p(:,:,:) = zero
+    ! if commented, we used the previous pressure as first guess for the current projection
+    ! grid(1)%p(:,:,:) = zero
 
     p  => grid(1)%p
     b  => grid(1)%b
