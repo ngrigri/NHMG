@@ -17,7 +17,7 @@ program mg_testcuc
   real(kind=rp), dimension(:,:), pointer :: dx, dy 
   real(kind=rp), dimension(:,:), pointer :: zeta, h
   real(kind=rp), dimension(:,:), pointer :: dxu, dyv
-  real(kind=rp), dimension(:,:,:), pointer :: z_r
+  real(kind=rp), dimension(:,:,:), pointer :: z_r,z_w
   real(kind=rp), dimension(:,:,:), pointer :: Hz
   real(kind=rp), dimension(:,:,:), pointer :: u,v,w
 
@@ -132,6 +132,7 @@ program mg_testcuc
   allocate(  dyv(0:nx+1,0:ny+1))
 
   allocate(   z_r(0:nx+1,0:ny+1,1:nz))
+  allocate(   z_w(0:nx+1,0:ny+1,1:nz+1))
   allocate(    Hz(0:nx+1,0:ny+1,1:nz))
 
   call setup_cuc(       &
@@ -140,9 +141,9 @@ program mg_testcuc
        zeta,h)
 
   !- stretching vertical grid -!   
-  call setup_zr_hz(hc,theta_b,theta_s,zeta,h,z_r,Hz,'new_s_coord')
+  call setup_zr_zw_hz(hc,theta_b,theta_s,zeta,h,z_r,z_w,Hz,'new_s_coord')
   !- linear vertical grid -!
-  !  call setup_zr_hz(h,z_r,Hz)
+  !  call setup_zr_zw_hz(h,z_r,z_w,Hz)
 
   call nhmg_matrices(nx,ny,nz,z_r,Hz,dx,dy)
 
@@ -172,7 +173,7 @@ program mg_testcuc
      !- Call nhmg solver -!
      !----------------------!
      if (rank == 0) write(*,*)'Call nhmg solver'
-!     call  nhmg_solve(nx,ny,nz,u,v,w)
+     call nhmg_solve(u,v,w,z_w,Hz,.true.)
 
      if (netcdf_output) then
         call write_netcdf(u,vname='uc',netcdf_file_name='uc.nc',rank=rank,iter=it)

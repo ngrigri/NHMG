@@ -2,23 +2,22 @@ module mg_zr_hz
 
   implicit none
 
-  interface setup_zr_hz
+  interface setup_zr_zw_hz
      module procedure           &
-          setup_zr_hz_linear, &
-          setup_zr_hz_stretch
-  end interface setup_zr_hz
+          setup_zr_zw_hz_linear, &
+          setup_zr_zw_hz_stretch
+  end interface setup_zr_zw_hz
 
 contains
 
   !-------------------------------------------------------------------------     
-  subroutine setup_zr_hz_linear(h, zr, hz)
+  subroutine setup_zr_zw_hz_linear(h, zr, zw, hz)
 
     integer(kind=4),parameter :: ip=4,rp=8
     real(kind=rp), dimension(:,:)  , pointer, intent(in)  :: h
     real(kind=rp), dimension(:,:,:), pointer, intent(out) :: zr
+    real(kind=rp), dimension(:,:,:), pointer, intent(out) :: zw
     real(kind=rp), dimension(:,:,:), pointer, intent(out) :: hz
-
-    real(kind=rp), dimension(:,:,:), pointer :: zw
 
     integer(kind=ip):: nx,ny,nz,nh
 
@@ -28,8 +27,6 @@ contains
     nh = 1
     ny = size(zr,dim=2) - 2*nh
     nx = size(zr,dim=1) - 2*nh
-
-    allocate(zw(1-nh:nx+nh,1-nh:ny+nh,1:nz+1))
 
     do i = 1-nh,nx+nh
        do j = 1-nh,ny+nh
@@ -49,12 +46,10 @@ contains
        enddo
     enddo
 
-    deallocate(zw)
-
-  end subroutine setup_zr_hz_linear
+  end subroutine setup_zr_zw_hz_linear
 
   !-------------------------------------------------------------------------     
-  subroutine setup_zr_hz_stretch(hlim,theta_b,theta_s,zeta,h,zr,hz,coord_type)
+  subroutine setup_zr_zw_hz_stretch(hlim,theta_b,theta_s,zeta,h,zr,zw,hz,coord_type)
 
     ! compute zr and zw from zeta(i,j) and h(i,j)
 
@@ -64,9 +59,7 @@ contains
     real(kind=rp), intent(in) :: theta_b
     real(kind=rp), intent(in) :: theta_s
     real(kind=rp), dimension(:,:)  , pointer, intent(in)  :: zeta, h
-    real(kind=rp), dimension(:,:,:), pointer, intent(out) :: zr, hz
-
-    real(kind=rp), dimension(:,:,:), pointer :: zw
+    real(kind=rp), dimension(:,:,:), pointer, intent(out) :: zr, zw, hz
 
     character(len=*), optional, intent(in) :: coord_type
 
@@ -97,8 +90,6 @@ contains
     nh = 2
     ny = size(zr,dim=2) - 2*nh
     nx = size(zr,dim=1) - 2*nh
-
-    allocate(zw(1-nh:nx+nh,1-nh:ny+nh,1:nz+1))
 
     ! vertical coordinate
 
@@ -230,8 +221,6 @@ contains
        enddo
     enddo
 
-    deallocate(zw)
-
-  end subroutine setup_zr_hz_stretch
+  end subroutine setup_zr_zw_hz_stretch
 
 end module mg_zr_hz
