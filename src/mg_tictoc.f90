@@ -111,6 +111,39 @@ contains
   end subroutine toc
 
   !------------------------------------------------
+  subroutine get_tictoc(val, lev, string)
+    real(kind = lg) , intent(out) :: val
+    integer(kind=st), intent(in)  :: lev
+    character(len=*), intent(in)  :: string
+
+    integer(kind=st) :: ns
+    logical :: flag 
+
+    if (nbsub > 0) then
+
+       flag = .true.
+
+       do ns=1, nbsub
+          if (TRIM(string) == subname(ns)) then
+             val = time_tictoc(lev,ns)
+             flag = .false.
+             exit
+          endif
+       end do
+
+       if (flag) then
+          write(*,*)'Error: tictoc: no information for this name !'
+          write(*,*)'Error: check if a tictoc calls exist for:', TRIM(string)
+       endif
+
+    else
+       write(*,*)'Error: tictoc: no information for this name !'
+       write(*,*)'Error: check if a tictoc calls exist for:', TRIM(string)
+    endif
+
+  end subroutine get_tictoc
+
+  !------------------------------------------------
   subroutine print_tictoc(myrank)
     integer(kind=st), optional, intent(in)::myrank
 
