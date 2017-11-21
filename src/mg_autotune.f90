@@ -41,9 +41,9 @@ contains
     real(kind=rp), dimension(:,:)  , allocatable :: res
     real(kind=rp), dimension(:,:,:), allocatable :: pres
 
-    write(*,*)'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-    write(*,*)'>>>>>> STARTING AUTOTUNE <<<<<<<'
-    write(*,*)'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+    if (myrank==0) write(*,*)'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+    if (myrank==0) write(*,*)'>>>>>> STARTING AUTOTUNE <<<<<<<'
+    if (myrank==0) write(*,*)'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
 
     orig_pre  = ns_pre
     orig_post = ns_post
@@ -97,10 +97,10 @@ contains
 
     deallocate(pres)
 
-    write(*,*)'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-    write(*,*)'>>>>>> FINISHING AUTOTUNE <<<<<<'
-    write(*,*)'>>>> AND STOP THE PROGRAM  <<<<<'
-    write(*,*)'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+    if (myrank==0) write(*,*)'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+    if (myrank==0) write(*,*)'>>>>>> FINISHING AUTOTUNE <<<<<<'
+    if (myrank==0) write(*,*)'>>>> AND STOP THE PROGRAM  <<<<<'
+    if (myrank==0) write(*,*)'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
 
     stop
 
