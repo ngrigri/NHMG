@@ -15,6 +15,9 @@ Configuration and compilation:
 -----------------------------
 setenv MPI_INC /opt/linux/mpich2/1.5-intel12.1/include
 setenv MPI_LIB /opt/linux/mpich2/1.5-intel12.1/lib
+or
+export MPI_INC=/opt/linux/mpich2/1.5-intel12.1/include
+export MPI_LIB=/opt/linux/mpich2/1.5-intel12.1/lib
 
 ./configure --prefix=/home/grima/CROCO-NH --enable-mpich
 or
