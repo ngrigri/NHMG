@@ -54,7 +54,16 @@ Please see the FAQ page for debugging suggestions
 
 If you've got this message error, enter 'unlimit' before to submit you test*
 
+in csh
+
 unlimit
+mpirun -np 4 test*
+
+or in sh
+
+ulimit -all
+ulimit -s unlimited
+ulimit -all
 mpirun -np 4 test*
 
 LIBRARY problem:
