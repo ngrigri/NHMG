@@ -31,6 +31,7 @@ contains
 
     verbose = .false.
     if (mod(count,10)==0) verbose=.true.
+    if (autotune)  verbose=.true.
     count = count+1
     if ((myrank==0).and.verbose) write(*,*)'     ---------------'
 

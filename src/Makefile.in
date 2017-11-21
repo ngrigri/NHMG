@@ -125,7 +125,7 @@ am_libnhmg_la_OBJECTS = mg_cst.lo mg_mpi.lo mg_tictoc.lo \
 	mg_namelist.lo mg_netcdf_out.lo mg_grids.lo mg_mpi_exchange.lo \
 	mg_gather.lo mg_horiz_grids.lo mg_vert_grids.lo \
 	mg_projection.lo mg_relax.lo mg_intergrids.lo mg_solvers.lo \
-	mg_diagnostics.lo nhmg_debug.lo nhmg.lo
+	mg_autotune.lo mg_diagnostics.lo nhmg_debug.lo nhmg.lo
 libnhmg_la_OBJECTS = $(am_libnhmg_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -375,12 +375,13 @@ libnhmg_la_SOURCES = \
 	mg_mpi_exchange.f90    \
 	mg_gather.f90          \
 	mg_horiz_grids.f90     \
-	mg_vert_grids.f90     \
-	mg_projection.f90 \
+	mg_vert_grids.f90      \
+	mg_projection.f90      \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
 	mg_solvers.f90         \
-	mg_diagnostics.f90         \
+	mg_autotune.f90        \
+	mg_diagnostics.f90     \
 	nhmg_debug.f90         \
 	nhmg.f90
 
@@ -394,12 +395,13 @@ nodist_include_HEADERS = \
 	mg_mpi_exchange.mod    \
 	mg_gather.mod          \
 	mg_horiz_grids.mod     \
-	mg_vert_grids.mod     \
-	mg_projection.mod \
+	mg_vert_grids.mod      \
+	mg_projection.mod      \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
 	mg_solvers.mod         \
-	mg_diagnostics.mod         \
+	mg_autotune.mod        \
+	mg_diagnostics.mod     \
 	nhmg_debug.mod         \
 	nhmg.mod
 

@@ -173,10 +173,12 @@ program mg_testseamount
         call write_netcdf(w,vname='w',netcdf_file_name='w.nc',rank=rank,iter=it)
      endif
 
+     grid(1)%p=0._rp
+
      !--------------------!
      !- Call nhmg solver -!
      !--------------------!
-     if (rank == 0) write(*,*)'Call nhmg solver'
+     if (rank == 0) write(*,*)'Call nhmg solver',it
      call nhmg_solve(u,v,w,z_w,Hz,.true.)
 
      if (netcdf_output) then
