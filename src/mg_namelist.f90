@@ -12,8 +12,11 @@ module mg_namelist
   integer(kind=ip) :: ns_pre      =   3
   integer(kind=ip) :: ns_post     =   2
 
-  real(kind=rp)    :: solver_prec    = 1.d-6  !- solver precision 
+  real(kind=rp)    :: solver_prec    = 1.d-6   !- solver precision 
   integer(kind=ip) :: solver_maxiter = 50      !- maximum of solver iterations
+
+  logical          :: autotune    =.false.     !- tuning test after a number of time steps (by default 100)
+  integer(kind=ip) :: autotune_ts = 100        !- tuning test time step (if autotune=.true.)
 
   character(len=16) :: cmatrix='real'          !- 'real' or 'simple'
 
@@ -46,6 +49,8 @@ module mg_namelist
        ns_coarsest   , &
        ns_pre        , &
        ns_post       , &
+       autotune      , &
+       autotune_ts   , &
        cmatrix       , &
        relax_method  , &
        interp_type   , &
@@ -125,6 +130,8 @@ contains
           write(*,*)'  - ns_coarsest   : ', ns_coarsest
           write(*,*)'  - ns_pre        : ', ns_pre
           write(*,*)'  - ns_post       : ', ns_post
+          write(*,*)'  - autotune      : ', autotune
+          write(*,*)'  - autotune_ts   : ', autotune_ts
           write(*,*)'  - cmatrix       : ', trim(cmatrix)
           write(*,*)'  - relax_method  : ', trim(relax_method)
           write(*,*)'  - interp_type   : ', trim(interp_type)

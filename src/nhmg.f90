@@ -6,6 +6,7 @@ module nhmg
   use mg_namelist
   use mg_tictoc
   use mg_mpi_exchange
+  use mg_autotune
   use mg_horiz_grids
   use mg_vert_grids
   use mg_projection
@@ -21,6 +22,8 @@ module nhmg
     real(kind=rp), dimension(:,:),allocatable :: ubar
     real(kind=rp), dimension(:,:),allocatable :: vbar
     real(kind=rp), dimension(:,:),allocatable :: wcorr
+
+    integer(kind=ip) :: tscount = 1
 
 contains
 
@@ -507,7 +510,7 @@ contains
           do i=1,nx
              is=i+ishift
              wcorr(j,i) = wa(is,js,nz+1) + ( ubar(j,i+1) - ubar(j,i) + vbar(j+1,i) - vbar(j,i) ) &
-                            / (dx(j,i) * dy(j,i)) 
+                  / (dx(j,i) * dy(j,i)) 
           enddo
        enddo
        do k=1,nz+1
@@ -516,12 +519,12 @@ contains
              do i=1,nx
                 is=i+ishift
                 wa(is,js,k) = wa(is,js,k) - wcorr(j,i) &
-                            * (zw(is,js,k   )-zw(is,js,1)) &
-                            / (zw(is,js,nz+1)-zw(is,js,1))
+                     * (zw(is,js,k   )-zw(is,js,1)) &
+                     / (zw(is,js,nz+1)-zw(is,js,1))
              enddo
           enddo
        enddo
-    endif 
+    endif
 
     do k=1,nz
        do j=1,ny
@@ -534,9 +537,17 @@ contains
     enddo
     w(1,:,:) = zero
 
+    !- auto tuning tests if autotune = .true.
+    if ((tscount == autotune_ts).and.(autotune)) then
+       call sb_autotune()  !- test of autotuning
+    end if
+
     !- set rhs, solve for p, and compute correction for u,v,w
     call set_rhs()
-    call solve_p()
+    call solve_p()   
+
+    tscount = tscount + 1
+
     call correction_uvw()
 
     if (check_output) then

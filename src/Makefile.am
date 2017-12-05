@@ -38,12 +38,13 @@ libnhmg_la_SOURCES =       \
 	mg_mpi_exchange.f90    \
 	mg_gather.f90          \
 	mg_horiz_grids.f90     \
-	mg_vert_grids.f90     \
-	mg_projection.f90 \
+	mg_vert_grids.f90      \
+	mg_projection.f90      \
 	mg_relax.f90           \
 	mg_intergrids.f90      \
 	mg_solvers.f90         \
-	mg_diagnostics.f90         \
+	mg_autotune.f90        \
+	mg_diagnostics.f90     \
 	nhmg_debug.f90         \
 	nhmg.f90
 
@@ -57,12 +58,13 @@ nodist_include_HEADERS =   \
 	mg_mpi_exchange.mod    \
 	mg_gather.mod          \
 	mg_horiz_grids.mod     \
-	mg_vert_grids.mod     \
-	mg_projection.mod \
+	mg_vert_grids.mod      \
+	mg_projection.mod      \
 	mg_relax.mod           \
 	mg_intergrids.mod      \
 	mg_solvers.mod         \
-	mg_diagnostics.mod         \
+	mg_autotune.mod        \
+	mg_diagnostics.mod     \
 	nhmg_debug.mod         \
 	nhmg.mod
 
