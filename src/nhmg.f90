@@ -265,16 +265,16 @@ contains
           !
           do k = 1,nz
              wrk(k) = &
-             !dt term
-                  +0.5*(+dt_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
-                        +dt_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
-                  +0.5*(+dt_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
-                        +dt_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k)) &
-                  !or
-                  !+0.5*(+dt_zx(k,j,i) *u(i  ,j,k)  &
-                  !      +dt_zx(k,j,i) *u(i+1,j,k)) &
-                  !+0.5*(+dt_zy(k,j,i) *v(i,j  ,k)  &
-                  !      +dt_zy(k,j,i) *v(i,j+1,k)) &
+!             !dt term
+!                  +0.5*(+dt_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
+!                        +dt_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
+!                  +0.5*(+dt_zy(k,j,i) /dz(k,j,i) *v(i,j  ,k)  &
+!                        +dt_zy(k,j,i) /dz(k,j,i) *v(i,j+1,k)) &
+!                  !or
+!                  !+0.5*(+dt_zx(k,j,i) *u(i  ,j,k)  &
+!                  !      +dt_zx(k,j,i) *u(i+1,j,k)) &
+!                  !+0.5*(+dt_zy(k,j,i) *v(i,j  ,k)  &
+!                  !      +dt_zy(k,j,i) *v(i,j+1,k)) &
              !divx term
                   +0.5*(+divx_zx(k,j,i) /dz(k,j,i) *u(i  ,j,k)  &
                         +divx_zx(k,j,i) /dz(k,j,i) *u(i+1,j,k)) &
